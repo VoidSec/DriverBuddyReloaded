@@ -120,14 +120,14 @@ output can be copy-pasted at the end of the file and then be picked up by WinDbg
 
 ## Credits & Acknowledgements
 
-- Updated in 2021 by [Paolo Stagno](https://voidsec.com/) aka [@Void_Sec](https://twitter.com/Void_Sec):
+- Created in 2021 by [Paolo Stagno](https://voidsec.com/) aka [@Void_Sec](https://twitter.com/Void_Sec):
     - Made it compatible with Python 3.x
     - Made it compatible with IDA 7.x
-    - Updated C/C++ function and Windows API list
+    - Updated C/C++ function and Windows APIs list
     - Various bug fixing
     - Various improvements
-    - Integrated FSecure's win_driver_plugin
-- Originally written by Braden Hollembaek and Adam Pond of NCC Group
+    - Integrated part of the functionalities present in FSecure's win_driver_plugin
+- [DriverBuddy](https://github.com/nccgroup/DriverBuddy) was originally written by Braden Hollembaek and Adam Pond of NCC Group
 - Using Satoshi Tanda's IOCTL decoder, originally found here https://github.com/tandasat/WinIoCtlDecoder.
 - The WDF functions struct is based on Red Plait's work (http://redplait.blogspot.ru/2012/12/wdffunctionsidc.html) and
   was ported to IDA Python by Nicolas Guigo, later updated by Braden Hollembaek and Adam Pond.
