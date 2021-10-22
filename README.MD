@@ -127,7 +127,7 @@ output can be copy-pasted at the end of the file and then be picked up by WinDbg
     - Various bug fixing
     - Various improvements
     - Integrated part of the functionalities present in FSecure's win_driver_plugin
-- [DriverBuddy](https://github.com/nccgroup/DriverBuddy) was originally written by Braden Hollembaek and Adam Pond of NCC Group
+- [DriverBuddy](https://github.com/nccgroup/DriverBuddy) was originally written by Braden Hollembaek and Adam Pond of NCC Group.
 - Using Satoshi Tanda's IOCTL decoder, originally found here https://github.com/tandasat/WinIoCtlDecoder.
 - The WDF functions struct is based on Red Plait's work (http://redplait.blogspot.ru/2012/12/wdffunctionsidc.html) and
   was ported to IDA Python by Nicolas Guigo, later updated by Braden Hollembaek and Adam Pond.
