@@ -1,6 +1,8 @@
 # PyCharm ENV
 venv/
 .idea/
+# Sample Drivers
+sample_drivers/
 # IDA Python SDK ENV
 ida_32/
 ida_64/
