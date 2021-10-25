@@ -119,6 +119,7 @@ Madiant’s [FLOSS](https://github.com/mandiant/flare-floss/) in an attempt to f
 
 During the auto-analysis, the tool also dumps the `Pooltags` used by the binary in a format that works
 with `pooltags.txt`. The output can then be copy-pasted at the end of the file and later picked up by WinDbg.
+
 ![](/screenshots/pooltag.png)
 
 ## Known Caveats & Limitations
