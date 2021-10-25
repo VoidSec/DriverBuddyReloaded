@@ -97,6 +97,7 @@ If you right-click on the first instruction of the function you believe to be th
 Reloaded menu, a “**Decode All**” option appears, this attempt to decode all the IOCTL codes it can find in the
 function. This is a bit hacky and has known limitations (see [issues](https://github.com/VoidSec/DriverBuddyReloaded/issues)),
 but most of the time it can speed things up.
+
 ![](/screenshots/IOCTL-table.png)
 ![](/screenshots/decode-IOCTL.png)
 
@@ -113,6 +114,7 @@ help while looking for possible user-controlled code paths reaching sensitive fu
 The tool automatically attempts to find the drivers registered device paths (`DeviceName`), if no paths can be found by
 looking at Unicode strings inside the binary, then the analyst can manually try to use
 Madiant’s [FLOSS](https://github.com/mandiant/flare-floss/) in an attempt to find obfuscated paths.
+
 ![](/screenshots/devicename.png)
 
 ### Dumping Pooltags
