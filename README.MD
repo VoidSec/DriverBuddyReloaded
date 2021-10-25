@@ -6,13 +6,13 @@
 2. [Usage](#Usage)
 3. [About Driver Buddy Reloaded](#About-Driver-Buddy-Reloaded)
     1. [Finding DispatchDeviceControl](#Finding-DispatchDeviceControl)
-    2. [Labelling WDM & WDF Structures](#Labelling-WDM-&-WDF-Structures)
-    3. [Finding & Decoding IOCTL Codes](#Finding-&-Decoding-IOCTL-Codes)
+    2. [Labelling WDM & WDF Structures](#Labelling-WDM-and-WDF-Structures)
+    3. [Finding & Decoding IOCTL Codes](#Finding-and-Decoding-IOCTL-Codes)
     4. [Flagging Functions](#Flagging-Functions)
     5. [Finding DeviceName](#Finding-DeviceName)
     6. [Dumping Pooltags](#Dumping-Pooltags)
-4. [Known Caveats & Limitations](#Known-Caveats-&-Limitations)
-5. [Credits & Acknowledgements](#Credits-&-Acknowledgements)
+4. [Known Caveats & Limitations](#Known-Caveats-and-Limitations)
+5. [Credits & Acknowledgements](#Credits-and-Acknowledgements)
 
 ## Installation
 
@@ -73,7 +73,7 @@ When the analysis is successful some subs will be renamed as follow:
 
 ![](/screenshots/finding-dispatchdevicecontrol.png)
 
-### Labelling WDM & WDF Structures
+### Labelling WDM and WDF Structures
 
 Several driver structures are shared among all `WDM`/`WDF` drivers. The tool is able to automatically identify these
 structures, such as the `IO_STACK_LOCATION`, `IRP`, and `DeviceObject` structures and can help save time during the
@@ -81,7 +81,7 @@ reverse engineering process and provide context to areas of the driver where the
 
 ![](/screenshots/WDM-structures.png)
 
-### Finding & Decoding IOCTL Codes
+### Finding and Decoding IOCTL Codes
 
 While reversing drivers, it is common to come across IOCTL codes as part of the analysis. These codes, when decoded,
 reveal useful information and may draw focus to specific parts of the driver where vulnerabilities are more likely to
@@ -124,12 +124,12 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
 
 ![](/screenshots/pooltag.png)
 
-## Known Caveats & Limitations
+## Known Caveats and Limitations
 
 - Experimental `DispatchDeviceControl` searching works only for x64 drivers
 - Shortcuts are incompatible with FSecure's [win_driver_plugin](https://github.com/FSecureLABS/win_driver_plugin)
 
-## Credits & Acknowledgements
+## Credits and Acknowledgements
 
 - Created in 2021 by [Paolo Stagno](https://voidsec.com/) aka [@Void_Sec](https://twitter.com/Void_Sec):
     - Made it compatible with Python 3.x
