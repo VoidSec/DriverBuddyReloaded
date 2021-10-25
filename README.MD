@@ -127,7 +127,7 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
 ## Known Caveats and Limitations
 
 - Experimental `DispatchDeviceControl` searching works only for x64 drivers
-- Shortcuts are incompatible with FSecure's [win_driver_plugin](https://github.com/FSecureLABS/win_driver_plugin)
+- Shortcuts are incompatible with F-Secure's [win_driver_plugin](https://github.com/FSecureLABS/win_driver_plugin)
 
 ## Credits and Acknowledgements
 
@@ -137,13 +137,13 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
     - Updated C/C++ function and Windows APIs list
     - Various bug fixing
     - Various improvements
-    - Integrated part of the functionalities presents in FSecure's win_driver_plugin
+    - Integrated part of the functionalities presents in F-Secure's win_driver_plugin
 - [DriverBuddy](https://github.com/nccgroup/DriverBuddy) was originally written by Braden Hollembaek and Adam Pond of
   NCC Group.
 - Using Satoshi Tanda's [IOCTL decoder](https://github.com/tandasat/WinIoCtlDecoder).
 - The WDF functions struct is based on [Red Plait's work](http://redplait.blogspot.ru/2012/12/wdffunctionsidc.html) and
   was ported to IDA Python by Nicolas Guigo, later updated by Braden Hollembaek and Adam Pond.
-- Using Sam Brown's FSecure [win_driver_plugin](https://github.com/FSecureLABS/win_driver_plugin) to retrieve device
+- Using Sam Brown's F-Secure [win_driver_plugin](https://github.com/FSecureLABS/win_driver_plugin) to retrieve device
   name and pool tags, specifically Alexander Pick [fork](https://github.com/alexander-pick/win_driver_plugin).
 - The original code for adding items to the right-click menu (and possibly some other random snippets) came
   from '[herrcore](https://gist.github.com/herrcore/b3143dde185cecda7c1dee7ffbce5d2c)'.
