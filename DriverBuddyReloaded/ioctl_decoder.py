@@ -188,7 +188,7 @@ def find_ioctls_dumb():
                 idc.op_dec(cur, 1)
                 get_ioctl_code(int(idc.print_operand(cur, 1)))
                 result = True
-            else:
-                print("[!] Cannot get IOCTL from {} at {} ".format(idc.GetDisasm(cur), hex(cur)))
+            # else:
+            # print("[!] Cannot get IOCTL from {} at {} ".format(idc.GetDisasm(cur), hex(cur)))
         cur = idc.next_head(cur)
     return result
