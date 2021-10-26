@@ -197,9 +197,9 @@ driver_functions = []
 
 # List of problematic opcodes to search for
 opcodes = [
-    "rdpmc",
-    "wrmsr",
-    "rdmsr",
+    "rdpmc;",
+    "wrmsr;",
+    "rdmsr;",
 ]
 
 # Data structures needed to store addresses of functions we are interested in
