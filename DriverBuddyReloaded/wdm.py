@@ -284,7 +284,8 @@ def find_dispatch_function():
         print("[>] Based off basic CFG analysis, potential dispatch functions are:")
         for i in range(cfg_finds_to_print):
             if cfg_funcs[i] != "__security_check_cookie":
-                print("\t- {}".format(cfg_funcs[i]))
+                if cfg_funcs[i] != "" and cfg_funcs[i] is not None:
+                    print("\t- {}".format(cfg_funcs[i]))
     elif len(index_funcs) == 1:
         func = index_funcs.pop()
         if func in cfg_funcs:
