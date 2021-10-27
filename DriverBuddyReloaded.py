@@ -173,19 +173,18 @@ def find_all_ioctls():
     f = idaapi.get_func(addr)
     fc = idaapi.FlowChart(f, flags=idaapi.FC_PREDS)
     for block in fc:
-        # grab the last two instructions in the block
-        last_inst = idc.prev_head(block.end_ea)
-        penultimate_inst = idc.prev_head(last_inst)
-        # If the penultimate instruction is cmp or sub against an immediate value immediately preceding a 'jz'
-        # then it's a decent guess that it's an IOCTL code (if this is a dispatch function)
-        if idc.print_insn_mnem(penultimate_inst) in ['cmp', 'sub'] and idc.get_operand_type(penultimate_inst, 1) == 5:
-            if idc.print_insn_mnem(last_inst) == 'jz':
-                value = get_operand_value(penultimate_inst)
+        start = block.start_ea
+        end = block.end_ea
+        # print("Block: {} - {}".format(start, end))
+        for instr in range(start, end):
+            # if the penultimate instruction is cmp or sub or mov against an immediate value
+            if idc.print_insn_mnem(instr) in ['cmp', 'sub', 'mov'] and idc.get_operand_type(instr, 1) == 5:
+                value = get_operand_value(instr)
                 digits = utils.check_digits(value)
-                if digits == 10:
-                    if value not in utils.ntstatus_values:
-                        ioctls.append((penultimate_inst, value))
-                        ioctl_tracker.add_ioctl(penultimate_inst, value)
+                # value has 10 digits and is not a known NTSTATUS value
+                if digits == 10 and value not in utils.ntstatus_values:
+                    ioctls.append((instr, value))
+                    ioctl_tracker.add_ioctl(instr, value)
     return ioctls
 
 
@@ -228,8 +227,7 @@ def get_position_and_translate():
 
     value = get_operand_value(pos)
     digits = utils.check_digits(value)
-    if digits == 10:
-        if value not in utils.ntstatus_values:
+    if digits == 10 and value not in utils.ntstatus_values:
             ioctl_tracker.add_ioctl(pos, value)
             define = ioctl_decoder.get_define(value)
             make_comment(pos, define)
