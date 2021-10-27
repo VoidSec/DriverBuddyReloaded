@@ -183,8 +183,9 @@ def find_all_ioctls():
                 value = get_operand_value(penultimate_inst)
                 digits = utils.check_digits(value)
                 if digits == 10:
-                    ioctls.append((penultimate_inst, value))
-                    ioctl_tracker.add_ioctl(penultimate_inst, value)
+                    if value not in utils.ntstatus_values:
+                        ioctls.append((penultimate_inst, value))
+                        ioctl_tracker.add_ioctl(penultimate_inst, value)
     return ioctls
 
 
@@ -228,15 +229,16 @@ def get_position_and_translate():
     value = get_operand_value(pos)
     digits = utils.check_digits(value)
     if digits == 10:
-        ioctl_tracker.add_ioctl(pos, value)
-        define = ioctl_decoder.get_define(value)
-        make_comment(pos, define)
-        # Print summary table each time a new IOCTL code is decoded
-        ioctls = []
-        for inst in ioctl_tracker.ioctl_locs:
-            value = get_operand_value(inst)
-            ioctls.append((inst, value))
-        ioctl_tracker.print_table(ioctls)
+        if value not in utils.ntstatus_values:
+            ioctl_tracker.add_ioctl(pos, value)
+            define = ioctl_decoder.get_define(value)
+            make_comment(pos, define)
+            # Print summary table each time a new IOCTL code is decoded
+            ioctls = []
+            for inst in ioctl_tracker.ioctl_locs:
+                value = get_operand_value(inst)
+                ioctls.append((inst, value))
+            ioctl_tracker.print_table(ioctls)
 
 
 class ActionHandler(idaapi.action_handler_t):
