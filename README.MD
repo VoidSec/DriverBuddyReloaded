@@ -95,8 +95,7 @@ disassembly view, it's possible to mark it as invalid; this will leave any non-I
 If you right-click on the first instruction of the function you believe to be the IOCTL dispatcher (
 `DispatchDeviceControl`/`DispatchInternalDeviceControl`/`Possible_DispatchDeviceControl_#`) under the Driver Buddy
 Reloaded menu, a “**Decode All**” option appears, this attempt to decode all the IOCTL codes it can find in the
-function. This is a bit hacky and has known limitations (see [issues](https://github.com/VoidSec/DriverBuddyReloaded/issues)),
-but most of the time it can speed things up.
+function. This is a bit hacky but most of the time it can speed things up.
 
 ![](/screenshots/IOCTL-table.png)
 ![](/screenshots/decode-IOCTL.png)
