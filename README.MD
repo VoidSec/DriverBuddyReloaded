@@ -27,12 +27,12 @@ To use the auto-analysis feature:
 2. Go to `Edit -> Plugins -> Driver Buddy Reloaded` or press `CTRL+ALT+A` to start the auto-analysis.
 3. Check the "Output" window for the analysis results.
 
-To decode an IOCTLs:
+To decode an IOCTL:
 
 1. Place the mouse cursor on the line containing a suspected IOCTL code.
 2. Right-click and select `Driver Buddy Reloaded -> Decode IOCTL`; alternatively press the `CTRL+ALT+D` shortcut.
 
-To decode ALL IOCTLs:
+To decode ALL IOCTLs within a function:
 
 1. Place the mouse cursor on the first instruction of the function you believe to be the IOCTL dispatcher (
    `DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`)
