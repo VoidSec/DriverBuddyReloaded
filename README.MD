@@ -30,7 +30,14 @@ To use the auto-analysis feature:
 To decode an IOCTLs:
 
 1. Place the mouse cursor on the line containing a suspected IOCTL code.
-2. Right-click and select `Driver Buddy Reloaded -> Decode IOCTL`; alternatively press `CTRL+ALT+D`.
+2. Right-click and select `Driver Buddy Reloaded -> Decode IOCTL`; alternatively press the `CTRL+ALT+D` shortcut.
+
+To decode ALL IOCTLs:
+
+1. Place the mouse cursor on the first instruction of the function you believe to be the IOCTL dispatcher (
+   `DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`)
+2. Right-click and select `Driver Buddy Reloaded -> Decode ALL IOCTLs in Function`; alternatively press the `CTRL+ALT+F`
+   shortcut.
 
 ## About Driver Buddy Reloaded
 
@@ -92,8 +99,9 @@ By right-clicking on a potential IOCTL code, a context menu option is presented 
 value. This will print out a table with all decoded IOCTL codes. By right-clicking on a decoded IOCTL code, in the
 disassembly view, it's possible to mark it as invalid; this will leave any non-IOCTL comment intact.
 
-If you right-click on the first instruction of the function you believe to be the IOCTL dispatcher (
-`DispatchDeviceControl`/`DispatchInternalDeviceControl`/`Possible_DispatchDeviceControl_#`) under the Driver Buddy
+If you right-click, alternatively using the
+`Ctrl+Alt+F` shortcut, on the first instruction of the function you believe to be the IOCTL dispatcher (
+`DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`) under the Driver Buddy
 Reloaded menu, a “**Decode All**” option appears, this attempt to decode all the IOCTL codes it can find in the
 function. This is a bit hacky but most of the time it can speed things up.
 
@@ -127,6 +135,7 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
 
 - Experimental `DispatchDeviceControl` searching works only for x64 drivers
 - Shortcuts are incompatible with F-Secure's [win_driver_plugin](https://github.com/FSecureLABS/win_driver_plugin)
+- Shortcuts are incompatible with [findcrypt-yara](https://github.com/polymorf/findcrypt-yara)
 
 ## Credits and Acknowledgements
 

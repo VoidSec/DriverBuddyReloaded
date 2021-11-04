@@ -378,6 +378,15 @@ class DriverBuddyPlugin(idaapi.plugin_t):
             callback=get_position_and_translate
         )
         decode_ioctl.registerAction()
+        decode_all_ioctl = UiAction(
+            id="ioctl:decode_all",
+            name="Decode ALL IOCTLs in a Function",
+            tooltip="Decodes ALL IOCTLs in a Function into its IOCTL details.",
+            menuPath="",
+            shortcut="Ctrl+Alt+F",
+            callback=decode_all_ioctls
+        )
+        decode_all_ioctl.registerAction()
         return idaapi.PLUGIN_KEEP
 
     def run(self, args):
