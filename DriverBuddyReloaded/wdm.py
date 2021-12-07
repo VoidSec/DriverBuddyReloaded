@@ -53,9 +53,10 @@ def locate_ddc(driver_entry_address):
     for i in driver_entry_func[1:]:
         if ddc_offset in idc.print_operand(i, 0)[4:] and idc.print_insn_mnem(prev_instruction) == "lea":
             real_ddc = idc.get_name_ea_simple(idc.print_operand(prev_instruction, 1))
-            print("[+] Found `DispatchDeviceControl` at 0x{addr:08x}".format(addr=real_ddc))
-            idc.set_name(real_ddc, "DispatchDeviceControl")
-            dispatch["ddc"] = real_ddc
+            if real_ddc != 0xffffffffffffffff:
+                print("[+] Found `DispatchDeviceControl` at 0x{addr:08x}".format(addr=real_ddc))
+                idc.set_name(real_ddc, "DispatchDeviceControl")
+                dispatch["ddc"] = real_ddc
         if didc_offset in idc.print_operand(i, 0)[4:] and idc.print_insn_mnem(prev_instruction) == "lea":
             real_didc = idc.get_name_ea_simple(idc.print_operand(prev_instruction, 1))
             print("[+] Found `DispatchInternalDeviceControl` at 0x{addr:08x}".format(addr=real_didc))
