@@ -283,7 +283,7 @@ def find_dispatch_function():
         cfg_finds_to_print = min(len(cfg_funcs), 3)
         print("[>] Based off basic CFG analysis, potential dispatch functions are:")
         for i in range(cfg_finds_to_print):
-            excluded_functions = ["__security_check_cookie", "start", "DriverEntry"]
+            excluded_functions = ["__security_check_cookie", "start", "DriverEntry", "Real_Driver_Entry"]
             if cfg_funcs[i] not in excluded_functions:
                 if cfg_funcs[i] != "" and cfg_funcs[i] is not None:
                     print("\t- {}".format(cfg_funcs[i]))
