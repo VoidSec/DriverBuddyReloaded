@@ -1,5 +1,5 @@
 """
-Device name finding functions. Using a Unicode string search
+DeviceName finding functions. Using a Unicode string search
 """
 import collections
 import mmap
@@ -57,7 +57,7 @@ def extract_unicode_strings(buf, n=4):
 
 def get_unicode_device_names():
     """
-    Returns all Unicode strings within the binary currently being analysed in IDA which might be device names
+    Returns all Unicode strings within the binary currently being analysed in IDA which might be DeviceNames
     """
 
     path = ida_nalt.get_root_filename()
@@ -75,7 +75,7 @@ def get_unicode_device_names():
 
 def find_unicode_device_name():
     """
-    Attempts to find and output potential device names - returning False if none are found so further analysis can be done
+    Attempts to find and output potential DeviceNames - returning False if none are found so further analysis can be done
     """
 
     possible_names = get_unicode_device_names()
@@ -83,20 +83,20 @@ def find_unicode_device_name():
         if '\\Device\\' in possible_names or '\\DosDevices\\' in possible_names:
             if len(possible_names) == 1:
                 print(
-                    "[!] The Device prefix was found but no full Device Paths; the Device Name is likely obfuscated or created on the stack.")
+                    "[!] The Device prefix was found but no full Device Paths; the DeviceName is likely obfuscated or created on the stack.")
                 return False
             elif '\\Device\\' in possible_names and '\\DosDevices\\' in possible_names:
                 print(
-                    "[!] The Device prefix was found but no full Device Paths; the Device Name is likely obfuscated or created on the stack.")
+                    "[!] The Device prefix was found but no full Device Paths; the DeviceName is likely obfuscated or created on the stack.")
                 return False
             else:
-                # print("Potential device name: ")
+                # print("Potential DeviceName: ")
                 for i in possible_names:
                     if i != '\\Device\\' and i != '\\DosDevices\\':
                         print("\t- {}".format(i))
             return True
         else:
-            # print("Potential device names: ")
+            # print("Potential DeviceNames: ")
             for i in possible_names:
                 print("\t- {}".format(i))
             return True
@@ -106,17 +106,17 @@ def find_unicode_device_name():
             print("\t- {}".format(i))
         return True
     else:
-        print("[!] No potential device names found; it may be obfuscated or created on the stack in some way.")
+        print("[!] No potential DeviceNames found; it may be obfuscated or created on the stack in some way.")
         return False
 
 
 def search():
     """
-    Attempts to find potential device names in the currently opened binary.
-    It starts by searching for Unicode device names, if this fails then it suggests the analyst to use FLOSS
+    Attempts to find potential DeviceNames in the currently opened binary.
+    It starts by searching for Unicode DeviceNames, if this fails then it suggests the analyst to use FLOSS
     in order to search for stack based and obfuscated strings.
     """
 
     if not find_unicode_device_name():
         print(
-            "[!] Unicode Device Name not found; try using FLOSS in order to recover obfuscated and stack based strings.")
+            "[!] Unicode DeviceName not found; try using FLOSS in order to recover obfuscated and stack based strings.")

@@ -407,7 +407,7 @@ class DriverBuddyPlugin(idaapi.plugin_t):
                 print("[!] ERR: Loaded file is not a Driver")
             else:
                 print("[+] `DriverEntry` found at: 0x{addr:08x}".format(addr=driver_entry_addr))
-                print("[>] Searching for `Device Names`...")
+                print("[>] Searching for `DeviceNames`...")
                 device_name_finder.search()
                 print("[>] Searching for `Pooltags`... ")
                 pool = dump_pool_tags.get_all_pooltags()
