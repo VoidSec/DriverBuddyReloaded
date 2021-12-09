@@ -4,6 +4,7 @@ from DriverBuddyReloaded import device_name_finder
 from DriverBuddyReloaded import dump_pool_tags
 from DriverBuddyReloaded import ioctl_decoder
 from DriverBuddyReloaded import utils
+from DriverBuddyReloaded import NTSTATUS
 
 """
 DriverBuddyReloaded.py: Entry point for IDA python plugin used in Windows driver vulnerability research.
@@ -182,7 +183,7 @@ def find_all_ioctls():
                 value = get_operand_value(instr)
                 digits = utils.check_digits(value)
                 # value has 10 digits and is not a known NTSTATUS value
-                if digits == 10 and value not in utils.ntstatus_values:
+                if digits == 10 and value not in NTSTATUS.ntstatus_values:
                     ioctls.append((instr, value))
                     ioctl_tracker.add_ioctl(instr, value)
     return ioctls
@@ -227,16 +228,16 @@ def get_position_and_translate():
 
     value = get_operand_value(pos)
     digits = utils.check_digits(value)
-    if digits == 10 and value not in utils.ntstatus_values:
-            ioctl_tracker.add_ioctl(pos, value)
-            define = ioctl_decoder.get_define(value)
-            make_comment(pos, define)
-            # Print summary table each time a new IOCTL code is decoded
-            ioctls = []
-            for inst in ioctl_tracker.ioctl_locs:
-                value = get_operand_value(inst)
-                ioctls.append((inst, value))
-            ioctl_tracker.print_table(ioctls)
+    if digits == 10 and value not in NTSTATUS.ntstatus_values:
+        ioctl_tracker.add_ioctl(pos, value)
+        define = ioctl_decoder.get_define(value)
+        make_comment(pos, define)
+        # Print summary table each time a new IOCTL code is decoded
+        ioctls = []
+        for inst in ioctl_tracker.ioctl_locs:
+            value = get_operand_value(inst)
+            ioctls.append((inst, value))
+        ioctl_tracker.print_table(ioctls)
 
 
 class ActionHandler(idaapi.action_handler_t):
