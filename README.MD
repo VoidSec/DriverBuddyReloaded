@@ -3,7 +3,8 @@
 ## Table of Contents
 
 1. [Installation](#Installation)
-2. [Usage](#Usage)
+2. [Quick Usage](#Quick-Usage)
+    1. [Advanced Usage](#Advanced-Usage)
 3. [About Driver Buddy Reloaded](#About-Driver-Buddy-Reloaded)
     1. [Finding DispatchDeviceControl](#Finding-DispatchDeviceControl)
     2. [Labelling WDM & WDF Structures](#Labelling-WDM-and-WDF-Structures)
@@ -19,7 +20,7 @@
 Copy `DriverBuddyReloaded` folder and `DriverBuddyReloaded.py` file into the IDA plugins folder (
 e.g. `C:\Program Files (x86)\IDA 7\plugins\`) or wherever you have installed IDA.
 
-## Usage
+## Quick Usage
 
 To use the auto-analysis feature:
 
@@ -38,6 +39,19 @@ To decode ALL IOCTLs within a function:
    `DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`)
 2. Right-click and select `Driver Buddy Reloaded -> Decode ALL IOCTLs in Function`; alternatively press the `CTRL+ALT+F`
    shortcut.
+
+### Advanced Usage
+
+- In the [vulnerable_function_lists](DriverBuddyReloaded/vulnerable_functions_lists) directory, lists of potentially
+  dangerous/problematic functions, Windows APIs and opcodes are defined; you can edit the `custom` list including a list
+  of driver specific functions you're working on. A brief description on why specific function has been listed there is
+  provided.
+- In [find_opcodes.py](DriverBuddyReloaded/find_opcodes.py), the `find_opcode_data` option will prevent Driver Buddy
+  Reloaded to find opcodes in data sections. Switching it to `True` will print something along
+  this [line](https://github.com/VoidSec/DriverBuddyReloaded/issues/11):
+  `Found jnz     short loc_15862 in sub_15820 at 0x00015852`
+  Usually, going at the showed address and re-defining the selection as code will bring the searched opcode back.
+  **Watch out**: It is prone to false positives!
 
 ## About Driver Buddy Reloaded
 
@@ -110,9 +124,10 @@ function. This is a bit hacky but most of the time it can speed things up.
 
 ### Flagging Functions
 
-Driver Buddy Reloaded has a list of C/C++ functions and opcodes as well as Windows API that are commonly vulnerable or
-that can facilitate buffer overflow conditions. All found instances are reported back during the auto-analysis and can
-help while looking for possible user-controlled code paths reaching sensitive functions.
+Driver Buddy Reloaded has lists of C/C++ functions, opcodes and Windows APIs (defined in
+the [vulnerable_function_lists](DriverBuddyReloaded/vulnerable_functions_lists) directory) that are commonly vulnerable
+or that can facilitate buffer overflow conditions. All found instances are reported back during the auto-analysis and
+can help while looking for possible user-controlled code paths reaching sensitive functions.
 
 ![](/screenshots/flagging-functions.png)
 
@@ -136,6 +151,12 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
 - Experimental `DispatchDeviceControl` searching works only for x64 drivers
 - Shortcuts are incompatible with F-Secure's [win_driver_plugin](https://github.com/FSecureLABS/win_driver_plugin)
 - Shortcuts are incompatible with [findcrypt-yara](https://github.com/polymorf/findcrypt-yara)
+- In [find_opcodes.py](DriverBuddyReloaded/find_opcodes.py), the `find_opcode_data` option will prevent Driver Buddy
+  Reloaded to find opcodes in data sections. Switching it to `True` will print something along
+  this [line](https://github.com/VoidSec/DriverBuddyReloaded/issues/11):
+  `Found jnz     short loc_15862 in sub_15820 at 0x00015852`
+  Usually, going at the showed address and re-defining the selection as code will bring the searched opcode back.
+  **Watch out**: It is prone to false positives!
 
 ## Credits and Acknowledgements
 

@@ -18,7 +18,7 @@ ALL RIGHTS RESERVED.
 """
 import re
 import sys
-from DriverBuddyReloaded.vulnerable_functions_lists.opcode import *
+
 import ida_bytes
 import ida_funcs
 import ida_ida
@@ -29,6 +29,15 @@ import ida_search
 import ida_segment
 import ida_ua
 import idautils
+from DriverBuddyReloaded.vulnerable_functions_lists.opcode import *
+
+# This option will prevent Driver Buddy Reloaded to find opcodes in data sections
+# https://github.com/VoidSec/DriverBuddyReloaded/issues/11
+# switch it to true to see something along this line:
+# - Found jnz     short loc_15862 in sub_15820 at 0x00015852
+# going at that address and defining the selection as code will usually bring the searched opcode back
+# prone to false positives
+find_opcode_data = False
 
 
 def FindInstructions(instr, asm_where=None):
@@ -137,9 +146,13 @@ class SearchResult:
             or ida_segment.get_segm_name(ida_segment.getseg(ea))
         if n:
             self.funcname_or_segname = n
-        for opcode in opcodes:
-            if opcode in self.text:
-                print("\t- Found {} in {} at 0x{addr:08x}".format(self.text, self.funcname_or_segname, addr=self.ea))
+        if find_opcode_data is False:
+            for opcode in opcodes:
+                if opcode in self.text:
+                    print(
+                        "\t- Found {} in {} at 0x{addr:08x}".format(self.text, self.funcname_or_segname, addr=self.ea))
+        else:
+            print("\t- Found {} in {} at 0x{addr:08x}".format(self.text, self.funcname_or_segname, addr=self.ea))
 
 
 def find(s=None, x=False, asm_where=None):
