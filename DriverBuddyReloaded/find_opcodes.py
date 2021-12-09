@@ -18,7 +18,7 @@ ALL RIGHTS RESERVED.
 """
 import re
 import sys
-
+from DriverBuddyReloaded.vulnerable_functions_lists.opcode import *
 import ida_bytes
 import ida_funcs
 import ida_ida
@@ -137,7 +137,9 @@ class SearchResult:
             or ida_segment.get_segm_name(ida_segment.getseg(ea))
         if n:
             self.funcname_or_segname = n
-        print("\t- Found {} in {} at 0x{addr:08x}".format(self.text, self.funcname_or_segname, addr=self.ea))
+        for opcode in opcodes:
+            if opcode in self.text:
+                print("\t- Found {} in {} at 0x{addr:08x}".format(self.text, self.funcname_or_segname, addr=self.ea))
 
 
 def find(s=None, x=False, asm_where=None):
