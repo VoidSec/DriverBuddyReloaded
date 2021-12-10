@@ -53,7 +53,7 @@ def FindInstructions(instr, asm_where=None):
         seg = ida_segment.get_first_seg()
         asm_where = seg.start_ea if seg else ida_idaapi.BADADDR
         if asm_where == ida_idaapi.BADADDR:
-            return (False, "No segments defined")
+            return False, "No segments defined"
 
     # regular expression to distinguish between opcodes and instructions
     re_opcode = re.compile('^[0-9a-f]{2} *', re.I)
@@ -71,7 +71,7 @@ def FindInstructions(instr, asm_where=None):
             # assemble the instruction
             ret, buf = idautils.Assemble(asm_where, line)
             if not ret:
-                return (False, "Failed to assemble:" + line)
+                return False, "Failed to assemble: {}".format(line)
         # add the assembled buffer
         bufs.append(buf)
 
@@ -96,9 +96,9 @@ def FindInstructions(instr, asm_where=None):
         # ida_kernwin.msg(".")
         ea += tlen
     if not ret:
-        return (False, "Could not match {} - [{}]".format(instr, bin_str))
+        return False, "Could not match {} - [{}]".format(instr, bin_str)
     # ida_kernwin.msg("\n")
-    return (True, ret)
+    return True, ret
 
 
 # Chooser class
@@ -129,7 +129,7 @@ class SearchResultChoose(ida_kernwin.Choose):
 
 # class to represent the results
 class SearchResult:
-    def __init__(self, ea):
+    def __init__(self, ea, log_file):
         self.ea = ea
         self.funcname_or_segname = ""
         self.text = ""
@@ -151,13 +151,18 @@ class SearchResult:
                 if opcode in self.text:
                     print(
                         "\t- Found {} in {} at 0x{addr:08x}".format(self.text, self.funcname_or_segname, addr=self.ea))
+                    log_file.write("\t- Found {} in {} at 0x{addr:08x}\n".format(self.text, self.funcname_or_segname,
+                                                                                 addr=self.ea))
         else:
             print("\t- Found {} in {} at 0x{addr:08x}".format(self.text, self.funcname_or_segname, addr=self.ea))
+            log_file.write(
+                "\t- Found {} in {} at 0x{addr:08x}\n".format(self.text, self.funcname_or_segname, addr=self.ea))
 
 
-def find(s=None, x=False, asm_where=None):
+def find(log_file, s=None, x=False, asm_where=None):
     """
     Search for opcode/instruction
+    :param log_file: log file handler
     :param s: opcode/instruction
     :param x: if true search for executable code segments only
     :param asm_where: where to start searching
@@ -173,9 +178,9 @@ def find(s=None, x=False, asm_where=None):
                 seg = ida_segment.getseg(ea)
                 if (not seg) or (seg.perm & ida_segment.SEGPERM_EXEC) == 0:
                     continue
-                results.append(SearchResult(ea))
+                results.append(SearchResult(ea, log_file))
         else:
-            results = [SearchResult(ea) for ea in ret]
+            results = [SearchResult(ea, log_file) for ea in ret]
         """title = "Search result for: [%s]" % s
         ida_kernwin.close_chooser(title)
         c = SearchResultChoose(title, results)

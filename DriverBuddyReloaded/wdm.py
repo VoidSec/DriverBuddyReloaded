@@ -7,10 +7,11 @@ WDM driver specific function calls.
 """
 
 
-def check_for_fake_driver_entry(driver_entry_address):
+def check_for_fake_driver_entry(driver_entry_address, log_file):
     """
     Checks if DriverEntry in WDM driver is fake and try to recover the real one
     :param driver_entry_address: Autodetected address of `DriverEntry` function
+    :param log_file: log file handler
     :return: real_driver_entry address
     """
 
@@ -28,18 +29,22 @@ def check_for_fake_driver_entry(driver_entry_address):
         end_range = "0xffffffff"
     if hex(real_driver_entry_address) != end_range:
         print("[+] Found REAL `DriverEntry` address at 0x{addr:08x}".format(addr=real_driver_entry_address))
+        log_file.write("[+] Found REAL `DriverEntry` address at 0x{addr:08x}\n".format(addr=real_driver_entry_address))
         idc.set_name(real_driver_entry_address, "Real_Driver_Entry")
         return real_driver_entry_address
     else:
         print("[!] Cannot find real `DriverEntry`; using IDA's one at 0x{addr:08x}".format(addr=driver_entry_address))
+        log_file.write(
+            "[!] Cannot find real `DriverEntry`; using IDA's one at 0x{addr:08x}\n".format(addr=driver_entry_address))
         return driver_entry_address
 
 
-def locate_ddc(driver_entry_address):
+def locate_ddc(driver_entry_address, log_file):
     """
     Tries to automatically discover the `DispatchDeviceControl` in WDM drivers.
     Also looks for `DispatchInternalDeviceControl`. Has some experimental DDC searching
     :param driver_entry_address: Address of `DriverEntry` function found using check_for_fake_driver_entry.
+    :param log_file: log file handler
     :return: dictionary containing `DispatchDeviceControl` and `DispatchInternalDeviceControl` addresses, None otherwise
     """
 
@@ -55,11 +60,13 @@ def locate_ddc(driver_entry_address):
             real_ddc = idc.get_name_ea_simple(idc.print_operand(prev_instruction, 1))
             if real_ddc != 0xffffffffffffffff:
                 print("[+] Found `DispatchDeviceControl` at 0x{addr:08x}".format(addr=real_ddc))
+                log_file.write("[+] Found `DispatchDeviceControl` at 0x{addr:08x}\n".format(addr=real_ddc))
                 idc.set_name(real_ddc, "DispatchDeviceControl")
                 dispatch["ddc"] = real_ddc
         if didc_offset in idc.print_operand(i, 0)[4:] and idc.print_insn_mnem(prev_instruction) == "lea":
             real_didc = idc.get_name_ea_simple(idc.print_operand(prev_instruction, 1))
             print("[+] Found `DispatchInternalDeviceControl` at 0x{addr:08x}".format(addr=real_didc))
+            log_file.write("[+] Found `DispatchInternalDeviceControl` at 0x{addr:08x}\n".format(addr=real_didc))
             idc.set_name(real_didc, "DispatchInternalDeviceControl")
             dispatch["didc"] = real_didc
         prev_instruction = i
@@ -72,6 +79,7 @@ def locate_ddc(driver_entry_address):
     # indicating it could be the `DispatchDeviceControl`.
     # probably going to give you false-positives
     print("[!] Unable to locate `DispatchDeviceControl`; using some experimental searching")
+    log_file.write("[!] Unable to locate `DispatchDeviceControl`; using some experimental searching\n")
     ddc_list = []
     for f in idautils.Functions():
         # For each function, get list of all instructions
@@ -93,6 +101,7 @@ def locate_ddc(driver_entry_address):
             if reffunc is not None and reffunc.start_ea == driver_entry_address:
                 real_ddc[count] = ddc
                 print("[+] Possible `DispatchDeviceControl` at 0x{addr:08x}".format(addr=ddc))
+                log_file.write("[+] Possible `DispatchDeviceControl` at 0x{addr:08x}\n".format(addr=ddc))
                 idc.set_name(ddc, "Possible_DispatchDeviceControl_{}".format(count))
     if real_ddc != {}:
         return real_ddc
@@ -272,10 +281,11 @@ def find_dispatch_by_cfg():
     return out
 
 
-def find_dispatch_function():
+def find_dispatch_function(log_file):
     """
     Compares and processes results of `find_dispatch_by_struct_index` and `find_dispatch_by_cfg`
     to output potential dispatch function addresses
+    :param log_file: log file handler
     """
 
     index_funcs = find_dispatch_by_struct_index()
@@ -283,21 +293,30 @@ def find_dispatch_function():
     if len(index_funcs) == 0:
         cfg_finds_to_print = min(len(cfg_funcs), 3)
         print("[>] Based off basic CFG analysis, potential dispatch functions are:")
+        log_file.write("[>] Based off basic CFG analysis, potential dispatch functions are:\n")
         for i in range(cfg_finds_to_print):
             excluded_functions = ["__security_check_cookie", "start", "DriverEntry", "Real_Driver_Entry",
                                   "__GSHandlerCheck_SEH"]
             if cfg_funcs[i] not in excluded_functions:
                 if cfg_funcs[i] != "" and cfg_funcs[i] is not None:
                     print("\t- {}".format(cfg_funcs[i]))
+                    log_file.write("\t- {}\n".format(cfg_funcs[i]))
     elif len(index_funcs) == 1:
         func = index_funcs.pop()
         if func in cfg_funcs:
-            print("[>] The likely dispatch function is: " + func)
+            print("[>] The likely dispatch function is: {}".format(func))
+            log_file.write("[>] The likely dispatch function is: {}\n".format(func))
         else:
             print("[>] Based off of the offset it is loaded at, a potential dispatch function is: {}".format(func))
+            log_file.write(
+                "[>] Based off of the offset it is loaded at, a potential dispatch function is: {}\n".format(func))
             print("[>] Based off basic CFG analysis, the likely dispatch function is: {}".format(cfg_funcs[0]))
+            log_file.write(
+                "[>] Based off basic CFG analysis, the likely dispatch function is: {}\n".format(cfg_funcs[0]))
     else:
         print("[>] Potential dispatch functions:")
+        log_file.write("[>] Potential dispatch functions:\n")
         for i in index_funcs:
             if i in cfg_funcs:
                 print("\t- {}".format(i))
+                log_file.write("\t- {}\n".format(i))

@@ -12,6 +12,13 @@ from DriverBuddyReloaded import utils
 DriverBuddyReloaded.py: Entry point for IDA python plugin used in Windows driver vulnerability research.
 Updated in 2021 by Paolo Stagno aka VoidSec: https://voidsec.com - https://twitter.com/Void_Sec
 """
+# needed GLOBALs
+driver_name = idaapi.get_root_filename()
+path = "{}{}".format(os.getcwd(), os.sep)
+ioctl_file_name = "{}-{}-{}-IOCTLs.txt".format(driver_name, utils.today(), utils.timestamp())
+analysis_file_name = "{}-{}-{}-DriverBuddyReloaded_autoanalysis.txt".format(driver_name, utils.today(),
+                                                                            utils.timestamp())
+pool_file_name = "{}-{}-{}-pooltags.txt".format(driver_name, utils.today(), utils.timestamp())
 
 
 class UiAction(idaapi.action_handler_t):
@@ -147,8 +154,6 @@ class IOCTLTracker:
         :param ioctls: IOCTL to decode
         :return:
         """
-        driver_name = idaapi.get_root_filename()
-        ioctl_file_name = "{}-{}-IOCTLs.txt".format(driver_name, utils.today())
         try:
             with open(ioctl_file_name, "w") as IOCTL_file:
                 print("\nDriver Buddy Reloaded - IOCTLs\n"
@@ -169,9 +174,10 @@ class IOCTLTracker:
                         access_code)
                     print("0x%-8X | 0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)" % all_vars)
                     IOCTL_file.write("0x%-8X | 0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)\n" % all_vars)
-            print("\n[>] Saved decoded IOCTLs to \"{}{}{}\"".format(os.getcwd(), os.sep, ioctl_file_name))
+            print("\n[>] Saved decoded IOCTLs to \"{}{}\"".format(path, ioctl_file_name))
         except IOError as e:
-            print("ERROR #{}: Can't write to {}; {}".format(e.errno, ioctl_file_name, e.strerror))
+            print("ERROR #{}: {}\nCan't save decoded IOCTLs to \"{}{}\"".format(e.errno, e.strerror, path,
+                                                                                ioctl_file_name))
             print("\nDriver Buddy Reloaded - IOCTLs\n"
                   "-----------------------------------------------")
             print("%-10s | %-10s | %-42s | %-10s | %-22s | %s" % (
@@ -195,7 +201,7 @@ def find_all_ioctls():
     """
 
     ioctls = []
-    # Find the currently selected function and get a list of all of it's basic blocks
+    # Find the currently selected function and get a list of all of its basic blocks
     addr = idc.get_screen_ea()
     f = idaapi.get_func(addr)
     fc = idaapi.FlowChart(f, flags=idaapi.FC_PREDS)
@@ -422,33 +428,64 @@ class DriverBuddyPlugin(idaapi.plugin_t):
         :param args:
         :return:
         """
-        print("\nDriver Buddy Reloaded Auto-analysis\n"
-              "-----------------------------------------------")
-        idc.auto_wait()  # Wait for IDA analysis to complete
-        file_type = idaapi.get_file_type_name()
-        if "portable executable" not in file_type.lower():
-            print("[!] ERR: Loaded file is not a valid PE")
-        else:
-            driver_entry_addr = utils.is_driver()
-            if driver_entry_addr is False:
-                print("[!] ERR: Loaded file is not a Driver")
-            else:
-                print("[+] `DriverEntry` found at: 0x{addr:08x}".format(addr=driver_entry_addr))
-                print("[>] Searching for `DeviceNames`...")
-                device_name_finder.search()
-                print("[>] Searching for `Pooltags`... ")
-                pool = dump_pool_tags.get_all_pooltags()
-                if pool:
-                    print(pool)
-                if utils.populate_data_structures() is True:
-                    driver_type = utils.get_driver_id(driver_entry_addr)
-                    print(("[+] Driver type detected: {}".format(driver_type)))
-                    if ioctl_decoder.find_ioctls_dumb() is False:
-                        print("[!] Unable to automatically find any IOCTLs")
+        try:
+            with open(analysis_file_name, "w") as log_file:
+                print("\nDriver Buddy Reloaded Auto-analysis\n"
+                      "-----------------------------------------------")
+                log_file.write("\nDriver Buddy Reloaded Auto-analysis\n"
+                               "-----------------------------------------------\n")
+                idc.auto_wait()  # Wait for IDA analysis to complete
+                file_type = idaapi.get_file_type_name()
+                if "portable executable" not in file_type.lower():
+                    print("[!] ERR: Loaded file is not a valid PE")
+                    log_file.write("[!] ERR: Loaded file is not a valid PE\n")
                 else:
-                    print("[!] ERR: Unable to enumerate functions")
-        print("[+] Analysis Completed!\n"
-              "-----------------------------------------------")
+                    driver_entry_addr = utils.is_driver()
+                    if driver_entry_addr is False:
+                        print("[!] ERR: Loaded file is not a Driver")
+                        log_file.write("[!] ERR: Loaded file is not a Driver\n")
+                    else:
+                        print("[+] `DriverEntry` found at: 0x{addr:08x}".format(addr=driver_entry_addr))
+                        log_file.write("[+] `DriverEntry` found at: 0x{addr:08x}\n".format(addr=driver_entry_addr))
+                        print("[>] Searching for `DeviceNames`...")
+                        log_file.write("[>] Searching for `DeviceNames`...\n")
+                        device_name_finder.search(log_file)
+                        print("[>] Searching for `Pooltags`...")
+                        log_file.write("[>] Searching for `Pooltags`...\n")
+                        pool = dump_pool_tags.get_all_pooltags()
+                        if pool:
+                            print(pool)
+                            try:
+                                with open(pool_file_name, "w") as pool_file:
+                                    pool_file.write(pool)
+                            except IOError as e:
+                                print(
+                                    "ERROR #{}: {}\nCan't write pool file to \"{}{}\"".format(e.errno, e.strerror, path,
+                                                                                              pool_file_name))
+                        if utils.populate_data_structures(log_file) is True:
+                            driver_type = utils.get_driver_id(driver_entry_addr, log_file)
+                            print("[+] Driver type detected: {}".format(driver_type))
+                            log_file.write("[+] Driver type detected: {}\n".format(driver_type))
+                            if ioctl_decoder.find_ioctls_dumb(log_file, ioctl_file_name) is False:
+                                print("[!] Unable to automatically find any IOCTLs")
+                                log_file.write("[!] Unable to automatically find any IOCTLs\n")
+                            else:
+                                print("\n[>] Saved decoded IOCTLs log file to \"{}{}_dumb.txt\"".format(path,
+                                                                                                        ioctl_file_name))
+                        else:
+                            print("[!] ERR: Unable to enumerate functions")
+                            log_file.write("[!] ERR: Unable to enumerate functions\n")
+                print("[+] Analysis Completed!\n"
+                      "-----------------------------------------------")
+                log_file.write("[+] Analysis Completed!\n"
+                               "-----------------------------------------------")
+            print("\n[>] Saved Autoanalysis log file to \"{}{}\"".format(path, analysis_file_name))
+            if pool:
+                print("[>] Saved Pooltags file to \"{}{}\"".format(path, pool_file_name))
+        except IOError as e:
+            print("ERROR #{}: {}\nAutoanalysis aborted, can't write log file to \"{}{}\"".format(e.errno, e.strerror,
+                                                                                                 path,
+                                                                                                 analysis_file_name))
         return
 
     def term(self):

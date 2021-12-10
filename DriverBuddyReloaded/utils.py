@@ -116,9 +116,10 @@ def populate_driver_map():
     return result
 
 
-def populate_data_structures():
+def populate_data_structures(log_file):
     """
     Enumerate through the list of functions and load vulnerable functions found into a map.
+    :param log_file: log file handler
     :return boolean: False if unable to enumerate functions, True otherwise
     """
 
@@ -126,42 +127,49 @@ def populate_data_structures():
     result = populate_function_map()
     # search for problematic opcodes; x=True search in executable segments only
     print("[>] Searching for interesting opcodes...")
+    log_file.write("[>] Searching for interesting opcodes...\n")
     for opcode in opcodes:
-        find(opcode, x=True)
+        # x=True; search opcodes in executable code segments only
+        find(log_file, opcode, x=True)
     if result is True:
         print("[>] Searching for interesting C/C++ functions...")
+        log_file.write("[>] Searching for interesting C/C++ functions...\n")
         result = populate_c_map()
         if result is True:
             # Interesting C/C++ functions detected
-            get_xrefs(c_map)
+            get_xrefs(c_map, log_file)
         # else:
         #    print("[-] No interesting C/C++ functions found")
         print("[>] Searching for interesting Windows APIs...")
+        log_file.write("[>] Searching for interesting Windows APIs...\n")
         result = populate_winapi_map()
         if result is True:
             # Interesting Windows API functions detected
-            get_xrefs(winapi_map)
+            get_xrefs(winapi_map, log_file)
         # else:
         #    print("[-] No interesting Windows API functions found")
         # do not search for custom driver's functions if the list is empty
         if len(driver_functions) > 0:
             print("[>] Searching for interesting driver functions...")
+            log_file.write("[>] Searching for interesting driver functions...\n")
             result = populate_driver_map()
             if result is True:
                 # Interesting driver functions detected
-                get_xrefs(driver_map)
+                get_xrefs(driver_map, log_file)
             # else:
             #    print("[-] No interesting specific driver functions found")
         return True
     else:
         print("[!] ERR: Couldn't populate function_map")
+        log_file.write("[!] ERR: Couldn't populate function_map\n")
         return False
 
 
-def get_xrefs(func_map):
+def get_xrefs(func_map, log_file):
     """
     Gets cross references to vulnerable functions stored in map.
     :param func_map: function map you want xrefs for
+    :param log_file: log file handler
     :return:
     """
 
@@ -170,12 +178,14 @@ def get_xrefs(func_map):
         for ref in code_refs:
             # xref = "0x%08x" % ref
             print("\t- Found {} at 0x{addr:08x}".format(name, addr=ref))
+            log_file.write("\t- Found {} at 0x{addr:08x}\n".format(name, addr=ref))
 
 
-def get_driver_id(driver_entry_addr):
+def get_driver_id(driver_entry_addr, log_file):
     """
     Attempts to determine the type of the loaded driver by using functions found inside the imports section.
     :param driver_entry_addr: `DriverEntry` address
+    :param log_file: log file handler
     :return string: return the detected driver type
     """
 
@@ -203,14 +213,15 @@ def get_driver_id(driver_entry_addr):
             continue
     if driver_type == "":
         print("[!] Unable to determine driver type; assuming WDM")
+        log_file.write("[!] Unable to determine driver type; assuming WDM\n")
         # Only WDM drivers make it here so run all the WDM stuff
         driver_type = "WDM"
-        real_driver_entry = check_for_fake_driver_entry(driver_entry_addr)
-        real_ddc_addr = locate_ddc(real_driver_entry)
+        real_driver_entry = check_for_fake_driver_entry(driver_entry_addr, log_file)
+        real_ddc_addr = locate_ddc(real_driver_entry, log_file)
         if real_ddc_addr is not None:
             for ddc in real_ddc_addr.values():
                 define_ddc(ddc)
-        find_dispatch_function()
+        find_dispatch_function(log_file)
     return driver_type
 
 

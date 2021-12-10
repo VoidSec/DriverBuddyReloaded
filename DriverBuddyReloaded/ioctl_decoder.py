@@ -163,15 +163,19 @@ def get_define(ioctl_code):
     return "#define %s CTL_CODE(0x%X, 0x%X, %s, %s)" % (name, device_code, function, method_name, access_name)
 
 
-def find_ioctls_dumb():
+def find_ioctls_dumb(log_file, ioctl_file_name):
     """
     Attempts to locate any IOCTLs in driver automatically.
     :return boolean: True if any IOCTLs found, False otherwise
+    :param log_file: log file handler
+    :param ioctl_file_name: IOCTL log file name
     """
+    ioctl_file_name = ioctl_file_name + "_dumb.txt"
     result = False
     cur = idc.ida_ida.inf_get_min_ea()
     max = idc.ida_ida.inf_get_max_ea()
     print("[>] Searching for IOCTLs found by IDA...")
+    log_file.write("[>] Searching for IOCTLs found by IDA...\n")
     while cur < max:
         # idc.find_text(ea, flag, y, x, searchstr, from_bc695=False)
         # cur = find_text(cur, SEARCH_DOWN, 0, 0, "IoControlCode")
@@ -182,11 +186,41 @@ def find_ioctls_dumb():
         else:
             if idc.get_operand_type(cur, 0) == 5:
                 idc.op_dec(cur, 0)
-                get_ioctl_code(int(idc.print_operand(cur, 0)))
+                ioctl_code = int(idc.print_operand(cur, 0))
+                function = get_function(ioctl_code)
+                device_name, device_code = get_ioctl_code(ioctl_code)
+                method_name, method_code = get_method(ioctl_code)
+                access_name, access_code = get_access(ioctl_code)
+                all_vars = (
+                    ioctl_code, device_name, device_code, function, method_name, method_code, access_name,
+                    access_code)
+                try:
+                    with open(ioctl_file_name, "w") as IOCTL_file:
+                        IOCTL_file.write("0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)\n" % all_vars)
+                except IOError as e:
+                    print("ERROR #{}: {}\nCan't save decoded IOCTLs to \"{}\"".format(e.errno, e.strerror,
+                                                                                      ioctl_file_name))
+                print("0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)" % all_vars)
+                log_file.write("0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)\n" % all_vars)
                 result = True
             elif idc.get_operand_type(cur, 1) == 5:
                 idc.op_dec(cur, 1)
-                get_ioctl_code(int(idc.print_operand(cur, 1)))
+                ioctl_code = int(idc.print_operand(cur, 1))
+                function = get_function(ioctl_code)
+                device_name, device_code = get_ioctl_code(ioctl_code)
+                method_name, method_code = get_method(ioctl_code)
+                access_name, access_code = get_access(ioctl_code)
+                all_vars = (
+                    ioctl_code, device_name, device_code, function, method_name, method_code, access_name,
+                    access_code)
+                try:
+                    with open(ioctl_file_name, "w") as IOCTL_file:
+                        IOCTL_file.write("0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)\n" % all_vars)
+                except IOError as e:
+                    print("ERROR #{}: {}\nCan't save decoded IOCTLs to \"{}\"".format(e.errno, e.strerror,
+                                                                                      ioctl_file_name))
+                print("0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)" % all_vars)
+                log_file.write("0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)\n" % all_vars)
                 result = True
             # else:
             # print("[!] Cannot get IOCTL from {} at {} ".format(idc.GetDisasm(cur), hex(cur)))

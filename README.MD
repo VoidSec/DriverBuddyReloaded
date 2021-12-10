@@ -27,6 +27,8 @@ To use the auto-analysis feature:
 1. Start IDA and load a Windows kernel driver.
 2. Go to `Edit -> Plugins -> Driver Buddy Reloaded` or press `CTRL+ALT+A` to start the auto-analysis.
 3. Check the "Output" window for the analysis results.
+4. A `DriverName.sys-2021-12-10-TIME_STAMP-DriverBuddyReloaded_autoanalysis.txt` file, containing the analysis results,
+   will be written under IDA's DB directory.
 
 To decode an IOCTL:
 
@@ -39,8 +41,8 @@ To decode ALL IOCTLs within a function:
    `DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`)
 2. Right-click and select `Driver Buddy Reloaded -> Decode ALL IOCTLs in Function`; alternatively press the `CTRL+ALT+F`
    shortcut.
-3. A `DriverName.sys-2021-12-10-IOCTLs.txt` recap file, containing all the decoded IOCTLs up to that moment, will be
-   written under IDA's DB directory.
+3. A `DriverName.sys-2021-12-10-TIME_STAMP-IOCTLs.txt`/`DriverName.sys-2021-12-10-TIME_STAMP-IOCTLs.txt_dumb.txt` file,
+   containing all the decoded IOCTLs up to that moment, will be written under IDA's DB directory.
 
 ### Advanced Usage
 
@@ -121,8 +123,8 @@ If you right-click, alternatively using the
 Reloaded menu, a “**Decode All**” option appears, this attempt to decode all the IOCTL codes it can find in the
 function. This is a bit hacky but most of the time it can speed things up.
 
-- A `DriverName.sys-2021-12-10-IOCTLs.txt` recap file, containing all the decoded IOCTLs up to that moment, will be
-  written under IDA's DB directory.
+- A `DriverName.sys-2021-12-10-TIME_STAMP-IOCTLs.txt`/`DriverName.sys-2021-12-10-TIME_STAMP-IOCTLs.txt_dumb.txt` file,
+  containing all the decoded IOCTLs up to that moment, will be written under IDA's DB directory.
 
 ![](/screenshots/IOCTL-table.png)
 ![](/screenshots/decode-IOCTL.png)
@@ -148,6 +150,9 @@ Madiant’s [FLOSS](https://github.com/mandiant/flare-floss/) in an attempt to f
 
 During the auto-analysis, the tool also dumps the `Pooltags` used by the binary in a format that works
 with `pooltags.txt`. The output can then be copy-pasted at the end of the file and later picked up by WinDbg.
+
+- A `DriverName.sys-2021-12-10-TIME_STAMP-pooltags.txt` file, containing all the dumped Pooltags, will be written under
+  IDA's DB directory.
 
 ![](/screenshots/pooltag.png)
 

@@ -7,7 +7,7 @@ import re
 
 import ida_nalt
 
-ASCII_BYTE = b" !\"#\$%&\'\(\)\*\+,-\./0123456789:;<=>\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\]\^_`abcdefghijklmnopqrstuvwxyz\{\|\}\\\~\t"
+ASCII_BYTE = b" !\"#\\$%&\'\\(\\)\\*\\+,-\\./0123456789:;<=>\\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\\[\\]\\^_`abcdefghijklmnopqrstuvwxyz\\{\\|\\}\\\\~\t"
 UNICODE_RE_4 = re.compile(b"((?:[%s]\x00){%d,})" % (ASCII_BYTE, 4))
 REPEATS = ["A", "\x00", "\xfe", "\xff"]
 SLICE_SIZE = 4096
@@ -73,9 +73,10 @@ def get_unicode_device_names():
     return possible_names
 
 
-def find_unicode_device_name():
+def find_unicode_device_name(log_file):
     """
     Attempts to find and output potential DeviceNames - returning False if none are found so further analysis can be done
+    :param log_file: log file handler
     """
 
     possible_names = get_unicode_device_names()
@@ -84,39 +85,51 @@ def find_unicode_device_name():
             if len(possible_names) == 1:
                 print(
                     "[!] The Device prefix was found but no full Device Paths; the DeviceName is likely obfuscated or created on the stack.")
+                log_file.write(
+                    "[!] The Device prefix was found but no full Device Paths; the DeviceName is likely obfuscated or created on the stack.\n")
                 return False
             elif '\\Device\\' in possible_names and '\\DosDevices\\' in possible_names:
                 print(
                     "[!] The Device prefix was found but no full Device Paths; the DeviceName is likely obfuscated or created on the stack.")
+                log_file.write(
+                    "[!] The Device prefix was found but no full Device Paths; the DeviceName is likely obfuscated or created on the stack.\n")
                 return False
             else:
                 # print("Potential DeviceName: ")
                 for i in possible_names:
                     if i != '\\Device\\' and i != '\\DosDevices\\':
                         print("\t- {}".format(i))
+                        log_file.write("\t- {}\n".format(i))
             return True
         else:
             # print("Potential DeviceNames: ")
             for i in possible_names:
                 print("\t- {}".format(i))
+                log_file.write("\t- {}\n".format(i))
             return True
     elif len(possible_names) > 2:
         # print("Possible devices names found:")
         for i in possible_names:
             print("\t- {}".format(i))
+            log_file.write("\t- {}\n".format(i))
         return True
     else:
         print("[!] No potential DeviceNames found; it may be obfuscated or created on the stack in some way.")
+        log_file.write(
+            "[!] No potential DeviceNames found; it may be obfuscated or created on the stack in some way.\n")
         return False
 
 
-def search():
+def search(log_file):
     """
     Attempts to find potential DeviceNames in the currently opened binary.
     It starts by searching for Unicode DeviceNames, if this fails then it suggests the analyst to use FLOSS
     in order to search for stack based and obfuscated strings.
+    :param log_file: log file handler
     """
 
-    if not find_unicode_device_name():
+    if not find_unicode_device_name(log_file):
         print(
             "[!] Unicode DeviceName not found; try using FLOSS in order to recover obfuscated and stack based strings.")
+        log_file.write(
+            "[!] Unicode DeviceName not found; try using FLOSS in order to recover obfuscated and stack based strings.\n")
