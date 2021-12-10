@@ -1,4 +1,6 @@
 import math
+import time
+from datetime import date
 
 import ida_nalt
 import idautils
@@ -17,6 +19,22 @@ imports_map = {}
 c_map = {}
 winapi_map = {}
 driver_map = {}
+
+
+def timestamp():
+    """
+    Return timestamp
+    :return: 1552562387
+    """
+    return str(int(time.time()))
+
+
+def today():
+    """
+    Return today date (Y-M-d)
+    :return: 2019-03-12
+    """
+    return str(date.today())
 
 
 def cb(address, name, ord):

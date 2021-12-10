@@ -1,10 +1,12 @@
+import os
+
 import idaapi
 import idc
+from DriverBuddyReloaded import NTSTATUS
 from DriverBuddyReloaded import device_name_finder
 from DriverBuddyReloaded import dump_pool_tags
 from DriverBuddyReloaded import ioctl_decoder
 from DriverBuddyReloaded import utils
-from DriverBuddyReloaded import NTSTATUS
 
 """
 DriverBuddyReloaded.py: Entry point for IDA python plugin used in Windows driver vulnerability research.
@@ -141,24 +143,48 @@ class IOCTLTracker:
 
     def print_table(self, ioctls):
         """
-        Print table of decoded IOCTL codes
+        Print table of decoded IOCTL codes and write the result to a file
         :param ioctls: IOCTL to decode
         :return:
         """
-
-        print("\nDriver Buddy Reloaded - IOCTLs\n"
-              "-----------------------------------------------")
-        print("%-10s | %-10s | %-42s | %-10s | %-22s | %s" % (
-            "Address", "IOCTL Code", "Device", "Function", "Method", "Access"))
-        for (addr, ioctl_code) in ioctls:
-            function = ioctl_decoder.get_function(ioctl_code)
-            device_name, device_code = ioctl_decoder.get_ioctl_code(ioctl_code)
-            method_name, method_code = ioctl_decoder.get_method(ioctl_code)
-            access_name, access_code = ioctl_decoder.get_access(ioctl_code)
-            all_vars = (
-                addr, ioctl_code, device_name, device_code, function, method_name, method_code, access_name,
-                access_code)
-            print("0x%-8X | 0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)" % all_vars)
+        driver_name = idaapi.get_root_filename()
+        ioctl_file_name = "{}-{}-IOCTLs.txt".format(driver_name, utils.today())
+        try:
+            with open(ioctl_file_name, "w") as IOCTL_file:
+                print("\nDriver Buddy Reloaded - IOCTLs\n"
+                      "-----------------------------------------------")
+                IOCTL_file.write("Driver Buddy Reloaded - IOCTLs\n"
+                                 "-----------------------------------------------\n")
+                print("%-10s | %-10s | %-42s | %-10s | %-22s | %s" % (
+                    "Address", "IOCTL Code", "Device", "Function", "Method", "Access"))
+                IOCTL_file.write("%-10s | %-10s | %-42s | %-10s | %-22s | %s\n" % (
+                    "Address", "IOCTL Code", "Device", "Function", "Method", "Access"))
+                for (addr, ioctl_code) in ioctls:
+                    function = ioctl_decoder.get_function(ioctl_code)
+                    device_name, device_code = ioctl_decoder.get_ioctl_code(ioctl_code)
+                    method_name, method_code = ioctl_decoder.get_method(ioctl_code)
+                    access_name, access_code = ioctl_decoder.get_access(ioctl_code)
+                    all_vars = (
+                        addr, ioctl_code, device_name, device_code, function, method_name, method_code, access_name,
+                        access_code)
+                    print("0x%-8X | 0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)" % all_vars)
+                    IOCTL_file.write("0x%-8X | 0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)\n" % all_vars)
+            print("\n[>] Saved decoded IOCTLs to \"{}{}{}\"".format(os.getcwd(), os.sep, ioctl_file_name))
+        except IOError as e:
+            print("ERROR #{}: Can't write to {}; {}".format(e.errno, ioctl_file_name, e.strerror))
+            print("\nDriver Buddy Reloaded - IOCTLs\n"
+                  "-----------------------------------------------")
+            print("%-10s | %-10s | %-42s | %-10s | %-22s | %s" % (
+                "Address", "IOCTL Code", "Device", "Function", "Method", "Access"))
+            for (addr, ioctl_code) in ioctls:
+                function = ioctl_decoder.get_function(ioctl_code)
+                device_name, device_code = ioctl_decoder.get_ioctl_code(ioctl_code)
+                method_name, method_code = ioctl_decoder.get_method(ioctl_code)
+                access_name, access_code = ioctl_decoder.get_access(ioctl_code)
+                all_vars = (
+                    addr, ioctl_code, device_name, device_code, function, method_name, method_code, access_name,
+                    access_code)
+                print("0x%-8X | 0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)" % all_vars)
 
 
 def find_all_ioctls():

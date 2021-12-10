@@ -39,6 +39,8 @@ To decode ALL IOCTLs within a function:
    `DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`)
 2. Right-click and select `Driver Buddy Reloaded -> Decode ALL IOCTLs in Function`; alternatively press the `CTRL+ALT+F`
    shortcut.
+3. A `DriverName.sys-2021-12-10-IOCTLs.txt` recap file, containing all the decoded IOCTLs up to that moment, will be
+   written under IDA's DB directory.
 
 ### Advanced Usage
 
@@ -118,6 +120,9 @@ If you right-click, alternatively using the
 `DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`) under the Driver Buddy
 Reloaded menu, a “**Decode All**” option appears, this attempt to decode all the IOCTL codes it can find in the
 function. This is a bit hacky but most of the time it can speed things up.
+
+- A `DriverName.sys-2021-12-10-IOCTLs.txt` recap file, containing all the decoded IOCTLs up to that moment, will be
+  written under IDA's DB directory.
 
 ![](/screenshots/IOCTL-table.png)
 ![](/screenshots/decode-IOCTL.png)
