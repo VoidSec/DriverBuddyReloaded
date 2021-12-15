@@ -186,3 +186,4 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
   name and pool tags, specifically Alexander Pick [fork](https://github.com/alexander-pick/win_driver_plugin).
 - The original code for adding items to the right-click menu (and possibly some other random snippets) came
   from '[herrcore](https://gist.github.com/herrcore/b3143dde185cecda7c1dee7ffbce5d2c)'.
+- Prodly developed using **PyCharm** for [Open Source development](https://www.jetbrains.com/community/opensource/#support) by JetBrains
