@@ -232,10 +232,24 @@ c_functions = [
     # File Handling
     # verify that user cannot modify filename for malicious purposes
     # and that file is not 'opened' more than once simultaneously
+    "fopen",
     "_wfopen",
+    "fopen_s",
+    "_wfopen_s",
+    "freopen",
+    "_wfreopen",
+    "freopen_s",
+    "_wfreopen_s",
+    "_fsopen",
+    "_wfsopen",
+    "open",
     "_open",
     "_wopen",
-    "fopen",
+    "sopen",
+    "_sopen",
+    "_wsopen",
+    "_sopen_s",
+    "_wsopen_s",
     ######################################################
     # Considered Harmful
     "rewind",
@@ -245,6 +259,8 @@ c_functions = [
     "_strlwr",  # Function is deprecated. Use the safer version, _strlwr_s
     "_strupr",  # Function is deprecated. Use the safer version, _strupr_s
     "assert",
+    "_assert",
+    "_wassert",
     # The 'assert' macro usually only exists for code in the debug build.
     # In general, no check will take place in production code.
     # Verify that this check does not perform any critical function and is not being used in place of error handling
