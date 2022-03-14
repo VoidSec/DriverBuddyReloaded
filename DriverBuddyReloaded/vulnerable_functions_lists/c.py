@@ -164,9 +164,11 @@ c_functions = [
     # Memory Copy Functions
     # can facilitate buffer overflow conditions and other memory mis-management situations
     "CopyMemory",
-    "memcpy",
     "RtlCopyMemory",
+    "memcpy",
     "wmemcpy",
+    "memccpy",
+    "_memccpy",
     ######################################################
     # Stack Dynamic Memory Allocation Functions
     # can facilitate buffer overflow conditions and other memory mis-management situations
@@ -177,7 +179,19 @@ c_functions = [
     # Unrestricted Memory Manipulation
     # can facilitate buffer overflow conditions and other memory mis-management situations
     "memmove",
+    "wmemmove",
     "realloc",
+    "_realloc_dbg",
+    "_recalloc",
+    "_recalloc_dbg",
+    "_aligned_offset_realloc",
+    "_aligned_offset_realloc_dbg",
+    "_aligned_offset_recalloc",
+    "_aligned_offset_recalloc_dbg",
+    "_aligned_realloc",
+    "_aligned_realloc_dbg",
+    "_aligned_recalloc",
+    "_aligned_recalloc_dbg",
     # can expose residual memory contents or render existing buffers impossible to securely erase.
     # do not use realloc on memory intended to be secure as the old structure will not be zeroed out
     ######################################################
