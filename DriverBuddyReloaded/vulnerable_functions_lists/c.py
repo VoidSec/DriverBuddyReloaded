@@ -217,12 +217,23 @@ c_functions = [
     "catgets",
     # These functions may use the NLSPATH environment variable.
     # Environment variables may be within the control of the end user and should be handled with caution.
-    "getenv",  # Environment variables may be within the control of the end user and should be handled with caution.
+    "getenv",
+    "_wgetenv",
+    "getenv_s",
+    "_wgetenv_s",
+    "_dupenv_s",
+    "_wdupenv_s",
+    "_dupenv_s_dbg",
+    "_wdupenv_s_dbg",
+    "_searchenv",
+    "_wsearchenv",
+    "_searchenv_s",
+    "_wsearchenv_s",
     "gethostbyname",
-    # Environment variables may be within the control of the end user and should be handled with caution.
-    "setbuf",
     # Allows data to be read from a file/stream. Use with caution and do not allow user defined streams where possible.
     # Conduct a manual check to ensure data is handled in a safe manner
-    "umask",  # Manually check this function to ensure that safe privilege levels are being applied
+    "setbuf",
+    # Manually check this function to ensure that safe privilege levels are being applied
+    "umask",
     ######################################################
 ]
