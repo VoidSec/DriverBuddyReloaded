@@ -17,6 +17,9 @@ c_functions = [
     "lstrcpy",
     "lstrcpyA",
     "lstrcpyW",
+    "_fstrcpy",
+    "_ftccpy",
+    "ualstrcpyW",
     # While 'safer', "n" functions include non-null termination of overflowed buffers; no error returns on overflow
     "StrCpyN",
     "StrCpyNA",
@@ -37,6 +40,7 @@ c_functions = [
     "_mbsnbcpy",
     "_mbsnbcpy_l",
     "_tcsncpy",
+    "_fstrncpy",
     ######################################################
     # String Concatenation Functions
     "lstrcat",
@@ -58,6 +62,8 @@ c_functions = [
     "_tccat",
     "_tcscat",
     "_ftcscat",
+    "_fstrcat",
+    "_ftccat",
     # While 'safer', "n" functions include non-null termination of overflowed buffers; no error returns on overflow
     "lstrcatnA",
     "lstrcatn",
@@ -78,6 +84,7 @@ c_functions = [
     "_mbsnbcat",
     "_mbsnbcat_l",
     "_tcsncat",
+    "_fstrncat",
     ######################################################
     # String Tokenizing Functions
     "strtok",  # not always thread-safe
@@ -139,6 +146,10 @@ c_functions = [
     "vswscanf",
     "vfscanf",
     "vfwscanf",
+    "_snscanf",
+    "_snscanf_l",
+    "_snwscanf",
+    "_snwscanf_l",
     ######################################################
     # Gets Functions
     # reads characters from STDIN and writes to buffer until EOL, can facilitate buffer overflows
