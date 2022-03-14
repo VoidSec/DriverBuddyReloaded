@@ -252,12 +252,27 @@ c_functions = [
     "_wsopen_s",
     ######################################################
     # Considered Harmful
-    "rewind",
     # The 'rewind' function is considered unsafe and obsolete.
     # Rewind() makes it impossible to determine if the file position indicator was set back to the beginning of the file,
     # potentially resulting in improper control flow. fseek() is considered a safer alternative
-    "_strlwr",  # Function is deprecated. Use the safer version, _strlwr_s
-    "_strupr",  # Function is deprecated. Use the safer version, _strupr_s
+    "rewind",
+    # These *lwr* and *upr* functions are considered deprecated/unsafe, and their safer *_s versions should be used instead (e.g. _strlwr_s)
+    "strlwr",
+    "wcslwr",
+    "_strlwr",
+    "_strlwr_l",
+    "_wcslwr",
+    "_wcslwr_l",
+    "_mbslwr",
+    "_mbslwr_l",
+    "strupr",
+    "wcsupr",
+    "_strupr",
+    "_strupr_l",
+    "_wcsupr",
+    "_wcsupr_l",
+    "_mbsupr",
+    "_mbsupr_l",
     "assert",
     "_assert",
     "_wassert",
