@@ -126,6 +126,10 @@ c_functions = [
     "_getts",
     "_gettws",
     "gets",
+    "_getws",
+    "cgets",
+    "_cgets",
+    "_cgetws",
     ######################################################
     # String Length functions
     # can become victims of integer overflow or 'wraparound' errors
