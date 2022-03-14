@@ -253,7 +253,9 @@ c_functions = [
     # Allows data to be read from a file/stream. Use with caution and do not allow user defined streams where possible.
     # Conduct a manual check to ensure data is handled in a safe manner
     "setbuf",
-    # Manually check this function to ensure that safe privilege levels are being applied
+    # Manually check these functions to ensure that safe privilege levels are being applied
     "umask",
+    "_umask",
+    "_umask_s",
     ######################################################
 ]
