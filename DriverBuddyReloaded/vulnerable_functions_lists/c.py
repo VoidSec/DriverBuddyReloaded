@@ -114,15 +114,31 @@ c_functions = [
     # Scanf Functions
     # directs user defined input to a buffer, can facilitate buffer overflows
     "scanf",
+    "cscanf",
+    "_cscanf",
+    "_cscanf_l",
+    "_cwscanf",
+    "_cwscanf_l",
     "_sntscanf",
     "_stscanf",
     "_tscanf",
     "fscanf",
+    "_fscanf_l",
+    "fwscanf",
+    "_fwscanf_l",
     "snscanf",
     "snwscanf",
     "sscanf",
+    "_sscanf_l",
     "swscanf",
+    "_swscanf_l",
     "wscanf",
+    "vscanf",
+    "vwscanf",
+    "vsscanf",
+    "vswscanf",
+    "vfscanf",
+    "vfwscanf",
     ######################################################
     # Gets Functions
     # reads characters from STDIN and writes to buffer until EOL, can facilitate buffer overflows
