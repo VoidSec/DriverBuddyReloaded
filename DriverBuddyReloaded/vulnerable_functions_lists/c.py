@@ -131,7 +131,9 @@ c_functions = [
     # can become victims of integer overflow or 'wraparound' errors
     "strlen",
     "_mbslen",
+    "_mbslen_l",
     "_mbstrlen",
+    "_mbstrlen_l",
     "lstrlen",
     "StrLen",
     "wcslen",
