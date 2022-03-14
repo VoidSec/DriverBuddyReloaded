@@ -153,6 +153,7 @@ c_functions = [
     # can facilitate buffer overflow conditions and other memory mis-management situations
     "_alloca",
     "alloca",
+    "_malloca",
     ######################################################
     # Unrestricted Memory Manipulation
     # can facilitate buffer overflow conditions and other memory mis-management situations
