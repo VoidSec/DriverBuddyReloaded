@@ -81,8 +81,11 @@ c_functions = [
     ######################################################
     # String Tokenizing Functions
     "strtok",  # not always thread-safe
+    "_strtok_l",
     "wcstok",
+    "_wcstok_l",
     "_mbstok",
+    "_mbstok_l",
     "_tcstok",
     ######################################################
     # Makepath/Splitpath Functions
