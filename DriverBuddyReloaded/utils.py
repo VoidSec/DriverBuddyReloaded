@@ -95,10 +95,14 @@ def populate_winapi_map():
 
     result = False
     for name, address in functions_map.items():
-        for winapi in winapi_functions:
-            if name.lower().startswith(winapi.lower()):
-                winapi_map[name] = address
-                result = True
+        if name in winapi_functions:
+            winapi_map[name] = address
+            result = True
+        else:
+            for winapi in winapi_function_prefixes:
+                if name.lower().startswith(winapi.lower()):
+                    winapi_map[name] = address
+                    result = True
     return result
 
 
