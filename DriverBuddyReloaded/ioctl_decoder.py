@@ -195,7 +195,7 @@ def find_ioctls_dumb(log_file, ioctl_file_name):
                     ioctl_code, device_name, device_code, function, method_name, method_code, access_name,
                     access_code)
                 try:
-                    with open(ioctl_file_name, "w") as IOCTL_file:
+                    with open(ioctl_file_name, "a") as IOCTL_file:
                         IOCTL_file.write("0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)\n" % all_vars)
                 except IOError as e:
                     print("ERROR #{}: {}\nCan't save decoded IOCTLs to \"{}\"".format(e.errno, e.strerror,
@@ -214,7 +214,7 @@ def find_ioctls_dumb(log_file, ioctl_file_name):
                     ioctl_code, device_name, device_code, function, method_name, method_code, access_name,
                     access_code)
                 try:
-                    with open(ioctl_file_name, "w") as IOCTL_file:
+                    with open(ioctl_file_name, "a") as IOCTL_file:
                         IOCTL_file.write("0x%-8X | %-31s 0x%-8X | 0x%-8X | %-17s %-4d | %s (%d)\n" % all_vars)
                 except IOError as e:
                     print("ERROR #{}: {}\nCan't save decoded IOCTLs to \"{}\"".format(e.errno, e.strerror,
