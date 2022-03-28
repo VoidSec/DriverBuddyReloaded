@@ -10,9 +10,19 @@ def find_pool_tags():
     """
 
     funcs = [
-        'ExAllocatePoolWithTag',
-        'ExFreePoolWithTag',
-        'ExAllocatePoolWithTagPriority'
+        "ExAllocatePoolWithTag",
+        "ExFreePoolWithTag",
+        "ExAllocatePool2",
+        "ExFreePool2",
+        "ExAllocatePool3",
+        "ExAllocatePoolWithTagPriority",
+        "ExAllocatePoolWithQuotaTag",
+        "ExAllocatePoolZero",
+        "ExAllocatePoolQuotaZero",
+        "ExAllocatePoolQuotaUninitialized",
+        "ExAllocatePoolPriorityZero",
+        "ExAllocatePoolPriorityUninitialized",
+        "ExAllocatePoolUninitialized"
     ]
 
     tags = {}
