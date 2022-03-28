@@ -1,3 +1,4 @@
+import ida_bytes
 import idaapi
 import idc
 
@@ -730,12 +731,11 @@ def add_struct(version):
 
 def populate_wdf():
     """
-    TODO: understand what this function does, update the doc and refactor
+    Find and define WDF driver's structures
     :return:
     """
 
-    # globals auto switch based on driver's architecture
-    # Architecture dependent globals
+    # globals auto switch based on driver's architecture dependent globals
     is64 = idaapi.get_inf_structure().is_64bit()
     if is64 is True:
         get_ptr = idaapi.get_64bit
@@ -748,20 +748,18 @@ def populate_wdf():
     for ea in segment_starts:
         if ea != idc.BADADDR:
             # search `KmdfLibrary` unicode string in .rdata section
-            """
-            It appears the API doesn't allow you to specify unicode anymore.
-            Therefore it cannot match the flags exactly as before.
-            Not sure about the radix either
-            """
-            idx = idc.find_binary(ea, idc.SEARCH_DOWN, '"KmdfLibrary"', 0)
-            if idx != idc.BADADDR:
-                log("Found `KmdfLibrary` unicode string at " + hex(idx))
+            # idx = idc.find_binary(ea, idc.SEARCH_DOWN, '"KmdfLibrary"', 0)
+            # idx = ida_search.find_binary(ea, idaapi.BADADDR, '"KmdfLibrary"', 0, ida_search.SEARCH_DOWN)
+            idx = ida_bytes.bin_search(ea, idaapi.BADADDR, ida_bytes.parse_binpat_str("KmdfLibrary"),
+                                       ida_bytes.BIN_SEARCH_NOCASE)
+            if idx != idaapi.BADADDR:
+                log("Found `KmdfLibrary` string at " + hex(idx))
                 addr = idc.get_first_dref_to(idx)
                 # hacky logic fix , consider only the minor portion
                 version = int(str(idc.Dword(addr + ptr_size + 0x4)))
                 id = add_struct(version)
                 if id != -1:
-                    log('Success')
+                    # log('Success')
                     wdf_func = get_ptr(addr + ptr_size + 0x10)
                     size = idc.GetStrucSize(id)
                     log('doStruct (size=' + hex(size) + ') at ' + hex(wdf_func))
