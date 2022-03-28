@@ -22,7 +22,7 @@ def find_pool_tags():
         "ExAllocatePoolQuotaUninitialized",
         "ExAllocatePoolPriorityZero",
         "ExAllocatePoolPriorityUninitialized",
-        "ExAllocatePoolUninitialized"
+        "ExAllocatePoolUninitialized",
     ]
 
     tags = {}
