@@ -3,6 +3,8 @@ import time
 from datetime import date
 
 import ida_nalt
+import ida_funcs
+import ida_segment
 import idautils
 import idc
 from DriverBuddyReloaded.vulnerable_functions_lists.c import *
@@ -181,8 +183,10 @@ def get_xrefs(func_map, log_file):
         code_refs = idautils.CodeRefsTo(int(address), 0)
         for ref in code_refs:
             # xref = "0x%08x" % ref
-            print("\t- Found {} at 0x{addr:08x}".format(name, addr=ref))
-            log_file.write("\t- Found {} at 0x{addr:08x}\n".format(name, addr=ref))
+            n = ida_funcs.get_func_name(ref) \
+                or ida_segment.get_segm_name(ida_segment.getseg(ref))
+            print("\t- Found {} in {} at 0x{addr:08x}".format(name, n, addr=ref))
+            log_file.write("\t- Found {} in {} at 0x{addr:08x}\n".format(name, n, addr=ref))
 
 
 def get_driver_id(driver_entry_addr, log_file):
