@@ -744,13 +744,13 @@ def populate_wdf():
         get_ptr = idaapi.get_32bit
         ptr_size = 4
     # find data sections
-    segment_starts = [idaapi.get_segm_by_name('.data').start_ea, idaapi.get_segm_by_name('.rdata').start_ea]
-    for ea in segment_starts:
-        if ea != idc.BADADDR:
+    segments = [idaapi.get_segm_by_name('.data'), idaapi.get_segm_by_name('.rdata')]
+    for segm in segments:
+        if segm.start_ea != idc.BADADDR and segm.end_ea != idc.BADADDR:
             # search `KmdfLibrary` unicode string in .rdata section
-            # idx = idc.find_binary(ea, idc.SEARCH_DOWN, '"KmdfLibrary"', 0)
-            # idx = ida_search.find_binary(ea, idaapi.BADADDR, '"KmdfLibrary"', 0, ida_search.SEARCH_DOWN)
-            idx = ida_bytes.bin_search(ea, idaapi.BADADDR, ida_bytes.parse_binpat_str("KmdfLibrary"),
+            binpat = idaapi.compiled_binpat_vec_t()
+            ida_bytes.parse_binpat_str(binpat, 0, 'L"KmdfLibrary"', 16)
+            idx = ida_bytes.bin_search(segm.start_ea, segm.end_ea, binpat,
                                        ida_bytes.BIN_SEARCH_NOCASE)
             if idx != idaapi.BADADDR:
                 log("Found `KmdfLibrary` string at " + hex(idx))
