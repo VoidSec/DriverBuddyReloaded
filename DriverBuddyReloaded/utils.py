@@ -2,8 +2,8 @@ import math
 import time
 from datetime import date
 
-import ida_nalt
 import ida_funcs
+import ida_nalt
 import ida_segment
 import idautils
 import idc

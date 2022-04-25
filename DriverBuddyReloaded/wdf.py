@@ -28,7 +28,7 @@ def add_struct(version):
     """
 
     # globals auto switch based on driver's architecture
-    # Architecture dependent globals
+    # dependent globals
     is64 = idaapi.get_inf_structure().is_64bit()
     if is64 is True:
         FF_PTR = ida_bytes.FF_QWORD
