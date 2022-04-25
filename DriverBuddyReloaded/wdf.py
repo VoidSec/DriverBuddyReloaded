@@ -750,13 +750,12 @@ def populate_wdf():
             # search `KmdfLibrary` unicode string in .rdata section
             binpat = idaapi.compiled_binpat_vec_t()
             ida_bytes.parse_binpat_str(binpat, 0, 'L"KmdfLibrary"', 16)
-            idx = ida_bytes.bin_search(segm.start_ea, segm.end_ea, binpat,
-                                       ida_bytes.BIN_SEARCH_NOCASE)
+            idx = ida_bytes.bin_search(segm.start_ea, segm.end_ea, binpat, ida_bytes.BIN_SEARCH_NOCASE)
             if idx != idaapi.BADADDR:
                 log("Found `KmdfLibrary` string at " + hex(idx))
                 addr = idc.get_first_dref_to(idx)
                 # hacky logic fix , consider only the minor portion
-                version = int(str(idc.Dword(addr + ptr_size + 0x4)))
+                version = int(str(idc.get_wide_dword(addr + ptr_size + 0x4)))
                 id = add_struct(version)
                 if id != -1:
                     # log('Success')
