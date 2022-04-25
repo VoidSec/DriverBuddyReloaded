@@ -105,6 +105,15 @@ winapi_function_prefixes = [
     "OemToChar",
     # OemToCharA
     # OemToCharW
+    ######################################################
+    # These functions can allow arbitrary memory read/write
+    "MmMapIoSpace",
+    ######################################################
+    # These functions can throw exceptions when limited memory is available,
+    # resulting in unstable behaviour and potential DoS conditions.
+    # Use the safer InitialCriticalSectionAndSpinCount function
+    "LoadLibrary",
+    "SeAccessCheck",
 ]
 
 # Exact matches only
@@ -114,17 +123,12 @@ winapi_functions = [
     # ChangeWindowMessageFilter may not be supported in future versions of Windows.
     "ChangeWindowMessageFilter",
     ######################################################
-    # These functions can allow arbitrary memory read/write
-    "MmMapIoSpace",
-    ######################################################
     # These functions can throw exceptions when limited memory is available,
     # resulting in unstable behaviour and potential DoS conditions.
     # Use the safer InitialCriticalSectionAndSpinCount function
     "EnterCriticalSection",
-    "LoadLibrary",
     "IofCallDriver",
     "IoRegisterDeviceInterface",
     "PsCreateSystemThread",
-    "SeAccessCheck",
     "SeQueryAuthenticationIdToken",
 ]
