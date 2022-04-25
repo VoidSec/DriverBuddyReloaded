@@ -42,7 +42,7 @@ def add_struct(version):
     id = idc.get_struc_id('WDFFUNCTIONS')
     if id != -1:
         # delete old struc
-        idc.del_struc(idaapi.get_struc(id))
+        idc.del_struc(id)
     log('Creating struct for WDF Functions version 1.%d' % version)
     id = idc.add_struc(-1, 'WDFFUNCTIONS', 0)
     struc = idaapi.get_struc(id)
