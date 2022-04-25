@@ -31,10 +31,10 @@ def add_struct(version):
     # Architecture dependent globals
     is64 = idaapi.get_inf_structure().is_64bit()
     if is64 is True:
-        FF_PTR = idc.FF_QWORD
+        FF_PTR = ida_bytes.FF_QWORD
         ptr_size = 8
     else:
-        FF_PTR = idc.FF_DWRD
+        FF_PTR = ida_bytes.FF_DWORD
         ptr_size = 4
     id = -1
     offset = 0
