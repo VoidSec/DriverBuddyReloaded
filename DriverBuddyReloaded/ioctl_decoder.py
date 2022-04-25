@@ -84,11 +84,29 @@ def get_ioctl_code(ioctl_code):
         "FILE_DEVICE_MT_TRANSPORT",  # 0x00000043
         "FILE_DEVICE_BIOMETRIC",  # 0x00000044
         "FILE_DEVICE_PMI",  # 0x00000045
+        "FILE_DEVICE_EHSTOR",  # 0x00000046
+        "FILE_DEVICE_DEVAPI",  # 0x00000047
+        "FILE_DEVICE_GPIO",  # 0x00000048
+        "FILE_DEVICE_USBEX",  # 0x00000049
+        "FILE_DEVICE_CONSOLE",  # 0x00000050
+        "FILE_DEVICE_NFP",  # 0x00000051
+        "FILE_DEVICE_SYSENV",  # 0x00000052
+        "FILE_DEVICE_VIRTUAL_BLOCK",  # 0x00000053
+        "FILE_DEVICE_POINT_OF_SERVICE",  # 0x00000054
+        "FILE_DEVICE_STORAGE_REPLICATION",  # 0x00000055
+        "FILE_DEVICE_TRUST_ENV",  # 0x00000056
+        "FILE_DEVICE_UCM",  # 0x00000057
+        "FILE_DEVICE_UCMTCPCI",  # 0x00000058
+        "FILE_DEVICE_PERSISTENT_MEMORY",  # 0x00000059
     ]
 
     # Custom devices
     custom_devices = [
+        {"name": "FILE_DEVICE_NVDIMM", "code": 0x0000005a},
+        {"name": "FILE_DEVICE_HOLOGRAPHIC", "code": 0x0000005b},
+        {"name": "FILE_DEVICE_SDFXHCI", "code": 0x0000005c},
         {"name": "MOUNTMGRCONTROLTYPE", "code": 0x0000006d},
+        {"name": "FILE_DEVICE_IRCLASS", "code": 0x00000f60},
     ]
 
     device = (ioctl_code >> 16) & 0xffff
