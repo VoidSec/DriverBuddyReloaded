@@ -1,4 +1,5 @@
 import ida_bytes
+import ida_struct
 import idaapi
 import idc
 
@@ -44,688 +45,688 @@ def add_struct(version):
         # delete old struc
         idc.del_struc(id)
     log('Creating struct for WDF Functions version 1.%d' % version)
-    id = idc.add_struc(-1, 'WDFFUNCTIONS', 0)
-    struc = idaapi.get_struc(id)
+    idc.add_struc(-1, 'WDFFUNCTIONS', 0)
+    id = idc.get_struc_id('WDFFUNCTIONS')
     if id != -1:
-        idc.add_struc_member(struc, "pfnWdfChildListCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfChildListGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfChildListRetrievePdo", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfChildListRetrieveAddressDescription", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfChildListBeginScan", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfChildListEndScan", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfChildListBeginIteration", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfChildListRetrieveNextDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfChildListEndIteration", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfChildListAddOrUpdateChildDescriptionAsPresent", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfChildListUpdateChildDescriptionAsMissing", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfChildListUpdateAllChildDescriptionsAsPresent", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfChildListRequestChildEject", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCollectionCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCollectionGetCount", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCollectionAdd", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCollectionRemove", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCollectionRemoveItem", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCollectionGetItem", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCollectionGetFirstItem", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCollectionGetLastItem", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCommonBufferCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCommonBufferGetAlignedVirtualAddress", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCommonBufferGetAlignedLogicalAddress", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCommonBufferGetLength", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfControlDeviceInitAllocate", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfControlDeviceInitSetShutdownNotification", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfControlFinishInitializing", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceGetDeviceState", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceSetDeviceState", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWdmDeviceGetWdfDeviceHandle", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceWdmGetDeviceObject", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceWdmGetAttachedDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceWdmGetPhysicalDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceWdmDispatchPreprocessedIrp", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceAddDependentUsageDeviceObject", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceAddRemovalRelationsPhysicalDevice", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceRemoveRemovalRelationsPhysicalDevice", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceClearRemovalRelationsDevices", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceGetDriver", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceRetrieveDeviceName", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceAssignMofResourceName", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceGetIoTarget", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceGetDevicePnpState", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceGetDevicePowerState", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceGetDevicePowerPolicyState", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceAssignS0IdleSettings", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceAssignSxWakeSettings", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceOpenRegistryKey", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceSetSpecialFileSupport", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceSetCharacteristics", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceGetCharacteristics", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceGetAlignmentRequirement", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceSetAlignmentRequirement", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitFree", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetPnpPowerEventCallbacks", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetPowerPolicyEventCallbacks", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetPowerPolicyOwnership", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitRegisterPnpStateChangeCallback", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitRegisterPowerStateChangeCallback", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitRegisterPowerPolicyStateChangeCallback", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetIoType", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetExclusive", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetPowerNotPageable", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetPowerPageable", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetPowerInrush", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetDeviceType", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitAssignName", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitAssignSDDLString", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetDeviceClass", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetCharacteristics", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetFileObjectConfig", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetRequestAttributes", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitAssignWdmIrpPreprocessCallback", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceInitSetIoInCallerContextCallback", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceSetStaticStopRemove", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceCreateDeviceInterface", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceSetDeviceInterfaceState", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceRetrieveDeviceInterfaceString", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceCreateSymbolicLink", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceQueryProperty", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceAllocAndQueryProperty", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceSetPnpCapabilities", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceSetPowerCapabilities", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceSetBusInformationForChildren", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceIndicateWakeStatus", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceSetFailed", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceStopIdle", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceResumeIdle", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceGetFileObject", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceEnqueueRequest", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceGetDefaultQueue", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceConfigureRequestDispatching", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaEnablerCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaEnablerGetMaximumLength", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaEnablerGetMaximumScatterGatherElements", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaEnablerSetMaximumScatterGatherElements", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionInitialize", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionInitializeUsingRequest", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionExecute", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionRelease", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionDmaCompleted", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionDmaCompletedWithLength", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionDmaCompletedFinal", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionGetBytesTransferred", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionSetMaximumLength", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionGetRequest", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionGetCurrentDmaTransferLength", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaTransactionGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDpcCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDpcEnqueue", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDpcCancel", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDpcGetParentObject", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDpcWdmGetDpc", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDriverCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDriverGetRegistryPath", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDriverWdmGetDriverObject", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDriverOpenParametersRegistryKey", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWdmDriverGetWdfDriverHandle", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDriverRegisterTraceInfo", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDriverRetrieveVersionString", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDriverIsVersionAvailable", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoInitWdmGetPhysicalDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoInitOpenRegistryKey", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoInitQueryProperty", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoInitAllocAndQueryProperty", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoInitSetEventCallbacks", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoInitSetFilter", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoInitSetDefaultChildListConfig", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoQueryForInterface", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoGetDefaultChildList", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoAddStaticChild", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoLockStaticChildListForIteration", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoRetrieveNextStaticChild", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFdoUnlockStaticChildListFromIteration", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFileObjectGetFileName", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFileObjectGetFlags", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFileObjectGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfFileObjectWdmGetFileObject", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfInterruptCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfInterruptQueueDpcForIsr", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfInterruptSynchronize", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfInterruptAcquireLock", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfInterruptReleaseLock", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfInterruptEnable", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfInterruptDisable", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfInterruptWdmGetInterrupt", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfInterruptGetInfo", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfInterruptSetPolicy", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfInterruptGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueGetState", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueStart", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueStop", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueStopSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueRetrieveNextRequest", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueRetrieveRequestByFileObject", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueFindRequest", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueRetrieveFoundRequest", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueDrainSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueDrain", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueuePurgeSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueuePurge", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoQueueReadyNotify", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetOpen", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetCloseForQueryRemove", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetClose", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetStart", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetStop", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetGetState", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetQueryTargetProperty", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetAllocAndQueryTargetProperty", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetQueryForInterface", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetWdmGetTargetDeviceObject", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetWdmGetTargetPhysicalDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetWdmGetTargetFileObject", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetWdmGetTargetFileHandle", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetSendReadSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetFormatRequestForRead", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetSendWriteSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetFormatRequestForWrite", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetSendIoctlSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetFormatRequestForIoctl", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetSendInternalIoctlSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetFormatRequestForInternalIoctl", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetSendInternalIoctlOthersSynchronously", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoTargetFormatRequestForInternalIoctlOthers", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfMemoryCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfMemoryCreatePreallocated", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfMemoryGetBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfMemoryAssignBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfMemoryCopyToBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfMemoryCopyFromBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfLookasideListCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfMemoryCreateFromLookaside", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceMiniportCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDriverMiniportUnload", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfObjectGetTypedContextWorker", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfObjectAllocateContext", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfObjectContextGetObject", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfObjectReferenceActual", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfObjectDereferenceActual", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfObjectCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfObjectDelete", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfObjectQuery", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoInitAllocate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoInitSetEventCallbacks", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoInitAssignDeviceID", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoInitAssignInstanceID", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoInitAddHardwareID", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoInitAddCompatibleID", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoInitAddDeviceText", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoInitSetDefaultLocale", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoInitAssignRawDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoMarkMissing", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoRequestEject", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoGetParent", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoRetrieveIdentificationDescription", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoRetrieveAddressDescription", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoUpdateAddressDescription", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoAddEjectionRelationsPhysicalDevice", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoRemoveEjectionRelationsPhysicalDevice", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfPdoClearEjectionRelationsDevices", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDeviceAddQueryInterface", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryOpenKey", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryCreateKey", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryClose", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryWdmGetHandle", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryRemoveKey", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryRemoveValue", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryQueryValue", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryQueryMemory", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryQueryMultiString", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryQueryUnicodeString", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryQueryString", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryQueryULong", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryAssignValue", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryAssignMemory", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryAssignMultiString", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryAssignUnicodeString", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryAssignString", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRegistryAssignULong", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestCreateFromIrp", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestReuse", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestChangeTarget", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestFormatRequestUsingCurrentType", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestWdmFormatUsingStackLocation", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestSend", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestGetStatus", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestMarkCancelable", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestUnmarkCancelable", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestIsCanceled", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestCancelSentRequest", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestIsFrom32BitProcess", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestSetCompletionRoutine", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestGetCompletionParams", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestAllocateTimer", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestComplete", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestCompleteWithPriorityBoost", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestCompleteWithInformation", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestGetParameters", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestRetrieveInputMemory", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestRetrieveOutputMemory", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestRetrieveInputBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestRetrieveOutputBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestRetrieveInputWdmMdl", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestRetrieveOutputWdmMdl", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestRetrieveUnsafeUserInputBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestRetrieveUnsafeUserOutputBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestSetInformation", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestGetInformation", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestGetFileObject", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestProbeAndLockUserBufferForRead", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestProbeAndLockUserBufferForWrite", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestGetRequestorMode", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestForwardToIoQueue", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestGetIoQueue", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestRequeue", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestStopAcknowledge", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfRequestWdmGetIrp", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceRequirementsListSetSlotNumber", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceRequirementsListSetInterfaceType", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceRequirementsListAppendIoResList", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceRequirementsListInsertIoResList", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceRequirementsListGetCount", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceRequirementsListGetIoResList", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceRequirementsListRemove", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceRequirementsListRemoveByIoResList", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceListCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceListAppendDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceListInsertDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceListUpdateDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceListGetCount", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceListGetDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceListRemove", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfIoResourceListRemoveByDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCmResourceListAppendDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCmResourceListInsertDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCmResourceListGetCount", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCmResourceListGetDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCmResourceListRemove", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCmResourceListRemoveByDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfStringCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfStringGetUnicodeString", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfObjectAcquireLock", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfObjectReleaseLock", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWaitLockCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWaitLockAcquire", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWaitLockRelease", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfSpinLockCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfSpinLockAcquire", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfSpinLockRelease", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfTimerCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfTimerStart", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfTimerStop", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfTimerGetParentObject", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceRetrieveInformation", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceGetDeviceDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceRetrieveConfigDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceQueryString", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceAllocAndQueryString", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceFormatRequestForString", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceGetNumInterfaces", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceSelectConfig", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceWdmGetConfigurationHandle", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceRetrieveCurrentFrameNumber", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceSendControlTransferSynchronously", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceFormatRequestForControlTransfer", idc.BADADDR,
-                             idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceIsConnectedSynchronous", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceResetPortSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceCyclePortSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceFormatRequestForCyclePort", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceSendUrbSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceFormatRequestForUrb", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeGetInformation", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeIsInEndpoint", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeIsOutEndpoint", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeGetType", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeSetNoMaximumPacketSizeCheck", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeWriteSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeFormatRequestForWrite", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeReadSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeFormatRequestForRead", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeConfigContinuousReader", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeAbortSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeFormatRequestForAbort", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeResetSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeFormatRequestForReset", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeSendUrbSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeFormatRequestForUrb", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbInterfaceGetInterfaceNumber", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbInterfaceGetNumEndpoints", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbInterfaceGetDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbInterfaceSelectSetting", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbInterfaceGetEndpointInformation", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceGetInterface", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbInterfaceGetConfiguredSettingIndex", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                             None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbInterfaceGetNumConfiguredPipes", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbInterfaceGetConfiguredPipe", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbTargetPipeWdmGetPipeHandle", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfVerifierDbgBreakPoint", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfVerifierKeBugCheck", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWmiProviderCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWmiProviderGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWmiProviderIsEnabled", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWmiProviderGetTracingHandle", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWmiInstanceCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWmiInstanceRegister", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWmiInstanceDeregister", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWmiInstanceGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWmiInstanceGetProvider", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWmiInstanceFireEvent", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWorkItemCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWorkItemEnqueue", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWorkItemGetParentObject", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfWorkItemFlush", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-        idc.add_struc_member(struc, "pfnWdfCommonBufferCreateWithConfig", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaEnablerGetFragmentLength", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfDmaEnablerWdmGetDmaAdapter", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
-                             ptr_size)
-        idc.add_struc_member(struc, "pfnWdfUsbInterfaceGetNumSettings", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+        idc.add_struc_member(id, "pfnWdfChildListCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfChildListGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfChildListRetrievePdo", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfChildListRetrieveAddressDescription", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfChildListBeginScan", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfChildListEndScan", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfChildListBeginIteration", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfChildListRetrieveNextDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfChildListEndIteration", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfChildListAddOrUpdateChildDescriptionAsPresent", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfChildListUpdateChildDescriptionAsMissing", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfChildListUpdateAllChildDescriptionsAsPresent", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfChildListRequestChildEject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfCollectionCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCollectionGetCount", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCollectionAdd", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCollectionRemove", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCollectionRemoveItem", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCollectionGetItem", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCollectionGetFirstItem", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCollectionGetLastItem", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCommonBufferCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCommonBufferGetAlignedVirtualAddress", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCommonBufferGetAlignedLogicalAddress", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCommonBufferGetLength", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfControlDeviceInitAllocate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfControlDeviceInitSetShutdownNotification", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfControlFinishInitializing", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceGetDeviceState", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceSetDeviceState", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWdmDeviceGetWdfDeviceHandle", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceWdmGetDeviceObject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceWdmGetAttachedDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceWdmGetPhysicalDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceWdmDispatchPreprocessedIrp", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceAddDependentUsageDeviceObject", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceAddRemovalRelationsPhysicalDevice", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceRemoveRemovalRelationsPhysicalDevice", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceClearRemovalRelationsDevices", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceGetDriver", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceRetrieveDeviceName", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceAssignMofResourceName", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceGetIoTarget", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceGetDevicePnpState", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceGetDevicePowerState", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceGetDevicePowerPolicyState", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceAssignS0IdleSettings", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceAssignSxWakeSettings", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceOpenRegistryKey", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceSetSpecialFileSupport", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceSetCharacteristics", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceGetCharacteristics", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceGetAlignmentRequirement", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceSetAlignmentRequirement", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitFree", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetPnpPowerEventCallbacks", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetPowerPolicyEventCallbacks", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetPowerPolicyOwnership", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitRegisterPnpStateChangeCallback", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitRegisterPowerStateChangeCallback", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitRegisterPowerPolicyStateChangeCallback", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetIoType", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetExclusive", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetPowerNotPageable", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetPowerPageable", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetPowerInrush", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetDeviceType", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitAssignName", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitAssignSDDLString", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetDeviceClass", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetCharacteristics", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetFileObjectConfig", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetRequestAttributes", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitAssignWdmIrpPreprocessCallback", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceInitSetIoInCallerContextCallback", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceSetStaticStopRemove", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceCreateDeviceInterface", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceSetDeviceInterfaceState", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceRetrieveDeviceInterfaceString", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceCreateSymbolicLink", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceQueryProperty", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceAllocAndQueryProperty", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceSetPnpCapabilities", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceSetPowerCapabilities", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceSetBusInformationForChildren", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceIndicateWakeStatus", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceSetFailed", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceStopIdle", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceResumeIdle", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceGetFileObject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceEnqueueRequest", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceGetDefaultQueue", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceConfigureRequestDispatching", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaEnablerCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaEnablerGetMaximumLength", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaEnablerGetMaximumScatterGatherElements", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaEnablerSetMaximumScatterGatherElements", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionInitialize", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionInitializeUsingRequest", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionExecute", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionRelease", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionDmaCompleted", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionDmaCompletedWithLength", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionDmaCompletedFinal", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionGetBytesTransferred", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionSetMaximumLength", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionGetRequest", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionGetCurrentDmaTransferLength", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaTransactionGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDpcCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDpcEnqueue", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDpcCancel", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDpcGetParentObject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDpcWdmGetDpc", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDriverCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDriverGetRegistryPath", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDriverWdmGetDriverObject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDriverOpenParametersRegistryKey", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfWdmDriverGetWdfDriverHandle", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDriverRegisterTraceInfo", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDriverRetrieveVersionString", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDriverIsVersionAvailable", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoInitWdmGetPhysicalDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoInitOpenRegistryKey", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoInitQueryProperty", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoInitAllocAndQueryProperty", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoInitSetEventCallbacks", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoInitSetFilter", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoInitSetDefaultChildListConfig", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoQueryForInterface", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoGetDefaultChildList", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoAddStaticChild", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoLockStaticChildListForIteration", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoRetrieveNextStaticChild", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfFdoUnlockStaticChildListFromIteration", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfFileObjectGetFileName", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfFileObjectGetFlags", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfFileObjectGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfFileObjectWdmGetFileObject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfInterruptCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfInterruptQueueDpcForIsr", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfInterruptSynchronize", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfInterruptAcquireLock", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfInterruptReleaseLock", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfInterruptEnable", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfInterruptDisable", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfInterruptWdmGetInterrupt", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfInterruptGetInfo", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfInterruptSetPolicy", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfInterruptGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueGetState", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueStart", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueStop", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueStopSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueRetrieveNextRequest", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueRetrieveRequestByFileObject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueFindRequest", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueRetrieveFoundRequest", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueDrainSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueDrain", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueuePurgeSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueuePurge", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoQueueReadyNotify", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetOpen", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetCloseForQueryRemove", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetClose", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetStart", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetStop", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetGetState", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetQueryTargetProperty", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetAllocAndQueryTargetProperty", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetQueryForInterface", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetWdmGetTargetDeviceObject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetWdmGetTargetPhysicalDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetWdmGetTargetFileObject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetWdmGetTargetFileHandle", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetSendReadSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetFormatRequestForRead", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetSendWriteSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetFormatRequestForWrite", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetSendIoctlSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetFormatRequestForIoctl", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetSendInternalIoctlSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetFormatRequestForInternalIoctl", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetSendInternalIoctlOthersSynchronously", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoTargetFormatRequestForInternalIoctlOthers", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfMemoryCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfMemoryCreatePreallocated", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfMemoryGetBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfMemoryAssignBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfMemoryCopyToBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfMemoryCopyFromBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfLookasideListCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfMemoryCreateFromLookaside", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceMiniportCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfDriverMiniportUnload", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfObjectGetTypedContextWorker", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfObjectAllocateContext", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfObjectContextGetObject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfObjectReferenceActual", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfObjectDereferenceActual", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfObjectCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfObjectDelete", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfObjectQuery", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoInitAllocate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoInitSetEventCallbacks", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoInitAssignDeviceID", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoInitAssignInstanceID", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoInitAddHardwareID", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoInitAddCompatibleID", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoInitAddDeviceText", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoInitSetDefaultLocale", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoInitAssignRawDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoMarkMissing", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoRequestEject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoGetParent", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoRetrieveIdentificationDescription", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoRetrieveAddressDescription", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoUpdateAddressDescription", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoAddEjectionRelationsPhysicalDevice", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoRemoveEjectionRelationsPhysicalDevice", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfPdoClearEjectionRelationsDevices", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDeviceAddQueryInterface", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryOpenKey", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryCreateKey", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryClose", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryWdmGetHandle", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryRemoveKey", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryRemoveValue", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryQueryValue", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryQueryMemory", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryQueryMultiString", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryQueryUnicodeString", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryQueryString", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryQueryULong", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryAssignValue", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryAssignMemory", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryAssignMultiString", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryAssignUnicodeString", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryAssignString", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRegistryAssignULong", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestCreateFromIrp", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestReuse", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestChangeTarget", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestFormatRequestUsingCurrentType", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestWdmFormatUsingStackLocation", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestSend", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestGetStatus", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestMarkCancelable", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestUnmarkCancelable", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestIsCanceled", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestCancelSentRequest", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestIsFrom32BitProcess", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestSetCompletionRoutine", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestGetCompletionParams", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestAllocateTimer", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestComplete", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestCompleteWithPriorityBoost", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestCompleteWithInformation", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestGetParameters", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestRetrieveInputMemory", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestRetrieveOutputMemory", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestRetrieveInputBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestRetrieveOutputBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestRetrieveInputWdmMdl", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestRetrieveOutputWdmMdl", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestRetrieveUnsafeUserInputBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestRetrieveUnsafeUserOutputBuffer", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestSetInformation", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestGetInformation", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestGetFileObject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestProbeAndLockUserBufferForRead", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestProbeAndLockUserBufferForWrite", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestGetRequestorMode", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestForwardToIoQueue", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestGetIoQueue", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestRequeue", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestStopAcknowledge", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfRequestWdmGetIrp", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceRequirementsListSetSlotNumber", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceRequirementsListSetInterfaceType", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceRequirementsListAppendIoResList", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceRequirementsListInsertIoResList", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceRequirementsListGetCount", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceRequirementsListGetIoResList", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceRequirementsListRemove", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceRequirementsListRemoveByIoResList", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceListCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceListAppendDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceListInsertDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceListUpdateDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceListGetCount", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceListGetDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceListRemove", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfIoResourceListRemoveByDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfCmResourceListAppendDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfCmResourceListInsertDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfCmResourceListGetCount", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCmResourceListGetDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfCmResourceListRemove", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCmResourceListRemoveByDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfStringCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfStringGetUnicodeString", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfObjectAcquireLock", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfObjectReleaseLock", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWaitLockCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWaitLockAcquire", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWaitLockRelease", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfSpinLockCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfSpinLockAcquire", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfSpinLockRelease", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfTimerCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfTimerStart", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfTimerStop", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfTimerGetParentObject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceRetrieveInformation", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceGetDeviceDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceRetrieveConfigDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceQueryString", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceAllocAndQueryString", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceFormatRequestForString", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceGetNumInterfaces", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceSelectConfig", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceWdmGetConfigurationHandle", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceRetrieveCurrentFrameNumber", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceSendControlTransferSynchronously", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceFormatRequestForControlTransfer", idc.BADADDR,
+                             idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceIsConnectedSynchronous", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceResetPortSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceCyclePortSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceFormatRequestForCyclePort", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceSendUrbSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceFormatRequestForUrb", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeGetInformation", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeIsInEndpoint", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeIsOutEndpoint", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeGetType", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeSetNoMaximumPacketSizeCheck", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeWriteSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeFormatRequestForWrite", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeReadSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeFormatRequestForRead", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeConfigContinuousReader", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeAbortSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeFormatRequestForAbort", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeResetSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeFormatRequestForReset", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeSendUrbSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeFormatRequestForUrb", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbInterfaceGetInterfaceNumber", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbInterfaceGetNumEndpoints", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbInterfaceGetDescriptor", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbInterfaceSelectSetting", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbInterfaceGetEndpointInformation", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetDeviceGetInterface", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbInterfaceGetConfiguredSettingIndex", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                             -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbInterfaceGetNumConfiguredPipes", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbInterfaceGetConfiguredPipe", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbTargetPipeWdmGetPipeHandle", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfVerifierDbgBreakPoint", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfVerifierKeBugCheck", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWmiProviderCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWmiProviderGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWmiProviderIsEnabled", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWmiProviderGetTracingHandle", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfWmiInstanceCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWmiInstanceRegister", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWmiInstanceDeregister", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWmiInstanceGetDevice", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWmiInstanceGetProvider", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWmiInstanceFireEvent", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWorkItemCreate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWorkItemEnqueue", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWorkItemGetParentObject", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfWorkItemFlush", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+        idc.add_struc_member(id, "pfnWdfCommonBufferCreateWithConfig", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaEnablerGetFragmentLength", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfDmaEnablerWdmGetDmaAdapter", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
+                             ptr_size)
+        idc.add_struc_member(id, "pfnWdfUsbInterfaceGetNumSettings", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                              ptr_size)
         if version >= 5:
-            idc.add_struc_member(struc, "pfnWdfDeviceRemoveDependentUsageDeviceObject", idc.BADADDR,
-                                 idc.FF_DATA | FF_PTR, None, ptr_size)
-            idc.add_struc_member(struc, "pfnWdfDeviceGetSystemPowerAction", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+            idc.add_struc_member(id, "pfnWdfDeviceRemoveDependentUsageDeviceObject", idc.BADADDR,
+                                 idc.FF_DATA | FF_PTR, -1, ptr_size)
+            idc.add_struc_member(id, "pfnWdfDeviceGetSystemPowerAction", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                  ptr_size)
-            idc.add_struc_member(struc, "pfnWdfInterruptSetExtendedPolicy", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+            idc.add_struc_member(id, "pfnWdfInterruptSetExtendedPolicy", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                  ptr_size)
-            idc.add_struc_member(struc, "pfnWdfIoQueueAssignForwardProgressPolicy", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                 None, ptr_size)
-            idc.add_struc_member(struc, "pfnWdfPdoInitAssignContainerID", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+            idc.add_struc_member(id, "pfnWdfIoQueueAssignForwardProgressPolicy", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                 -1, ptr_size)
+            idc.add_struc_member(id, "pfnWdfPdoInitAssignContainerID", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                  ptr_size)
-            idc.add_struc_member(struc, "pfnWdfPdoInitAllowForwardingRequestToParent", idc.BADADDR,
-                                 idc.FF_DATA | FF_PTR, None, ptr_size)
-            idc.add_struc_member(struc, "pfnWdfRequestMarkCancelableEx", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+            idc.add_struc_member(id, "pfnWdfPdoInitAllowForwardingRequestToParent", idc.BADADDR,
+                                 idc.FF_DATA | FF_PTR, -1, ptr_size)
+            idc.add_struc_member(id, "pfnWdfRequestMarkCancelableEx", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                  ptr_size)
-            idc.add_struc_member(struc, "pfnWdfRequestIsReserved", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-            idc.add_struc_member(struc, "pfnWdfRequestForwardToParentDeviceIoQueue", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                 None, ptr_size)
+            idc.add_struc_member(id, "pfnWdfRequestIsReserved", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+            idc.add_struc_member(id, "pfnWdfRequestForwardToParentDeviceIoQueue", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                 -1, ptr_size)
             if version >= 9:
-                idc.add_struc_member(struc, "pfnWdfCxDeviceInitAllocate", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                idc.add_struc_member(id, "pfnWdfCxDeviceInitAllocate", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                      ptr_size)
-                idc.add_struc_member(struc, "pfnWdfCxDeviceInitAssignWdmIrpPreprocessCallback", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfCxDeviceInitSetIoInCallerContextCallback", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfCxDeviceInitSetRequestAttributes", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                     None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfCxDeviceInitSetFileObjectConfig", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                     None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDeviceWdmDispatchIrp", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                idc.add_struc_member(id, "pfnWdfCxDeviceInitAssignWdmIrpPreprocessCallback", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfCxDeviceInitSetIoInCallerContextCallback", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfCxDeviceInitSetRequestAttributes", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                     -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfCxDeviceInitSetFileObjectConfig", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                     -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDeviceWdmDispatchIrp", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                      ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDeviceWdmDispatchIrpToIoQueue", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                     None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDeviceInitSetRemoveLockOptions", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                     None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDeviceConfigureWdmIrpDispatchCallback", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDmaEnablerConfigureSystemProfile", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                     None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDmaTransactionInitializeUsingOffset", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDmaTransactionGetTransferInfo", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                     None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDmaTransactionSetChannelConfigurationCallback", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDmaTransactionSetTransferCompleteCallback", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDmaTransactionSetImmediateExecution", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDmaTransactionAllocateResources", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                     None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDmaTransactionSetDeviceAddressOffset", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDmaTransactionFreeResources", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                     None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDmaTransactionCancel", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                idc.add_struc_member(id, "pfnWdfDeviceWdmDispatchIrpToIoQueue", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                     -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDeviceInitSetRemoveLockOptions", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                     -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDeviceConfigureWdmIrpDispatchCallback", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDmaEnablerConfigureSystemProfile", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                     -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDmaTransactionInitializeUsingOffset", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDmaTransactionGetTransferInfo", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                     -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDmaTransactionSetChannelConfigurationCallback", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDmaTransactionSetTransferCompleteCallback", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDmaTransactionSetImmediateExecution", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDmaTransactionAllocateResources", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                     -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDmaTransactionSetDeviceAddressOffset", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDmaTransactionFreeResources", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                     -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDmaTransactionCancel", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                      ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDmaTransactionWdmGetTransferContext", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfInterruptQueueWorkItemForIsr", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                     None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfInterruptTryToAcquireLock", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                idc.add_struc_member(id, "pfnWdfDmaTransactionWdmGetTransferContext", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfInterruptQueueWorkItemForIsr", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                     -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfInterruptTryToAcquireLock", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                      ptr_size)
-                idc.add_struc_member(struc, "pfnWdfIoQueueStopAndPurge", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                idc.add_struc_member(id, "pfnWdfIoQueueStopAndPurge", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                      ptr_size)
-                idc.add_struc_member(struc, "pfnWdfIoQueueStopAndPurgeSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                     None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfIoTargetPurge", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceCreateWithParameters", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceQueryUsbCapability", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceCreateUrb", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                idc.add_struc_member(id, "pfnWdfIoQueueStopAndPurgeSynchronously", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                     -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfIoTargetPurge", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfUsbTargetDeviceCreateWithParameters", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfUsbTargetDeviceQueryUsbCapability", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfUsbTargetDeviceCreateUrb", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                      ptr_size)
-                idc.add_struc_member(struc, "pfnWdfUsbTargetDeviceCreateIsochUrb", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                     None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDeviceWdmAssignPowerFrameworkSettings", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDmaTransactionStopSystemTransfer", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                     None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfCxVerifierKeBugCheck", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                idc.add_struc_member(id, "pfnWdfUsbTargetDeviceCreateIsochUrb", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                     -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDeviceWdmAssignPowerFrameworkSettings", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDmaTransactionStopSystemTransfer", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                     -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfCxVerifierKeBugCheck", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                      ptr_size)
-                idc.add_struc_member(struc, "pfnWdfInterruptReportActive", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                idc.add_struc_member(id, "pfnWdfInterruptReportActive", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                      ptr_size)
-                idc.add_struc_member(struc, "pfnWdfInterruptReportInactive", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                idc.add_struc_member(id, "pfnWdfInterruptReportInactive", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                      ptr_size)
-                idc.add_struc_member(struc, "pfnWdfDeviceInitSetReleaseHardwareOrderOnFailure", idc.BADADDR,
-                                     idc.FF_DATA | FF_PTR, None, ptr_size)
-                idc.add_struc_member(struc, "pfnWdfGetTriageInfo", idc.BADADDR, idc.FF_DATA | FF_PTR, None, ptr_size)
+                idc.add_struc_member(id, "pfnWdfDeviceInitSetReleaseHardwareOrderOnFailure", idc.BADADDR,
+                                     idc.FF_DATA | FF_PTR, -1, ptr_size)
+                idc.add_struc_member(id, "pfnWdfGetTriageInfo", idc.BADADDR, idc.FF_DATA | FF_PTR, -1, ptr_size)
                 if version >= 11:
-                    idc.add_struc_member(struc, "pfnWdfDeviceInitSetIoTypeEx", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                    idc.add_struc_member(id, "pfnWdfDeviceInitSetIoTypeEx", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                          ptr_size)
-                    idc.add_struc_member(struc, "pfnWdfDeviceQueryPropertyEx", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                    idc.add_struc_member(id, "pfnWdfDeviceQueryPropertyEx", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                          ptr_size)
-                    idc.add_struc_member(struc, "pfnWdfDeviceAllocAndQueryPropertyEx", idc.BADADDR,
-                                         idc.FF_DATA | FF_PTR, None, ptr_size)
-                    idc.add_struc_member(struc, "pfnWdfDeviceAssignProperty", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                    idc.add_struc_member(id, "pfnWdfDeviceAllocAndQueryPropertyEx", idc.BADADDR,
+                                         idc.FF_DATA | FF_PTR, -1, ptr_size)
+                    idc.add_struc_member(id, "pfnWdfDeviceAssignProperty", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                          ptr_size)
-                    idc.add_struc_member(struc, "pfnWdfFdoInitQueryPropertyEx", idc.BADADDR, idc.FF_DATA | FF_PTR, None,
+                    idc.add_struc_member(id, "pfnWdfFdoInitQueryPropertyEx", idc.BADADDR, idc.FF_DATA | FF_PTR, -1,
                                          ptr_size)
-                    idc.add_struc_member(struc, "pfnWdfFdoInitAllocAndQueryPropertyEx", idc.BADADDR,
-                                         idc.FF_DATA | FF_PTR, None, ptr_size)
+                    idc.add_struc_member(id, "pfnWdfFdoInitAllocAndQueryPropertyEx", idc.BADADDR,
+                                         idc.FF_DATA | FF_PTR, -1, ptr_size)
                     if version >= 13:
-                        idc.add_struc_member(struc, "pfnWdfDeviceStopIdleActual", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                             None, ptr_size)
-                        idc.add_struc_member(struc, "pfnWdfDeviceResumeIdleActual", idc.BADADDR, idc.FF_DATA | FF_PTR,
-                                             None, ptr_size)
+                        idc.add_struc_member(id, "pfnWdfDeviceStopIdleActual", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                             -1, ptr_size)
+                        idc.add_struc_member(id, "pfnWdfDeviceResumeIdleActual", idc.BADADDR, idc.FF_DATA | FF_PTR,
+                                             -1, ptr_size)
     return id
 
 
@@ -760,10 +761,13 @@ def populate_wdf():
                 if id != -1:
                     # log('Success')
                     wdf_func = get_ptr(addr + ptr_size + 0x10)
-                    size = idc.GetStrucSize(id)
+                    size = ida_struct.get_struc_size(id)
                     log('doStruct (size=' + hex(size) + ') at ' + hex(wdf_func))
-                    idaapi.do_unknown_range(wdf_func, size, 0)
-                    if idaapi.doStruct(wdf_func, size, id) and idc.set_name(wdf_func, 'WdfFunctions', 0):
+                    # ida_bytes.do_unknown_range(ea, size, flags)
+                    # idaapi.do_unknown_range(wdf_func, size, 0)
+                    ida_bytes.del_items(wdf_func, 0, size)
+                    # if idaapi.doStruct(wdf_func, size, id) and idc.set_name(wdf_func, 'WdfFunctions', 0):
+                    if ida_bytes.create_struct(wdf_func, size, id) and idc.set_name(wdf_func, 'WdfFunctions', 0):
                         log('Success')
                     else:
                         log('Failure')
