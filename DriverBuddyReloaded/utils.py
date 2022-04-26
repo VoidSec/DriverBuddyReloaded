@@ -244,6 +244,8 @@ def is_driver():
             func_name = idc.get_func_name(func_addr)
             if func_name == "DriverEntry":
                 return func_addr
+            elif func_name == "DriverEntry_0":
+                return func_addr
     return False
 
 
