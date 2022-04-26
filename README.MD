@@ -2,18 +2,20 @@
 
 ## Table of Contents
 
-1. [Installation](#Installation)
-2. [Quick Usage](#Quick-Usage)
-    1. [Advanced Usage](#Advanced-Usage)
-3. [About Driver Buddy Reloaded](#About-Driver-Buddy-Reloaded)
-    1. [Finding DispatchDeviceControl](#Finding-DispatchDeviceControl)
-    2. [Labelling WDM & WDF Structures](#Labelling-WDM-and-WDF-Structures)
-    3. [Finding & Decoding IOCTL Codes](#Finding-and-Decoding-IOCTL-Codes)
-    4. [Flagging Functions](#Flagging-Functions)
-    5. [Finding DeviceName](#Finding-DeviceName)
-    6. [Dumping Pooltags](#Dumping-Pooltags)
-4. [Known Caveats & Limitations](#Known-Caveats-and-Limitations)
-5. [Credits & Acknowledgements](#Credits-and-Acknowledgements)
+- [Driver Buddy Reloaded Quickstart](#driver-buddy-reloaded-quickstart)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Quick Usage](#quick-usage)
+    - [Advanced Usage](#advanced-usage)
+  - [About Driver Buddy Reloaded](#about-driver-buddy-reloaded)
+    - [Finding DispatchDeviceControl](#finding-dispatchdevicecontrol)
+    - [Labelling WDM and WDF Structures](#labelling-wdm-and-wdf-structures)
+    - [Finding and Decoding IOCTL Codes](#finding-and-decoding-ioctl-codes)
+    - [Flagging Functions](#flagging-functions)
+    - [Finding DeviceName](#finding-devicename)
+    - [Dumping Pooltags](#dumping-pooltags)
+  - [Known Caveats and Limitations](#known-caveats-and-limitations)
+  - [Credits and Acknowledgements](#credits-and-acknowledgements)
 
 ## Installation
 
@@ -158,6 +160,7 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
 
 ## Known Caveats and Limitations
 
+- Only IOCTL values >= 0x10000 will be automatically decoded, thus to prevent an high number of false positives. [Issue #15](https://github.com/VoidSec/DriverBuddyReloaded/issues/15)
 - Experimental `DispatchDeviceControl` searching works only for x64 drivers
 - Shortcuts are incompatible with F-Secure's [win_driver_plugin](https://github.com/FSecureLABS/win_driver_plugin)
 - Shortcuts are incompatible with [findcrypt-yara](https://github.com/polymorf/findcrypt-yara)

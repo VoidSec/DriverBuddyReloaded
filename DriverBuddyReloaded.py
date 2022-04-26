@@ -213,9 +213,8 @@ def find_all_ioctls():
             # if the penultimate instruction is cmp or sub or mov against an immediate value
             if idc.print_insn_mnem(instr) in ['cmp', 'sub', 'mov'] and idc.get_operand_type(instr, 1) == 5:
                 value = get_operand_value(instr)
-                digits = utils.check_digits(value)
-                # value has more than 2 digits (lower false positives) and is not a known NTSTATUS value
-                if digits > 2 and value not in NTSTATUS.ntstatus_values:
+                # value >= 0x10000 (lower false positives) and is not a known NTSTATUS value; check issue #15
+                if value >= 0x10000 and value not in NTSTATUS.ntstatus_values:
                     ioctls.append((instr, value))
                     ioctl_tracker.add_ioctl(instr, value)
     return ioctls
@@ -259,9 +258,8 @@ def get_position_and_translate():
         return
 
     value = get_operand_value(pos)
-    digits = utils.check_digits(value)
-    # value has more than 2 digits (lower false positives) and is not a known NTSTATUS value
-    if digits > 2 and value not in NTSTATUS.ntstatus_values:
+    # value >= 0x10000 (lower false positives) and is not a known NTSTATUS value; check issue #15
+    if value >= 0x10000 and value not in NTSTATUS.ntstatus_values:
         ioctl_tracker.add_ioctl(pos, value)
         define = ioctl_decoder.get_define(value)
         make_comment(pos, define)

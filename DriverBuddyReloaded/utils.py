@@ -248,17 +248,3 @@ def is_driver():
                 return func_addr
     return False
 
-
-def check_digits(n):
-    """
-    Given an integer number return how many digits it has
-    :param n: number to check digits
-    :return:
-    """
-    if n > 0:
-        digits = int(math.log10(n)) + 1
-    elif n == 0:
-        digits = 1
-    else:
-        digits = int(math.log10(-n)) + 2  # +1 if you don't count the '-'
-    return digits
