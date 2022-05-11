@@ -22,6 +22,8 @@
 Copy `DriverBuddyReloaded` folder and `DriverBuddyReloaded.py` file into the IDA plugins folder (
 e.g. `C:\Program Files (x86)\IDA 7\plugins\`) or wherever you have installed IDA.
 
+If you are using Python v. 3.x run the idapyswitch binary from IDA's folder.
+
 ## Quick Usage
 
 To use the auto-analysis feature:
@@ -48,16 +50,18 @@ To decode ALL IOCTLs within a function:
 
 ### Advanced Usage
 
-- In the [vulnerable_function_lists](DriverBuddyReloaded/vulnerable_functions_lists) directory, lists of potentially
-  dangerous/problematic functions, Windows APIs and opcodes are defined; you can edit the `custom` list including a list
-  of driver specific functions you're working on. A brief description on why specific function has been listed there is
-  provided.
+- The [vulnerable_function_lists](DriverBuddyReloaded/vulnerable_functions_lists) directory contains a lists of potentially
+  dangerous/problematic functions, Windows APIs and opcodes; a brief description on why a specific function/API has been listed is
+  provided. You can edit the `custom` list including driver's specific functions.
+  
+  **Note**: `winapi_function_prefixes` will partial match to start of function name (e.g. `Zw` will match `ZwClose`, `ZwCommitComplete` and so on) while `winapi_functions` will perform exact matches only.
 - In [find_opcodes.py](DriverBuddyReloaded/find_opcodes.py), the `find_opcode_data` option will prevent Driver Buddy
   Reloaded to find opcodes in data sections. Switching it to `True` will print something along
   this [line](https://github.com/VoidSec/DriverBuddyReloaded/issues/11):
   `Found jnz     short loc_15862 in sub_15820 at 0x00015852`
   Usually, going at the showed address and re-defining the selection as code will bring the searched opcode back.
-  **Watch out**: It is prone to false positives!
+  
+  **Watch out**: switching it to `True`, will generates more false positives!
 
 ## About Driver Buddy Reloaded
 
@@ -160,7 +164,7 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
 
 ## Known Caveats and Limitations
 
-- Only IOCTL values >= 0x10000 will be automatically decoded, thus to prevent an high number of false positives. [Issue #15](https://github.com/VoidSec/DriverBuddyReloaded/issues/15)
+- Only IOCTL values >= `0x10000` will be automatically decoded, thus to prevent an high number of false positives. [Issue #15](https://github.com/VoidSec/DriverBuddyReloaded/issues/15)
 - Experimental `DispatchDeviceControl` searching works only for x64 drivers
 - Shortcuts are incompatible with F-Secure's [win_driver_plugin](https://github.com/FSecureLABS/win_driver_plugin)
 - Shortcuts are incompatible with [findcrypt-yara](https://github.com/polymorf/findcrypt-yara)
