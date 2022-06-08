@@ -214,6 +214,7 @@ winapi_function_prefixes = [
     ######################################################
     # These functions can allow arbitrary memory read/write
     "MmMapIoSpace",
+    # MmMapIoSpaceEx
     ######################################################
     # These functions can throw exceptions when limited memory is available,
     # resulting in unstable behaviour and potential DoS conditions.
