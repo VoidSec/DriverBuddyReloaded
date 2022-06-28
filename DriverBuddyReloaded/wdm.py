@@ -307,9 +307,9 @@ def find_dispatch_function(log_file):
             print("[>] The likely dispatch function is: {}".format(func))
             log_file.write("[>] The likely dispatch function is: {}\n".format(func))
         else:
-            print("[>] Based off of the offset it is loaded at, a potential dispatch function is: {}".format(func))
+            print("[>] Based off the offset it is loaded at, a potential dispatch function is: {}".format(func))
             log_file.write(
-                "[>] Based off of the offset it is loaded at, a potential dispatch function is: {}\n".format(func))
+                "[>] Based off the offset it is loaded at, a potential dispatch function is: {}\n".format(func))
             print("[>] Based off basic CFG analysis, the likely dispatch function is: {}".format(cfg_funcs[0]))
             log_file.write(
                 "[>] Based off basic CFG analysis, the likely dispatch function is: {}\n".format(cfg_funcs[0]))
