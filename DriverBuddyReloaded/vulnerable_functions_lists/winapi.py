@@ -213,8 +213,54 @@ winapi_function_prefixes = [
     # OemToCharW
     ######################################################
     # These functions can allow arbitrary memory read/write
-    "MmMapIoSpace",
+    "Mm",
+    # MmAdvanceMdl
+    # MmAllocateContiguousMemory
+    # MmAllocateContiguousMemoryEx
+    # MmAllocateContiguousMemorySpecifyCache
+    # MmAllocateContiguousMemorySpecifyCacheNode
+    # MmAllocateContiguousNodeMemory
+    # MmAllocateMappingAddress
+    # MmAllocateMappingAddressEx
+    # MmAllocateMdlForIoSpace
+    # MmAllocateNodePagesForMdlEx
+    # MmAllocatePagesForMdl
+    # MmAllocatePagesForMdlEx
+    # MmBuildMdlForNonPagedPool
+    # MmFreeContiguousMemory
+    # MmFreeContiguousMemorySpecifyCache
+    # MmFreeMappingAddress
+    # MmFreePagesFromMdl
+    # MmGetMdlByteCount
+    # MmGetMdlPfnArray
+    # MmGetSystemAddressForMdl
+    # MmGetSystemRoutineAddress
+    # MmGetSystemRoutineAddressEx
+    # MmIsDriverSuspectForVerifier
+    # MmIsDriverVerifying
+    # MmIsDriverVerifyingByAddress
+    # MmLockPagableCodeSection
+    # MmLockPagableDataSection
+    # MmMapIoSpace
     # MmMapIoSpaceEx
+    # MmMapLockedPages
+    # MmMapLockedPagesSpecifyCache
+    # MmMapLockedPagesWithReservedMapping
+    # MmMapMdl
+    # MmMapMemoryDumpMdlEx
+    # MmPageEntireDriver
+    # MmProbeAndLockPages
+    # MmProbeAndLockSelectedPages
+    # MmProtectDriverSection
+    # MmProtectMdlSystemAddress
+    # MmQuerySystemSize
+    # MmResetDriverPaging
+    # MmSizeOfMdl
+    # MmUnlockPagableImageSection
+    # MmUnlockPages
+    # MmUnmapIoSpace
+    # MmUnmapLockedPages
+    # MmUnmapReservedMapping
     ######################################################
     # These functions can throw exceptions when limited memory is available,
     # resulting in unstable behaviour and potential DoS conditions.
