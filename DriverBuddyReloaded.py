@@ -160,7 +160,7 @@ class IOCTLTracker:
                       "-----------------------------------------------")
                 IOCTL_file.write("Driver Buddy Reloaded - IOCTLs\n"
                                  "-----------------------------------------------\n")
-                print("%-10s | %-10s | %-42s | %-10s | %-22s | %s" % (
+                print("%-10s  | %-10s | %-42s | %-10s | %-22s | %s" % (
                     "Address", "IOCTL Code", "Device", "Function", "Method", "Access"))
                 IOCTL_file.write("%-10s | %-10s | %-42s | %-10s | %-22s | %s\n" % (
                     "Address", "IOCTL Code", "Device", "Function", "Method", "Access"))
@@ -180,7 +180,7 @@ class IOCTLTracker:
                                                                                 ioctl_file_name))
             print("\nDriver Buddy Reloaded - IOCTLs\n"
                   "-----------------------------------------------")
-            print("%-10s | %-10s | %-42s | %-10s | %-22s | %s" % (
+            print("%-10s  | %-10s | %-42s | %-10s | %-22s | %s" % (
                 "Address", "IOCTL Code", "Device", "Function", "Method", "Access"))
             for (addr, ioctl_code) in ioctls:
                 function = ioctl_decoder.get_function(ioctl_code)
