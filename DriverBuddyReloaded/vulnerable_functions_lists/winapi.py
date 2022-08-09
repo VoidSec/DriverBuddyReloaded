@@ -199,6 +199,7 @@ winapi_function_prefixes = [
     # ZwSetInformationTransaction
     # ZwSetValueKey
     # ZwSinglePhaseReject
+    # ZwTerminateProcess
     # ZwUnloadDriver
     # ZwUnmapViewOfSection
     # ZwWriteFile
