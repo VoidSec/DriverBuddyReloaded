@@ -19,12 +19,12 @@
 
 ## Installation
 
-Copy `DriverBuddyReloaded` folder and `DriverBuddyReloaded.py` file into the IDA plugins folder, for example:
+Copy the `DriverBuddyReloaded` folder and the `DriverBuddyReloaded.py` script file into the IDA plugins folder, for example:
 - `%APPDATA%\Hex-Rays\IDA Pro\plugins\`
 - `C:\Program Files\IDA Pro 7.6\plugins\`
 - `~/.idapro/plugins/`
 
-If you are using Python v. 3.x run the `idapyswitch.exe` binary, present in IDA's folder, from an admin command prompt.
+If you use Python v. 3.x, run the `idapyswitch.exe` binary (located in IDA's folder) from an admin command prompt.
 
 ## Quick Usage
 
@@ -33,19 +33,19 @@ To use the auto-analysis feature:
 1. Start IDA and load a Windows kernel driver.
 2. Go to `Edit -> Plugins -> Driver Buddy Reloaded` or press `CTRL+ALT+A` to start the auto-analysis.
 3. Check the "Output" window for the analysis results.
-4. A `DriverName.sys-2021-12-10-TIME_STAMP-DriverBuddyReloaded_autoanalysis.txt` file, containing the analysis results,
+4. A `<DRIVER_NAME>.sys-YYYY-MM-DD-TIME_STAMP-DriverBuddyReloaded_autoanalysis.txt` file containing the analysis results,
    will be written under IDA's DB directory.
 
 To decode an IOCTL:
 
 1. Place the mouse cursor on the line containing a suspected IOCTL code.
-2. Right-click and select `Driver Buddy Reloaded -> Decode IOCTL`; alternatively press the `CTRL+ALT+D` shortcut.
+2. Right-click and select `Driver Buddy Reloaded -> Decode IOCTL`; alternatively, press the `CTRL+ALT+D` shortcut.
 
 To decode ALL IOCTLs within a function:
 
 1. Place the mouse cursor on the first instruction of the function you believe to be the IOCTL dispatcher (
    `DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`)
-2. Right-click and select `Driver Buddy Reloaded -> Decode ALL IOCTLs in Function`; alternatively press the `CTRL+ALT+F`
+2. Right-click and select `Driver Buddy Reloaded -> Decode ALL IOCTLs in Function`; alternatively, press the `CTRL+ALT+F`
    shortcut.
 3. A `DriverName.sys-2021-12-10-TIME_STAMP-IOCTLs.txt`/`DriverName.sys-2021-12-10-TIME_STAMP-IOCTLs.txt_dumb.txt` file,
    containing all the decoded IOCTLs up to that moment, will be written under IDA's DB directory.
