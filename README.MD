@@ -19,7 +19,10 @@
 
 ## Installation
 
-Copy `DriverBuddyReloaded` folder and `DriverBuddyReloaded.py` file into the IDA plugins folder (e.g. `C:\Program Files\IDA Pro 7.6\plugins\`) or wherever you have installed IDA.
+Copy `DriverBuddyReloaded` folder and `DriverBuddyReloaded.py` file into the IDA plugins folder, for example:
+- `%APPDATA%\Hex-Rays\IDA Pro\plugins\`
+- `C:\Program Files\IDA Pro 7.6\plugins\`
+- `~/.idapro/plugins/`
 
 If you are using Python v. 3.x run the `idapyswitch.exe` binary, present in IDA's folder, from an admin command prompt.
 
