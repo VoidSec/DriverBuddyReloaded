@@ -26,6 +26,8 @@ Copy the `DriverBuddyReloaded` folder and the `DriverBuddyReloaded.py` script fi
 
 If you use Python v. 3.x, run the `idapyswitch.exe` binary (located in IDA's folder) from an admin command prompt.
 
+**NOTE:** IDA SDK > v.7.5 is required in order for this script to run. 
+
 ## Quick Usage
 
 To use the auto-analysis feature:
