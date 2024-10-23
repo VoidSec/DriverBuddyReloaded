@@ -1,5 +1,4 @@
 import ida_bytes
-import ida_struct
 import idaapi
 import idc
 
@@ -114,7 +113,7 @@ def populate_wdf():
                 id = add_struct(version)
                 if id != -1:
                     wdf_func = get_ptr(addr + ptr_size + WDF_FUNCTIONS_OFFSET)
-                    size = ida_struct.get_struc_size(id)
+                    size = idc.get_struc_size(id)
                     log('doStruct (size=' + hex(size) + ') at ' + hex(wdf_func))
                     ida_bytes.del_items(wdf_func, 0, ptr_size)
                     
