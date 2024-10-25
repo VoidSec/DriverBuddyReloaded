@@ -1,5 +1,6 @@
 import idaapi
 import idautils
+import ida_ida
 import idc
 
 """
@@ -15,7 +16,7 @@ def check_for_fake_driver_entry(driver_entry_address, log_file):
     :return: real_driver_entry address
     """
 
-    is64 = idaapi.get_inf_structure().is_64bit()
+    is64 = ida_ida.inf_is_64bit()
     address = idaapi.get_func(driver_entry_address)
     end_address = address.end_ea
     while idc.print_insn_mnem(end_address) != "jmp" and idc.print_insn_mnem(end_address) != "call":

@@ -86,10 +86,11 @@ def FindInstructions(instr, asm_where=None):
 
     # find all binary strings
     # print("[>] Searching for opcode {} - [{}]...".format(instr, bin_str))
-    ea = ida_ida.cvar.inf.min_ea
+    ea = ida_ida.inf_get_min_ea()
     ret = []
     while True:
-        ea = ida_search.find_binary(ea, ida_idaapi.BADADDR, bin_str, 16, ida_search.SEARCH_DOWN)
+        ea = ida_bytes.find_bytes(bin_str, ea)
+        # ea = ida_search.find_binary(ea, ida_idaapi.BADADDR, bin_str, 16, ida_search.SEARCH_DOWN)
         if ea == ida_idaapi.BADADDR:
             break
         ret.append(ea)
