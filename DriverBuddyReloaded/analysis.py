@@ -86,6 +86,8 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
         rep.info("[+] Driver type detected: {}".format(driver_type))
         if ioctl_decoder.find_ioctls(rep) is False:
             rep.info("[!] Unable to automatically find any IOCTLs")
+        if ctx.ddc_addresses:
+            ioctl_decoder.scan_dispatchers(rep, ctx.ddc_addresses)
     else:
         rep.info("[!] ERR: Unable to enumerate functions")
 

@@ -267,7 +267,7 @@ class DriverBuddyPlugin(idaapi.plugin_t):
         idc.auto_wait()  # wait for IDA's own analysis to complete
         # Fresh timestamp so all output artefacts for this run share one stamp.
         config._run_stamp = None
-        rep = reporting.Reporter(config.out_path("DriverBuddyReloaded_autoanalysis.txt"))
+        rep = reporting.Reporter(config.out_path("autoanalysis.txt"))
         rep.info("Driver Buddy Reloaded Auto-analysis")
         rep.info("-----------------------------------------------")
         try:

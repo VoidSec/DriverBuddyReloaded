@@ -1,8 +1,26 @@
 """
-Provides functions for decoding 32 bit IOCTL codes into the constants used for them and C defines which use the CTL_CODE macro
-A bulk of the code here is taken from Satoshi Tanda's https://github.com/tandasat/WinIoCtlDecoder/blob/master/plugins/WinIoCtlDecoder.py
+ioctl_decoder.py: IOCTL code decoding, text-search and flow-chart-based IOCTL discovery.
+
+Decode functions are pure Python (no IDA) and are tested offline.  The two discovery
+functions -- find_ioctls() and scan_dispatchers() -- require a live IDA database.
+
+find_ioctls() uses IDA's IoControlCode operand annotations (fast, requires struct types).
+scan_dispatchers() does a flow-chart brute-force scan of identified dispatcher functions,
+picking up IOCTLs that find_ioctls() misses when IDA has not applied WDM struct types.
+
+A bulk of the original IOCTL decode code is from Satoshi Tanda's WinIoCtlDecoder:
+https://github.com/tandasat/WinIoCtlDecoder/blob/master/plugins/WinIoCtlDecoder.py
 """
+
+from __future__ import annotations
+
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from DriverBuddyReloaded.reporting import Reporter
+
 import ida_funcs
+import idaapi
 import idc
 
 from DriverBuddyReloaded import config, ida_compat
@@ -221,7 +239,73 @@ def format_row(addr, ioctl_code):
         d["method_name"], d["method_code"], d["access_name"], d["access_code"])
 
 
-def find_ioctls(rep):
+_ntstatus_cache = None
+
+
+def _get_ntstatus_values():
+    """Lazy loader for the NTSTATUS filter set. Replaced by dynamic IDA enum lookup in Phase 4."""
+    global _ntstatus_cache
+    if _ntstatus_cache is None:
+        from DriverBuddyReloaded import NTSTATUS
+        _ntstatus_cache = NTSTATUS.ntstatus_values
+    return _ntstatus_cache
+
+
+def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
+    """
+    Flow-chart IOCTL scan over every identified WDM dispatch handler.
+
+    Complements find_ioctls() (which relies on IDA's IoControlCode operand
+    annotation) by brute-force scanning each basic block for cmp/sub/mov
+    instructions whose second operand is a large immediate that is not a known
+    NTSTATUS value.  Skips IOCTL addresses already recorded by find_ioctls().
+
+    :param rep: Reporter instance
+    :param ddc_addresses: list of function start EAs to scan
+    :return bool: True if any new IOCTLs were found
+    """
+    if not ddc_addresses:
+        return False
+
+    already_seen = {f.ea for f in rep.by_category("ioctl")}
+    ntstatus = _get_ntstatus_values()
+    result = False
+
+    for func_ea in ddc_addresses:
+        f = idaapi.get_func(func_ea)
+        if not f:
+            continue
+        func_name = ida_funcs.get_func_name(func_ea) or ""
+        fc = idaapi.FlowChart(f, flags=idaapi.FC_PREDS)
+        for block in fc:
+            for instr in range(block.start_ea, block.end_ea):
+                if idc.print_insn_mnem(instr) not in ('cmp', 'sub', 'mov'):
+                    continue
+                if idc.get_operand_type(instr, 1) != 5:
+                    continue
+                value = idc.get_operand_value(instr, 1) & 0xffffffff
+                if value < config.IOCTL_MIN_VALUE:
+                    continue
+                if instr in already_seen:
+                    continue
+                if value in ntstatus:
+                    continue
+                already_seen.add(instr)
+                d = decode(value)
+                rep.add(Finding(
+                    category="ioctl",
+                    title="IOCTL 0x%08X" % value,
+                    ea=instr,
+                    func=func_name,
+                    severity=config.SEV_INFO,
+                    detail="%s / %s / %s [dispatcher scan]" % (
+                        d["device_name"], d["method_name"], d["access_name"]),
+                    data=d))
+                result = True
+    return result
+
+
+def find_ioctls(rep: Reporter) -> bool:
     """
     Attempts to locate IOCTLs in the driver automatically by scanning for
     `IoControlCode` references and decoding the associated immediate operand.

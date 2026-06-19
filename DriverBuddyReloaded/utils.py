@@ -51,6 +51,8 @@ class AnalysisContext:
     c_map: dict = field(default_factory=dict)
     winapi_map: dict = field(default_factory=dict)
     driver_map: dict = field(default_factory=dict)
+    # Addresses of identified WDM dispatch handlers; populated by get_driver_id().
+    ddc_addresses: list = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -221,6 +223,7 @@ def get_driver_id(driver_entry_addr: int, rep: Reporter, ctx: AnalysisContext) -
         if ddc_map is not None:
             for ddc in ddc_map.values():
                 define_ddc(ddc, rep)
+                ctx.ddc_addresses.append(ddc)
         find_dispatch_function(rep)
 
     return driver_type
