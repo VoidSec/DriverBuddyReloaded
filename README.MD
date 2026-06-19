@@ -21,12 +21,14 @@
 
 Copy the `DriverBuddyReloaded` folder and the `DriverBuddyReloaded.py` script file into the IDA plugins folder, for example:
 - `%APPDATA%\Hex-Rays\IDA Pro\plugins\`
-- `C:\Program Files\IDA Pro 7.6\plugins\`
+- `C:\Program Files\IDA Pro 8.4\plugins\`
 - `~/.idapro/plugins/`
 
-If you use Python v. 3.x, run the `idapyswitch.exe` binary (located in IDA's folder) from an admin command prompt.
+If your IDA is configured for Python 2, run the `idapyswitch` binary (located in IDA's folder) to switch it to Python 3.
 
-**NOTE:** IDA SDK > v.7.5 is required in order for this script to run. 
+**NOTE:** Driver Buddy Reloaded runs on IDA 7.x, 8.x (including 8.4) and 9.0+ with Python 3. All version-specific
+IDA API differences (the removal of `get_inf_structure`, the `ida_struct` module and the `idc.*struc*` helpers in
+IDA 9.0, etc.) are handled internally by the `DriverBuddyReloaded/ida_compat.py` compatibility layer.
 
 ## Quick Usage
 
@@ -34,9 +36,14 @@ To use the auto-analysis feature:
 
 1. Start IDA and load a Windows kernel driver.
 2. Go to `Edit -> Plugins -> Driver Buddy Reloaded` or press `CTRL+ALT+A` to start the auto-analysis.
-3. Check the "Output" window for the analysis results.
-4. A `<DRIVER_NAME>.sys-YYYY-MM-DD-TIME_STAMP-DriverBuddyReloaded_autoanalysis.txt` file containing the analysis results,
-   will be written under IDA's DB directory.
+3. Check the "Output" window for the analysis results, and the **Driver Buddy Reloaded - Findings** window that opens
+   at the end of the run (double-click a row to jump to its address).
+4. The following files are written under IDA's DB directory (all prefixed with `<DRIVER_NAME>-YYYY-MM-DD-TIMESTAMP-`):
+   - `DriverBuddyReloaded_autoanalysis.txt` - the full text analysis log
+   - `findings.json` - machine-readable findings (IOCTLs, flagged functions, device names, pooltags, call chains)
+   - `report.html` - a standalone, severity-grouped HTML report
+   - `ioctl_pocs.c` - a `DeviceIoControl` PoC harness skeleton (severity-sorted)
+   - `pooltags.txt` - dumped Pooltags in `pooltags.txt` format for WinDbg
 
 To decode an IOCTL:
 
@@ -81,6 +88,16 @@ engineering tasks. It has a number of handy features, such as:
 * Flagging functions prone to misuse
 * Finding potential `DeviceName`
 * Dumping `Pooltags`
+* **Risk-scoring** decoded IOCTLs (prioritising `METHOD_NEITHER` / `FILE_ANY_ACCESS` and handlers that reach
+  dangerous sinks such as `MmMapIoSpace`, `memcpy`, `__writemsr`) and presenting all findings, by severity, in a
+  clickable results window (double-click to jump to the address)
+* **Tracing call chains** from dispatch / IOCTL handlers to dangerous sinks (heuristic, name-based)
+* Exporting results as a machine-readable **JSON** file, a standalone **HTML report**, and a generated **C/C++
+  `DeviceIoControl` PoC harness** to bootstrap testing/fuzzing
+
+> The risk-scoring, reporting and PoC-generation features were inspired by ideas from the
+> *Driver Buddy Revolutions* rewrite, re-implemented here on top of Reloaded's structure-labeling and interactive
+> IOCTL decoding (which Revolutions dropped).
 
 ![](/screenshots/auto-analysis.png)
 
@@ -169,6 +186,9 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
 ## Known Caveats and Limitations
 
 - Only IOCTL values >= `0x10000` will be automatically decoded, thus to prevent an high number of false positives. [Issue #15](https://github.com/VoidSec/DriverBuddyReloaded/issues/15)
+- Risk scoring and call-chain tracing are **heuristic, name-based lead generators**, not dataflow analysis; treat
+  High/Critical findings as places to look first, not as confirmed vulnerabilities. Feature toggles live in
+  `DriverBuddyReloaded/config.py`.
 - Experimental `DispatchDeviceControl` searching works only for x64 drivers
 - Shortcuts are incompatible with F-Secure's [win_driver_plugin](https://github.com/FSecureLABS/win_driver_plugin)
 - Shortcuts are incompatible with [findcrypt-yara](https://github.com/polymorf/findcrypt-yara)
@@ -184,10 +204,15 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
 - Created in 2021 by [Paolo Stagno](https://voidsec.com/) aka [@Void_Sec](https://twitter.com/Void_Sec):
     - Made it compatible with Python 3.x
     - Made it compatible with IDA 7.x
+    - Ported to IDA 8.4 and 9.0+ via the `ida_compat` compatibility layer
+    - Added IOCTL risk scoring, a clickable findings window, and JSON/HTML/PoC reporting
+    - Refactored around a shared findings model (`reporting.Finding`/`Reporter`); added regression tests
     - Updated C/C++ function and Windows APIs list
     - Various bug fixing
     - Various improvements
     - Integrated part of the functionalities presents in F-Secure's win_driver_plugin
+- Risk-scoring, reporting and PoC-generation ideas adapted from
+  [Driver Buddy Revolutions](https://github.com/jsacco/driverbuddyrevolutionsIDA) by Juan Sacco.
 - [DriverBuddy](https://github.com/nccgroup/DriverBuddy) was originally written by Braden Hollembaek and Adam Pond of
   NCC Group.
 - Using Satoshi Tanda's [IOCTL decoder](https://github.com/tandasat/WinIoCtlDecoder).

@@ -1,3 +1,6 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
 # PyCharm ENV
 venv/
 .idea/

@@ -1,190 +1,103 @@
 """
-A script to help you find desired opcodes/instructions in a database
+find_opcodes.py: search the database for desired opcodes / assembly statements.
 
-The script accepts opcodes and assembly statements (which will be assembled) separated by semicolon
+Accepts opcodes and assembly statements separated by semicolons. Assembly
+statements are assembled with idautils.Assemble; raw space-separated hex byte
+strings (e.g. "0f 32") are used verbatim.
 
-The general syntax is:
-  find(asm or opcodes, x=Bool, asm_where=ea)
+  find(rep, "wrmsr", x=True)            # executable segments only
+  find(rep, "0f 32;asm_statement", ...)
 
-* Example:
-  find("asm_statement1;asm_statement2;de ea dc 0d e0;asm_statement3;xx yy zz;...")
-* To filter-out non-executable segments pass x=True
-  find("jmp dword ptr [esp]", x=True)
-* To specify in which context the instructions should be assembled, pass asm_where=ea:
-  find("jmp dword ptr [esp]", asm_where=here())
-
-Copyright (c) 1990-2021 Hex-Rays
-ALL RIGHTS RESERVED.
+Adapted from Hex-Rays' find-instruction sample (Copyright (c) Hex-Rays);
+ported to the ida_compat search layer for IDA 7.x/8.4/9.0+.
 """
-import re
-import sys
 
-import ida_bytes
+import re
+
 import ida_funcs
-import ida_ida
 import ida_idaapi
-import ida_kernwin
-import ida_lines
-import ida_search
 import ida_segment
-import ida_ua
 import idautils
+
+from DriverBuddyReloaded import config, ida_compat
+from DriverBuddyReloaded.reporting import Finding
 from DriverBuddyReloaded.vulnerable_functions_lists.opcode import *
 
-# This option will prevent Driver Buddy Reloaded to find opcodes in data sections
-# https://github.com/VoidSec/DriverBuddyReloaded/issues/11
-# switch it to true to see something along this line:
-# - Found jnz     short loc_15862 in sub_15820 at 0x00015852
-# going at that address and defining the selection as code will usually bring the searched opcode back
-# prone to false positives
+# Prevent Driver Buddy Reloaded from reporting opcode matches in data sections
+# (https://github.com/VoidSec/DriverBuddyReloaded/issues/11). Switch to True to
+# surface raw byte matches too (more false positives).
 find_opcode_data = False
 
 
 def FindInstructions(instr, asm_where=None):
     """
-    Finds instructions/opcodes
-    :param instr:
-    :param asm_where:
-    :return: Returns a tuple(True, [ ea, ... ]) or a tuple(False, "error message")
+    Assemble/parse `instr` and find every matching location.
+    :return: tuple(True, [ea, ...]) or tuple(False, "error message")
     """
 
-    if not asm_where:
-        # get first segment
+    if asm_where is None:
         seg = ida_segment.get_first_seg()
         asm_where = seg.start_ea if seg else ida_idaapi.BADADDR
         if asm_where == ida_idaapi.BADADDR:
             return False, "No segments defined"
 
-    # regular expression to distinguish between opcodes and instructions
     re_opcode = re.compile('^[0-9a-f]{2} *', re.I)
-
-    # split lines
-    lines = instr.split(";")
-
-    # all the assembled buffers (for each instruction)
     bufs = []
-    for line in lines:
+    for line in instr.split(";"):
         if re_opcode.match(line):
-            # convert from hex string to a character list then join the list to form one string
-            buf = bytes(bytearray([int(x, 16) for x in line.split()]))
+            # hex byte string -> bytes
+            bufs.append(bytes(bytearray(int(x, 16) for x in line.split())))
         else:
-            # assemble the instruction
             ret, buf = idautils.Assemble(asm_where, line)
             if not ret:
                 return False, "Failed to assemble: {}".format(line)
-        # add the assembled buffer
-        bufs.append(buf)
+            bufs.append(buf)
 
-    # join the buffer into one string
     buf = b''.join(bufs)
-
-    # take total assembled instructions length
     tlen = len(buf)
+    bin_str = ' '.join("%02X" % b for b in buf)
 
-    # convert from binary string to space separated hex string
-    bin_str = ' '.join(["%02X" % (ord(x) if sys.version_info.major < 3 else x) for x in buf])
-
-    # find all binary strings
-    # print("[>] Searching for opcode {} - [{}]...".format(instr, bin_str))
-    ea = ida_ida.inf_get_min_ea()
+    ea = ida_compat.min_ea()
+    end = ida_compat.max_ea()
     ret = []
     while True:
-        ea = ida_bytes.find_bytes(bin_str, ea)
-        # ea = ida_search.find_binary(ea, ida_idaapi.BADADDR, bin_str, 16, ida_search.SEARCH_DOWN)
-        if ea == ida_idaapi.BADADDR:
+        ea = ida_compat.bin_search(bin_str, ea, end, nocase=False)
+        if ea == ida_compat.BADADDR:
             break
         ret.append(ea)
-        # ida_kernwin.msg(".")
         ea += tlen
     if not ret:
         return False, "Could not match {} - [{}]".format(instr, bin_str)
-    # ida_kernwin.msg("\n")
     return True, ret
 
 
-# Chooser class
-class SearchResultChoose(ida_kernwin.Choose):
-    def __init__(self, title, items):
-        ida_kernwin.Choose.__init__(
-            self,
-            title,
-            [["Address", 30], ["Function (or segment)", 25], ["Instruction", 20]],
-            width=250)
-        self.items = items
-
-    def OnGetSize(self):
-        return len(self.items)
-
-    def OnGetLine(self, n):
-        i = self.items[n]
-        ea = i.ea
-        return [
-            hex(i.ea),
-            i.funcname_or_segname,
-            i.text
-        ]
-
-    def OnSelectLine(self, n):
-        ida_kernwin.jumpto(self.items[n].ea)
-
-
-# class to represent the results
-class SearchResult:
-    def __init__(self, ea, log_file):
-        self.ea = ea
-        self.funcname_or_segname = ""
-        self.text = ""
-        if not ida_bytes.is_code(ida_bytes.get_flags(ea)):
-            ida_ua.create_insn(ea)
-
-        # text
-        t = ida_lines.generate_disasm_line(ea)
-        if t:
-            self.text = ida_lines.tag_remove(t)
-
-        # funcname_or_segname
-        n = ida_funcs.get_func_name(ea) \
-            or ida_segment.get_segm_name(ida_segment.getseg(ea))
-        if n:
-            self.funcname_or_segname = n
-        if find_opcode_data is False:
-            for opcode in opcodes:
-                if opcode in self.text:
-                    print(
-                        "\t- Found {} in {} at 0x{addr:08x}".format(self.text, self.funcname_or_segname, addr=self.ea))
-                    log_file.write("\t- Found {} in {} at 0x{addr:08x}\n".format(self.text, self.funcname_or_segname,
-                                                                                 addr=self.ea))
-        else:
-            print("\t- Found {} in {} at 0x{addr:08x}".format(self.text, self.funcname_or_segname, addr=self.ea))
-            log_file.write(
-                "\t- Found {} in {} at 0x{addr:08x}\n".format(self.text, self.funcname_or_segname, addr=self.ea))
-
-
-def find(log_file, s=None, x=False, asm_where=None):
+def find(rep, s=None, x=False, asm_where=None):
     """
-    Search for opcode/instruction
-    :param log_file: log file handler
-    :param s: opcode/instruction
-    :param x: if true search for executable code segments only
-    :param asm_where: where to start searching
-    :return:
+    Search for an opcode/instruction and report matches as findings.
+    :param rep: Reporter instance
+    :param s: opcode/instruction string
+    :param x: if True, restrict to executable segments only
+    :param asm_where: where to assemble in (defaults to first segment)
     """
 
-    b, ret = FindInstructions(s, asm_where)
-    if b:
-        # executable segs only?
-        if x:
-            results = []
-            for ea in ret:
-                seg = ida_segment.getseg(ea)
-                if (not seg) or (seg.perm & ida_segment.SEGPERM_EXEC) == 0:
-                    continue
-                results.append(SearchResult(ea, log_file))
-        else:
-            results = [SearchResult(ea, log_file) for ea in ret]
-        """title = "Search result for: [%s]" % s
-        ida_kernwin.close_chooser(title)
-        c = SearchResultChoose(title, results)
-        c.Show(True)"""
-    # else:
-    # print(ret)
+    ok, ret = FindInstructions(s, asm_where)
+    if not ok:
+        return
+    for ea in ret:
+        seg = ida_segment.getseg(ea)
+        if x and ((not seg) or (seg.perm & ida_segment.SEGPERM_EXEC) == 0):
+            continue
+        text = ida_compat.disasm_text(ea)
+        # Filter false positives: require the disassembly to contain a known opcode,
+        # unless data-section matching has been explicitly enabled.
+        if not find_opcode_data and not any(op in text for op in opcodes):
+            continue
+        func_or_seg = ida_funcs.get_func_name(ea) \
+            or (ida_segment.get_segm_name(seg) if seg else "")
+        rep.add(Finding(
+            category="opcode",
+            title=s,
+            ea=ea,
+            func=func_or_seg,
+            severity=config.OPCODE_SEVERITY.get(s, config.SEV_MEDIUM),
+            detail=text))

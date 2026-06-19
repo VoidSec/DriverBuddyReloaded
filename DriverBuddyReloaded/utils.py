@@ -1,12 +1,10 @@
-import math
-import time
-from datetime import date
-
 import ida_funcs
 import ida_nalt
 import ida_segment
 import idautils
 import idc
+from DriverBuddyReloaded import config
+from DriverBuddyReloaded.reporting import Finding
 from DriverBuddyReloaded.vulnerable_functions_lists.c import *
 from DriverBuddyReloaded.vulnerable_functions_lists.custom import *
 from DriverBuddyReloaded.vulnerable_functions_lists.opcode import *
@@ -21,22 +19,6 @@ imports_map = {}
 c_map = {}
 winapi_map = {}
 driver_map = {}
-
-
-def timestamp():
-    """
-    Return timestamp
-    :return: 1552562387
-    """
-    return str(int(time.time()))
-
-
-def today():
-    """
-    Return today date (Y-M-d)
-    :return: 2019-03-12
-    """
-    return str(date.today())
 
 
 def cb(address, name, ord):
@@ -122,82 +104,60 @@ def populate_driver_map():
     return result
 
 
-def populate_data_structures(log_file):
+def populate_data_structures(rep):
     """
     Enumerate through the list of functions and load vulnerable functions found into a map.
-    :param log_file: log file handler
+    :param rep: Reporter instance
     :return boolean: False if unable to enumerate functions, True otherwise
     """
 
-    # print("[>] Populating IDA functions...")
     result = populate_function_map()
-    # search for problematic opcodes; x=True search in executable segments only
-    print("[>] Searching for interesting opcodes...")
-    log_file.write("[>] Searching for interesting opcodes...\n")
+    # search for problematic opcodes in executable segments only (x=True)
+    rep.info("[>] Searching for interesting opcodes...")
     for opcode in opcodes:
-        # x=True; search opcodes in executable code segments only
-        find(log_file, opcode, x=True)
+        find(rep, opcode, x=True)
     if result is True:
-        print("[>] Searching for interesting C/C++ functions...")
-        log_file.write("[>] Searching for interesting C/C++ functions...\n")
-        result = populate_c_map()
-        if result is True:
-            # Interesting C/C++ functions detected
-            get_xrefs(c_map, log_file)
-        # else:
-        #    print("[-] No interesting C/C++ functions found")
-        print("[>] Searching for interesting Windows APIs...")
-        log_file.write("[>] Searching for interesting Windows APIs...\n")
-        result = populate_winapi_map()
-        if result is True:
-            # Interesting Windows API functions detected
-            get_xrefs(winapi_map, log_file)
-        # else:
-        #    print("[-] No interesting Windows API functions found")
+        rep.info("[>] Searching for interesting C/C++ functions...")
+        if populate_c_map():
+            get_xrefs(c_map, rep, "C/C++")
+        rep.info("[>] Searching for interesting Windows APIs...")
+        if populate_winapi_map():
+            get_xrefs(winapi_map, rep, "WinAPI")
         # do not search for custom driver's functions if the list is empty
         if len(driver_functions) > 0:
-            print("[>] Searching for interesting driver functions...")
-            log_file.write("[>] Searching for interesting driver functions...\n")
-            result = populate_driver_map()
-            if result is True:
-                # Interesting driver functions detected
-                get_xrefs(driver_map, log_file)
-            # else:
-            #    print("[-] No interesting specific driver functions found")
+            rep.info("[>] Searching for interesting driver functions...")
+            if populate_driver_map():
+                get_xrefs(driver_map, rep, "driver")
         return True
-    else:
-        print("[!] ERR: Couldn't populate function_map")
-        log_file.write("[!] ERR: Couldn't populate function_map\n")
-        return False
+    rep.info("[!] ERR: Couldn't populate function_map")
+    return False
 
 
-def get_xrefs(func_map, log_file):
+def get_xrefs(func_map, rep, kind="function"):
     """
-    Gets cross references to vulnerable functions stored in map.
+    Report cross references to flagged functions stored in `func_map` as findings.
     :param func_map: function map you want xrefs for
-    :param log_file: log file handler
-    :return:
+    :param rep: Reporter instance
+    :param kind: human label for the function category (C/C++, WinAPI, driver)
     """
 
     for name, address in func_map.items():
-        code_refs = idautils.CodeRefsTo(int(address), 0)
-        for ref in code_refs:
-            # xref = "0x%08x" % ref
+        severity = config.DANGEROUS_SINKS.get(name, config.SEV_LOW)
+        for ref in idautils.CodeRefsTo(int(address), 0):
             n = ida_funcs.get_func_name(ref) \
                 or ida_segment.get_segm_name(ida_segment.getseg(ref))
-            print("\t- Found {} in {} at 0x{addr:08x}".format(name, n, addr=ref))
-            log_file.write("\t- Found {} in {} at 0x{addr:08x}\n".format(name, n, addr=ref))
+            rep.add(Finding(category="flagged_function", title=name, ea=ref, func=n,
+                            severity=severity, detail="{} function".format(kind)))
 
 
-def get_driver_id(driver_entry_addr, log_file):
+def get_driver_id(driver_entry_addr, rep):
     """
     Attempts to determine the type of the loaded driver by using functions found inside the imports section.
     :param driver_entry_addr: `DriverEntry` address
-    :param log_file: log file handler
+    :param rep: Reporter instance
     :return string: return the detected driver type
     """
 
-    # print("[>] Trying to determine driver type...")
     driver_type = ""
     # Iterate through imports and try to determine driver type
     for name, address in imports_map.items():
@@ -206,7 +166,7 @@ def get_driver_id(driver_entry_addr, log_file):
             break
         elif name == "WdfVersionBind":
             driver_type = "WDF"
-            populate_wdf()
+            populate_wdf(rep)
             break
         elif name == "StreamClassRegisterMinidriver":
             driver_type = "Stream Minidriver"
@@ -217,19 +177,16 @@ def get_driver_id(driver_entry_addr, log_file):
         elif name == "PcRegisterSubdevice":
             driver_type = "PortCls"
             break
-        else:
-            continue
     if driver_type == "":
-        print("[!] Unable to determine driver type; assuming WDM")
-        log_file.write("[!] Unable to determine driver type; assuming WDM\n")
+        rep.info("[!] Unable to determine driver type; assuming WDM")
         # Only WDM drivers make it here so run all the WDM stuff
         driver_type = "WDM"
-        real_driver_entry = check_for_fake_driver_entry(driver_entry_addr, log_file)
-        real_ddc_addr = locate_ddc(real_driver_entry, log_file)
+        real_driver_entry = check_for_fake_driver_entry(driver_entry_addr, rep)
+        real_ddc_addr = locate_ddc(real_driver_entry, rep)
         if real_ddc_addr is not None:
             for ddc in real_ddc_addr.values():
-                define_ddc(ddc)
-        find_dispatch_function(log_file)
+                define_ddc(ddc, rep)
+        find_dispatch_function(rep)
     return driver_type
 
 

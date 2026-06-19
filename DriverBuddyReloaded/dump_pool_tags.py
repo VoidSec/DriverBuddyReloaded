@@ -1,34 +1,40 @@
-import idaapi
+import ida_nalt
 import idautils
 import idc
+
+from DriverBuddyReloaded import config
+from DriverBuddyReloaded.reporting import Finding
+
+# Pool allocation/free APIs whose call sites carry a pool 'Tag' immediate,
+# including the newer Win11 ExAllocatePool2/3 family.
+POOL_TAG_FUNCS = [
+    "ExAllocatePoolWithTag",
+    "ExFreePoolWithTag",
+    "ExAllocatePool2",
+    "ExFreePool2",
+    "ExAllocatePool3",
+    "ExAllocatePoolWithTagPriority",
+    "ExAllocatePoolWithQuotaTag",
+    "ExAllocatePoolZero",
+    "ExAllocatePoolQuotaZero",
+    "ExAllocatePoolQuotaUninitialized",
+    "ExAllocatePoolPriorityZero",
+    "ExAllocatePoolPriorityUninitialized",
+    "ExAllocatePoolUninitialized",
+]
 
 
 def find_pool_tags():
     """
-    Dirty hack around IDA's type information, find references to tag using functions then the comment marking the tag
-    then add the function caller/tag to output dictionary.
+    Find references to pool functions then the 'Tag' immediate marked at the call
+    site, mapping each tag to the functions that use it.
+    :return dict: tag -> set of caller function names
     """
-
-    funcs = [
-        "ExAllocatePoolWithTag",
-        "ExFreePoolWithTag",
-        "ExAllocatePool2",
-        "ExFreePool2",
-        "ExAllocatePool3",
-        "ExAllocatePoolWithTagPriority",
-        "ExAllocatePoolWithQuotaTag",
-        "ExAllocatePoolZero",
-        "ExAllocatePoolQuotaZero",
-        "ExAllocatePoolQuotaUninitialized",
-        "ExAllocatePoolPriorityZero",
-        "ExAllocatePoolPriorityUninitialized",
-        "ExAllocatePoolUninitialized",
-    ]
 
     tags = {}
 
     def imp_cb(ea, name, ord):
-        if name in funcs:
+        if name in POOL_TAG_FUNCS:
             for xref in idautils.XrefsTo(ea):
                 call_addr = xref.frm
                 caller_name = idc.get_func_name(call_addr)
@@ -39,35 +45,36 @@ def find_pool_tags():
                         tag = ''
                         for i in range(3, -1, -1):
                             tag += chr((tag_raw >> 8 * i) & 0xFF)
-                        if tag in tags.keys():
-                            tags[tag].add(caller_name)
-                        else:
-                            tags[tag] = {caller_name}
+                        tags.setdefault(tag, set()).add(caller_name)
                         break
                     prev = idc.prev_head(prev)
         return True
 
-    nimps = idaapi.get_import_module_qty()
-
-    for i in range(0, nimps):
-        name = idaapi.get_import_module_name(i)
-        if not name:
+    for i in range(ida_nalt.get_import_module_qty()):
+        if not ida_nalt.get_import_module_name(i):
             continue
-
-        idaapi.enum_import_names(i, imp_cb)
+        ida_nalt.enum_import_names(i, imp_cb)
     return tags
 
 
-def get_all_pooltags():
+def collect(rep):
     """
-    Returns a string with a 'pooltags.txt' formatted string of 'pool tag' - 'driver' - 'functions which use it'.
+    Find pool tags, emit a Finding per tag, and return a 'pooltags.txt'-formatted
+    string ('tag - driver - functions which use it') for WinDbg.
+    :param rep: Reporter instance
+    :return string: pooltags.txt content (empty if none found)
     """
 
     tags = find_pool_tags()
+    if not tags:
+        rep.info("[!] No Pooltags found")
+        return ""
+    file_name = ida_nalt.get_root_filename()
     out = ''
-    file_name = idaapi.get_root_filename()
-    for tag in tags.keys():
-        desc = 'Called by: '
-        desc += ', '.join(tags[tag])
-        out += '{} - {} - {}\n'.format(tag, file_name, desc)
+    for tag in sorted(tags.keys()):
+        callers = ', '.join(sorted(tags[tag]))
+        out += '{} - {} - Called by: {}\n'.format(tag, file_name, callers)
+        rep.add(Finding(category="pooltag", title=tag, severity=config.SEV_INFO,
+                        detail="Called by: " + callers))
+    rep.info("[>] Found {} Pooltag(s)".format(len(tags)))
     return out
