@@ -8,6 +8,14 @@ Results feed risk scoring (a handler that reaches a sink is bumped) and the PoC
 prioritisation.
 """
 
+from __future__ import annotations
+
+from typing import Set, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from DriverBuddyReloaded.reporting import Reporter
+    from DriverBuddyReloaded.utils import AnalysisContext
+
 import ida_funcs
 import idautils
 
@@ -30,7 +38,7 @@ def _out_refs(func_ea):
     return out
 
 
-def _seed_eas(rep, ctx):
+def _seed_eas(rep: Reporter, ctx: AnalysisContext) -> Set[int]:
     """Function start EAs to trace from: every IOCTL handler plus any recovered
     dispatch routine (DispatchDeviceControl / Possible_DispatchDeviceControl*)."""
     seeds = set()
@@ -51,7 +59,7 @@ def _seed_eas(rep, ctx):
 handler_seed_eas = _seed_eas
 
 
-def trace(rep, ctx):
+def trace(rep: Reporter, ctx: AnalysisContext) -> None:
     """
     BFS outward from each seed handler over call edges up to CALLCHAIN_MAX_DEPTH,
     emitting a Finding(category="callchain") for each dangerous sink reached.

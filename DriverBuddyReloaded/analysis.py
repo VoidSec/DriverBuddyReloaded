@@ -8,6 +8,13 @@ The caller creates and owns the Reporter; this module runs everything between
 idc.auto_wait() and rep.close().
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Dict, Any
+
+if TYPE_CHECKING:
+    from DriverBuddyReloaded.reporting import Reporter
+
 import idaapi
 
 from DriverBuddyReloaded import (
@@ -23,7 +30,7 @@ from DriverBuddyReloaded import (
 from DriverBuddyReloaded.utils import AnalysisContext
 
 
-def _write_pool_file(rep, pool):
+def _write_pool_file(rep: Reporter, pool: str) -> None:
     """Write the pool-tag text report next to the IDB."""
     path = config.out_path("pooltags.txt")
     try:
@@ -34,7 +41,7 @@ def _write_pool_file(rep, pool):
         rep.info('[!] Can\'t write pool file to "{}": {}'.format(path, e))
 
 
-def run_analysis(rep):
+def run_analysis(rep: Reporter) -> Dict[str, Any]:
     """
     Execute the full Driver Buddy Reloaded analysis against the currently loaded IDB.
 

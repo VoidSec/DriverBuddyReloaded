@@ -7,6 +7,13 @@ function is known to reach a dangerous sink (see config.DANGEROUS_SINKS and the
 call-chain tracer).
 """
 
+from __future__ import annotations
+
+from typing import Dict, List, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from DriverBuddyReloaded.reporting import Reporter
+
 from DriverBuddyReloaded import config
 
 
@@ -20,7 +27,7 @@ def _points_to_severity(points):
     return config.SEV_INFO
 
 
-def score_ioctl(decoded):
+def score_ioctl(decoded: Dict[str, object]) -> Tuple[int, List[str]]:
     """
     Compute (severity, reasons) for a decoded IOCTL dict (see ioctl_decoder.decode).
     METHOD_NEITHER + FILE_ANY_ACCESS is the canonical arbitrary-r/w shape and scores
@@ -41,7 +48,7 @@ def score_ioctl(decoded):
     return _points_to_severity(points), reasons
 
 
-def score(rep):
+def score(rep: Reporter) -> None:
     """
     Assign severities to every IOCTL finding in `rep`, in place, and record the
     contributing reasons under data["risk_reasons"]. Uses any call-chain findings

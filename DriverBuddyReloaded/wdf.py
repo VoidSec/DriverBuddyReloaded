@@ -1,4 +1,16 @@
+"""
+wdf.py: WDF (KMDF/UMDF) driver analysis - WdfFunctions table discovery and struct labelling.
+
+Identifies the mdfLibrary version string, resolves the matching WDFFUNCTIONS struct layout
+from wdf_structs.py, creates the IDA struct definition, and applies it to WdfFunctions.
+
+Inspired by http://redplait.blogspot.ru/2012/12/wdffunctionsidc.html
+Originally by Nicolas Guigo; modified by Braden Hollembaek, Adam Pond and Paolo Stagno.
+Ported to IDA 7.x/8.4/9.0+ via the ida_compat layer.
+"""
+
 from collections import namedtuple
+from typing import Optional
 
 import ida_bytes
 import idaapi
@@ -9,21 +21,13 @@ from . import wdf_structs
 
 VersionInfo = namedtuple("VersionInfo", ['library', 'major', 'minor'])
 
-"""
-Script to automatically identify WDF function pointers
-Inspired by http://redplait.blogspot.ru/2012/12/wdffunctionsidc.html
-Originally by Nicolas Guigo
-Modified by Braden Hollembaek, Adam Pond and Paolo Stagno
-Ported to IDA 7.x/8.4/9.0+ via the ida_compat layer.
-"""
-
 MAJOR_VERSION_OFFSET = 0x0
 MINOR_VERSION_OFFSET = 0x4
 WDF_FUNCTIONS_OFFSET = 0x10
 STRUCT_NAME = "WDFFUNCTIONS"
 
 
-def add_struct(version, rep):
+def add_struct(version: VersionInfo, rep: "Reporter") -> Optional[int]:
     """
     Define the WDFFUNCTIONS structure for the detected library/version.
     :param version: VersionInfo(library, major, minor)
@@ -51,7 +55,7 @@ def add_struct(version, rep):
     return ida_compat.create_named_struct(STRUCT_NAME, member_names)
 
 
-def populate_wdf(rep):
+def populate_wdf(rep: "Reporter") -> None:
     """
     Find and define the WDF driver's function table (WdfFunctions) and apply the
     WDFFUNCTIONS structure type to it.

@@ -1,3 +1,14 @@
+"""
+dump_pool_tags.py: extract pool allocation tags from kernel driver imports.
+
+Walks every import of the ExAllocatePool* / ExFreePool* family, scans backwards
+from each call site up to POOLTAG_LOOKBACK instructions for an IDA-annotated 'Tag'
+immediate, decodes the 4-byte big-endian tag, and collects a tag -> callers mapping.
+The result is emitted as findings and written to a WinDbg-compatible pooltags.txt.
+"""
+
+from typing import Dict, Set
+
 import ida_nalt
 import idautils
 import idc
@@ -24,7 +35,7 @@ POOL_TAG_FUNCS = [
 ]
 
 
-def find_pool_tags():
+def find_pool_tags() -> Dict[str, Set[str]]:
     """
     Find references to pool functions then the 'Tag' immediate marked at the call
     site, mapping each tag to the functions that use it.
@@ -57,7 +68,7 @@ def find_pool_tags():
     return tags
 
 
-def collect(rep):
+def collect(rep: "Reporter") -> str:
     """
     Find pool tags, emit a Finding per tag, and return a 'pooltags.txt'-formatted
     string ('tag - driver - functions which use it') for WinDbg.

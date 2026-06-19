@@ -8,7 +8,13 @@ instance per run_analysis() invocation and threads it through every function tha
 needs to read or write the maps.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
+from typing import Dict, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from DriverBuddyReloaded.reporting import Reporter
 
 import ida_funcs
 import ida_nalt
@@ -65,7 +71,7 @@ def _make_import_cb(ctx):
 # Map builders
 # ---------------------------------------------------------------------------
 
-def populate_function_map(ctx):
+def populate_function_map(ctx: AnalysisContext) -> bool:
     """
     Load all known functions (subs + imports) into ctx.functions_map.
     Imports also populate ctx.imports_map for driver-type detection.
@@ -85,7 +91,7 @@ def populate_function_map(ctx):
     return result
 
 
-def populate_c_map(ctx):
+def populate_c_map(ctx: AnalysisContext) -> bool:
     """
     Scan functions_map for known-vulnerable C/C++ functions into ctx.c_map.
     Returns True when at least one match was found.
@@ -98,7 +104,7 @@ def populate_c_map(ctx):
     return result
 
 
-def populate_winapi_map(ctx):
+def populate_winapi_map(ctx: AnalysisContext) -> bool:
     """
     Scan functions_map for dangerous Windows API functions (exact matches
     and prefix matches) into ctx.winapi_map.
@@ -118,7 +124,7 @@ def populate_winapi_map(ctx):
     return result
 
 
-def populate_driver_map(ctx):
+def populate_driver_map(ctx: AnalysisContext) -> bool:
     """
     Scan functions_map for user-defined driver-specific functions into
     ctx.driver_map.  Returns True when at least one match was found.
@@ -131,7 +137,7 @@ def populate_driver_map(ctx):
     return result
 
 
-def populate_data_structures(rep, ctx):
+def populate_data_structures(rep: Reporter, ctx: AnalysisContext) -> bool:
     """
     Enumerate all functions, search for dangerous opcodes and flagged C/WinAPI
     functions, and record cross-references as findings.
@@ -161,7 +167,7 @@ def populate_data_structures(rep, ctx):
     return True
 
 
-def get_xrefs(func_map, rep, kind="function"):
+def get_xrefs(func_map: Dict[str, int], rep: Reporter, kind: str = "function") -> None:
     """
     Emit a Finding(category='flagged_function') for every cross-reference to
     a function in *func_map*.  Severity is taken from config.DANGEROUS_SINKS
@@ -182,7 +188,7 @@ def get_xrefs(func_map, rep, kind="function"):
             ))
 
 
-def get_driver_id(driver_entry_addr, rep, ctx):
+def get_driver_id(driver_entry_addr: int, rep: Reporter, ctx: AnalysisContext) -> str:
     """
     Classify the driver type by examining imports, then kick off type-specific
     analysis (WDF struct identification, WDM dispatch detection, etc.).
@@ -220,7 +226,7 @@ def get_driver_id(driver_entry_addr, rep, ctx):
     return driver_type
 
 
-def is_driver():
+def is_driver() -> Optional[int]:
     """
     Scan all segments for a DriverEntry function.
     Returns the EA of DriverEntry (or DriverEntry_0) if found, else False.
