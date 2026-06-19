@@ -20,6 +20,7 @@ from DriverBuddyReloaded import (
     scoring,
     utils,
 )
+from DriverBuddyReloaded.utils import AnalysisContext
 
 
 def _write_pool_file(rep, pool):
@@ -49,6 +50,9 @@ def run_analysis(rep):
       }
     or {"error": reason} on early exit (not a PE / not a driver).
     """
+    # Fresh per-run state; isolates this invocation from any previous run.
+    ctx = AnalysisContext()
+
     file_type = idaapi.get_file_type_name()
     if "portable executable" not in file_type.lower():
         rep.info("[!] ERR: Loaded file is not a valid PE")
@@ -70,8 +74,8 @@ def run_analysis(rep):
         _write_pool_file(rep, pool)
 
     driver_type = "unknown"
-    if utils.populate_data_structures(rep) is True:
-        driver_type = utils.get_driver_id(driver_entry_addr, rep)
+    if utils.populate_data_structures(rep, ctx) is True:
+        driver_type = utils.get_driver_id(driver_entry_addr, rep, ctx)
         rep.info("[+] Driver type detected: {}".format(driver_type))
         if ioctl_decoder.find_ioctls(rep) is False:
             rep.info("[!] Unable to automatically find any IOCTLs")
@@ -79,7 +83,7 @@ def run_analysis(rep):
         rep.info("[!] ERR: Unable to enumerate functions")
 
     if config.Feature.CALLCHAIN:
-        callchain.trace(rep, utils.functions_map)
+        callchain.trace(rep, ctx)
     if config.Feature.RISK_SCORING:
         scoring.score(rep)
     if config.Feature.JSON_EXPORT:

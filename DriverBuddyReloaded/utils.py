@@ -1,207 +1,234 @@
+"""
+utils.py: function enumeration, cross-reference gathering, driver-type detection,
+and the AnalysisContext dataclass that scopes per-run state.
+
+The module-level mutable dicts that previously accumulated global state across
+plugin re-runs have been replaced by AnalysisContext.  Analysis code creates one
+instance per run_analysis() invocation and threads it through every function that
+needs to read or write the maps.
+"""
+
+from dataclasses import dataclass, field
+
 import ida_funcs
 import ida_nalt
 import ida_segment
 import idautils
 import idc
+
 from DriverBuddyReloaded import config
 from DriverBuddyReloaded.reporting import Finding
-from DriverBuddyReloaded.vulnerable_functions_lists.c import *
-from DriverBuddyReloaded.vulnerable_functions_lists.custom import *
-from DriverBuddyReloaded.vulnerable_functions_lists.opcode import *
-from DriverBuddyReloaded.vulnerable_functions_lists.winapi import *
+from DriverBuddyReloaded.vulnerable_functions_lists.c import c_functions
+from DriverBuddyReloaded.vulnerable_functions_lists.custom import driver_functions
+from DriverBuddyReloaded.vulnerable_functions_lists.opcode import opcodes
+from DriverBuddyReloaded.vulnerable_functions_lists.winapi import (
+    winapi_function_prefixes,
+    winapi_functions,
+)
 from .find_opcodes import find
 from .wdf import populate_wdf
-from .wdm import check_for_fake_driver_entry, locate_ddc, define_ddc, find_dispatch_function
-
-# Data structures needed to store addresses of functions we are interested in
-functions_map = {}
-imports_map = {}
-c_map = {}
-winapi_map = {}
-driver_map = {}
+from .wdm import check_for_fake_driver_entry, define_ddc, find_dispatch_function, locate_ddc
 
 
-def cb(address, name, ord):
+@dataclass
+class AnalysisContext:
     """
-    Callback function needed by idaapi.enum_import_names().
-    Called for every function in imports section of binary.
-    :param address: Address of enumerated function
-    :param name: Name of enumerated function
-    :param ord: Ordinal of enumerated function. Not used for imports.
-    :return boolean: 1 okay, -1 on error, otherwise callback return value
+    Per-run analysis state: the function maps built by populate_data_structures()
+    and consumed by get_xrefs(), get_driver_id(), and callchain.trace().
+
+    Create one instance at the start of each run_analysis() call so that
+    re-running the plugin in the same IDA session always starts from a clean slate.
     """
 
-    imports_map[name] = address
-    functions_map[name] = address
-    return True
+    functions_map: dict = field(default_factory=dict)
+    imports_map: dict = field(default_factory=dict)
+    c_map: dict = field(default_factory=dict)
+    winapi_map: dict = field(default_factory=dict)
+    driver_map: dict = field(default_factory=dict)
 
 
-def populate_function_map():
+# ---------------------------------------------------------------------------
+# Import-enumeration callback factory
+# ---------------------------------------------------------------------------
+
+def _make_import_cb(ctx):
+    """Return a callback compatible with ida_nalt.enum_import_names that
+    writes into *ctx* instead of into module-level globals."""
+    def _cb(address, name, ord):
+        ctx.imports_map[name] = address
+        ctx.functions_map[name] = address
+        return True
+    return _cb
+
+
+# ---------------------------------------------------------------------------
+# Map builders
+# ---------------------------------------------------------------------------
+
+def populate_function_map(ctx):
     """
-    Loads functions known to IDA from the subs and imports sections into a map.
-    :return boolean: True if functions are loaded successfully, otherwise False
+    Load all known functions (subs + imports) into ctx.functions_map.
+    Imports also populate ctx.imports_map for driver-type detection.
+    Returns True when at least one function was added.
     """
-
     result = False
-    # Populate function_map with sub functions
     for address in idautils.Functions():
         func_name = idc.get_func_name(address)
-        functions_map[func_name] = address
+        ctx.functions_map[func_name] = address
         result = True
-    # Populate function_map with import functions
-    import_list = ida_nalt.get_import_module_qty()
-    for index in range(0, import_list):
-        name = ida_nalt.get_import_module_name(index)
+
+    cb = _make_import_cb(ctx)
+    for index in range(0, ida_nalt.get_import_module_qty()):
         ida_nalt.enum_import_names(index, cb)
         result = True
+
     return result
 
 
-def populate_c_map():
+def populate_c_map(ctx):
     """
-    Enumerate through the list of all functions and load vulnerable C/C++ functions found into a map.
-    :return boolean: True if vulnerable functions are found, False otherwise
+    Scan functions_map for known-vulnerable C/C++ functions into ctx.c_map.
+    Returns True when at least one match was found.
     """
-
     result = False
-    for name, address in functions_map.items():
+    for name, address in ctx.functions_map.items():
         if name in c_functions:
-            c_map[name] = address
+            ctx.c_map[name] = address
             result = True
     return result
 
 
-def populate_winapi_map():
+def populate_winapi_map(ctx):
     """
-    Enumerate through the list of all functions and load vulnerable Win API functions found into a map.
-    :return boolean: True if vulnerable functions are found, False otherwise
+    Scan functions_map for dangerous Windows API functions (exact matches
+    and prefix matches) into ctx.winapi_map.
+    Returns True when at least one match was found.
     """
-
     result = False
-    for name, address in functions_map.items():
+    for name, address in ctx.functions_map.items():
         if name in winapi_functions:
-            winapi_map[name] = address
+            ctx.winapi_map[name] = address
             result = True
         else:
-            for winapi in winapi_function_prefixes:
-                if name.lower().startswith(winapi.lower()):
-                    winapi_map[name] = address
+            for prefix in winapi_function_prefixes:
+                if name.lower().startswith(prefix.lower()):
+                    ctx.winapi_map[name] = address
                     result = True
+                    break
     return result
 
 
-def populate_driver_map():
+def populate_driver_map(ctx):
     """
-    Enumerate through the list of all functions and load vulnerable driver specific functions found into a map.
-    :return boolean: True if vulnerable functions found, False otherwise
+    Scan functions_map for user-defined driver-specific functions into
+    ctx.driver_map.  Returns True when at least one match was found.
     """
-
     result = False
-    for name, address in functions_map.items():
+    for name, address in ctx.functions_map.items():
         if name in driver_functions:
-            driver_map[name] = address
+            ctx.driver_map[name] = address
             result = True
     return result
 
 
-def populate_data_structures(rep):
+def populate_data_structures(rep, ctx):
     """
-    Enumerate through the list of functions and load vulnerable functions found into a map.
-    :param rep: Reporter instance
-    :return boolean: False if unable to enumerate functions, True otherwise
+    Enumerate all functions, search for dangerous opcodes and flagged C/WinAPI
+    functions, and record cross-references as findings.
+    Returns True on success, False if IDA has no functions to enumerate.
     """
+    if not populate_function_map(ctx):
+        rep.info("[!] ERR: Couldn't populate function_map")
+        return False
 
-    result = populate_function_map()
-    # search for problematic opcodes in executable segments only (x=True)
     rep.info("[>] Searching for interesting opcodes...")
     for opcode in opcodes:
         find(rep, opcode, x=True)
-    if result is True:
-        rep.info("[>] Searching for interesting C/C++ functions...")
-        if populate_c_map():
-            get_xrefs(c_map, rep, "C/C++")
-        rep.info("[>] Searching for interesting Windows APIs...")
-        if populate_winapi_map():
-            get_xrefs(winapi_map, rep, "WinAPI")
-        # do not search for custom driver's functions if the list is empty
-        if len(driver_functions) > 0:
-            rep.info("[>] Searching for interesting driver functions...")
-            if populate_driver_map():
-                get_xrefs(driver_map, rep, "driver")
-        return True
-    rep.info("[!] ERR: Couldn't populate function_map")
-    return False
+
+    rep.info("[>] Searching for interesting C/C++ functions...")
+    if populate_c_map(ctx):
+        get_xrefs(ctx.c_map, rep, "C/C++")
+
+    rep.info("[>] Searching for interesting Windows APIs...")
+    if populate_winapi_map(ctx):
+        get_xrefs(ctx.winapi_map, rep, "WinAPI")
+
+    if driver_functions:
+        rep.info("[>] Searching for interesting driver functions...")
+        if populate_driver_map(ctx):
+            get_xrefs(ctx.driver_map, rep, "driver")
+
+    return True
 
 
 def get_xrefs(func_map, rep, kind="function"):
     """
-    Report cross references to flagged functions stored in `func_map` as findings.
-    :param func_map: function map you want xrefs for
-    :param rep: Reporter instance
-    :param kind: human label for the function category (C/C++, WinAPI, driver)
+    Emit a Finding(category='flagged_function') for every cross-reference to
+    a function in *func_map*.  Severity is taken from config.DANGEROUS_SINKS
+    when the function is a known high-signal sink, else SEV_LOW.
     """
-
     for name, address in func_map.items():
         severity = config.DANGEROUS_SINKS.get(name, config.SEV_LOW)
         for ref in idautils.CodeRefsTo(int(address), 0):
-            n = ida_funcs.get_func_name(ref) \
-                or ida_segment.get_segm_name(ida_segment.getseg(ref))
-            rep.add(Finding(category="flagged_function", title=name, ea=ref, func=n,
-                            severity=severity, detail="{} function".format(kind)))
+            func_name = (ida_funcs.get_func_name(ref)
+                         or ida_segment.get_segm_name(ida_segment.getseg(ref)))
+            rep.add(Finding(
+                category="flagged_function",
+                title=name,
+                ea=ref,
+                func=func_name,
+                severity=severity,
+                detail="{} function".format(kind),
+            ))
 
 
-def get_driver_id(driver_entry_addr, rep):
+def get_driver_id(driver_entry_addr, rep, ctx):
     """
-    Attempts to determine the type of the loaded driver by using functions found inside the imports section.
-    :param driver_entry_addr: `DriverEntry` address
-    :param rep: Reporter instance
-    :return string: return the detected driver type
+    Classify the driver type by examining imports, then kick off type-specific
+    analysis (WDF struct identification, WDM dispatch detection, etc.).
+    Returns a string such as 'WDM', 'WDF', 'KMDF', 'Mini-Filter', etc.
     """
-
     driver_type = ""
-    # Iterate through imports and try to determine driver type
-    for name, address in imports_map.items():
+    for name in ctx.imports_map:
         if name == "FltRegisterFilter":
             driver_type = "Mini-Filter"
             break
-        elif name == "WdfVersionBind":
+        if name == "WdfVersionBind":
             driver_type = "WDF"
             populate_wdf(rep)
             break
-        elif name == "StreamClassRegisterMinidriver":
+        if name == "StreamClassRegisterMinidriver":
             driver_type = "Stream Minidriver"
             break
-        elif name == "KsCreateFilterFactory":
+        if name == "KsCreateFilterFactory":
             driver_type = "AVStream"
             break
-        elif name == "PcRegisterSubdevice":
+        if name == "PcRegisterSubdevice":
             driver_type = "PortCls"
             break
-    if driver_type == "":
+
+    if not driver_type:
         rep.info("[!] Unable to determine driver type; assuming WDM")
-        # Only WDM drivers make it here so run all the WDM stuff
         driver_type = "WDM"
-        real_driver_entry = check_for_fake_driver_entry(driver_entry_addr, rep)
-        real_ddc_addr = locate_ddc(real_driver_entry, rep)
-        if real_ddc_addr is not None:
-            for ddc in real_ddc_addr.values():
+        real_entry = check_for_fake_driver_entry(driver_entry_addr, rep)
+        ddc_map = locate_ddc(real_entry, rep)
+        if ddc_map is not None:
+            for ddc in ddc_map.values():
                 define_ddc(ddc, rep)
         find_dispatch_function(rep)
+
     return driver_type
 
 
 def is_driver():
     """
-    Determine if the loaded file is actually a Windows driver, check if `DriverEntry` is in the exports section.
-    :return: address of `DriverEntry` if found in exports, False otherwise
+    Scan all segments for a DriverEntry function.
+    Returns the EA of DriverEntry (or DriverEntry_0) if found, else False.
     """
-
-    for segment_address in idautils.Segments():
-        for func_addr in idautils.Functions(idc.get_segm_start(segment_address), idc.get_segm_end(segment_address)):
-            func_name = idc.get_func_name(func_addr)
-            if func_name == "DriverEntry":
-                return func_addr
-            elif func_name == "DriverEntry_0":
+    for seg_ea in idautils.Segments():
+        for func_addr in idautils.Functions(
+                idc.get_segm_start(seg_ea), idc.get_segm_end(seg_ea)):
+            name = idc.get_func_name(func_addr)
+            if name in ("DriverEntry", "DriverEntry_0"):
                 return func_addr
     return False
-

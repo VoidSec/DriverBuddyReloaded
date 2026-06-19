@@ -30,15 +30,15 @@ def _out_refs(func_ea):
     return out
 
 
-def _seed_eas(rep, functions_map):
+def _seed_eas(rep, ctx):
     """Function start EAs to trace from: every IOCTL handler plus any recovered
-    dispatch routine."""
+    dispatch routine (DispatchDeviceControl / Possible_DispatchDeviceControl*)."""
     seeds = set()
     for f in rep.by_category("ioctl"):
         fn = ida_funcs.get_func(f.ea)
         if fn:
             seeds.add(fn.start_ea)
-    for name, ea in functions_map.items():
+    for name, ea in ctx.functions_map.items():
         if name in ("DispatchDeviceControl", "DispatchInternalDeviceControl") \
                 or name.startswith("Possible_DispatchDeviceControl"):
             fn = ida_funcs.get_func(ea)
@@ -47,23 +47,27 @@ def _seed_eas(rep, functions_map):
     return seeds
 
 
-def trace(rep, functions_map):
+# Public alias used by heuristics.py so dispatch-handler discovery is not duplicated.
+handler_seed_eas = _seed_eas
+
+
+def trace(rep, ctx):
     """
     BFS outward from each seed handler over call edges up to CALLCHAIN_MAX_DEPTH,
     emitting a Finding(category="callchain") for each dangerous sink reached.
     :param rep: Reporter instance
-    :param functions_map: dict name -> address (subs and imports), from utils
+    :param ctx: AnalysisContext holding functions_map (from utils.populate_data_structures)
     """
 
     sinks_by_ea = {}
     for name, sev in config.DANGEROUS_SINKS.items():
-        ea = functions_map.get(name)
+        ea = ctx.functions_map.get(name)
         if ea is not None:
             sinks_by_ea[ea] = (name, sev)
     if not sinks_by_ea:
         return
 
-    seeds = _seed_eas(rep, functions_map)
+    seeds = _seed_eas(rep, ctx)
     if not seeds:
         return
 
