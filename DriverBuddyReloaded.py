@@ -1,22 +1,21 @@
+"""
+DriverBuddyReloaded.py: Entry point for the IDA Python plugin used in Windows driver vulnerability
+research.  Created in 2021 by Paolo Stagno aka VoidSec: https://voidsec.com
+Ported to IDA 7.6/8.4/9.0+ and extended with risk scoring, JSON/HTML reporting and PoC generation.
+
+This module owns the plugin lifecycle (plugin_t, hotkeys, UI hooks, IOCTL tracker) and delegates
+all analysis work to DriverBuddyReloaded.analysis.run_analysis().
+"""
+
 import idaapi
 import idc
 
 from DriverBuddyReloaded import NTSTATUS
-from DriverBuddyReloaded import callchain
+from DriverBuddyReloaded import analysis
 from DriverBuddyReloaded import config
-from DriverBuddyReloaded import device_name_finder
-from DriverBuddyReloaded import dump_pool_tags
 from DriverBuddyReloaded import ioctl_decoder
-from DriverBuddyReloaded import poc
 from DriverBuddyReloaded import reporting
-from DriverBuddyReloaded import scoring
 from DriverBuddyReloaded import utils
-
-"""
-DriverBuddyReloaded.py: Entry point for IDA python plugin used in Windows driver vulnerability research.
-Created in 2021 by Paolo Stagno aka VoidSec: https://voidsec.com - https://twitter.com/Void_Sec
-Ported to IDA 7.x/8.4/9.0+ and extended with risk scoring, JSON/HTML reporting and PoC generation.
-"""
 
 # Shared state, initialised in DriverBuddyPlugin.init()
 ioctl_tracker = None
@@ -224,16 +223,6 @@ class WinDriverHooks(idaapi.UI_Hooks):
                 register_dynamic_action(form, popup, 'Invalid IOCTL', InvalidHandler())
 
 
-def _write_pool_file(rep, pool):
-    path = config.out_path("pooltags.txt")
-    try:
-        with open(path, "w", encoding="utf-8") as pool_file:
-            pool_file.write(pool)
-        rep.info("[>] Saved Pooltags file to \"{}\"".format(path))
-    except IOError as e:
-        rep.info("[!] Can't write pool file to \"{}\": {}".format(path, e))
-
-
 class DriverBuddyPlugin(idaapi.plugin_t):
     """Main entry class for Driver Buddy Reloaded."""
 
@@ -276,45 +265,13 @@ class DriverBuddyPlugin(idaapi.plugin_t):
         """Driver Buddy Reloaded auto-analysis entry point."""
 
         idc.auto_wait()  # wait for IDA's own analysis to complete
+        # Fresh timestamp so all output artefacts for this run share one stamp.
+        config._run_stamp = None
         rep = reporting.Reporter(config.out_path("DriverBuddyReloaded_autoanalysis.txt"))
         rep.info("Driver Buddy Reloaded Auto-analysis")
         rep.info("-----------------------------------------------")
         try:
-            file_type = idaapi.get_file_type_name()
-            if "portable executable" not in file_type.lower():
-                rep.info("[!] ERR: Loaded file is not a valid PE")
-                return
-            driver_entry_addr = utils.is_driver()
-            if driver_entry_addr is False:
-                rep.info("[!] ERR: Loaded file is not a Driver")
-                return
-            rep.info("[+] `DriverEntry` found at: 0x{addr:08x}".format(addr=driver_entry_addr))
-            rep.info("[>] Searching for `DeviceNames`...")
-            device_name_finder.search(rep)
-            rep.info("[>] Searching for `Pooltags`...")
-            pool = dump_pool_tags.collect(rep)
-            if pool:
-                _write_pool_file(rep, pool)
-            if utils.populate_data_structures(rep) is True:
-                driver_type = utils.get_driver_id(driver_entry_addr, rep)
-                rep.info("[+] Driver type detected: {}".format(driver_type))
-                if ioctl_decoder.find_ioctls(rep) is False:
-                    rep.info("[!] Unable to automatically find any IOCTLs")
-            else:
-                rep.info("[!] ERR: Unable to enumerate functions")
-            # post-processing over whatever findings were gathered
-            if config.Feature.CALLCHAIN:
-                callchain.trace(rep, utils.functions_map)
-            if config.Feature.RISK_SCORING:
-                scoring.score(rep)
-            if config.Feature.JSON_EXPORT:
-                rep.to_json(config.out_path("findings.json"))
-            if config.Feature.HTML_REPORT:
-                rep.to_html(config.out_path("report.html"))
-            if config.Feature.POC_HARNESS:
-                poc.generate(rep, config.out_path("ioctl_pocs.c"))
-            rep.info("[+] Analysis Completed!")
-            rep.info("-----------------------------------------------")
+            analysis.run_analysis(rep)
         finally:
             rep.close()
             if config.Feature.RESULTS_WINDOW:

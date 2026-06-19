@@ -91,8 +91,7 @@ def trace(rep, functions_map):
                                 func=seed_name,
                                 severity=sev,
                                 detail=" -> ".join(full),
-                                sink=sink_name,
-                                path=full))
+                                data={"sink": sink_name, "path": full}))
                     callee = ida_funcs.get_func(ref)
                     if callee and callee.start_ea not in visited:
                         visited.add(callee.start_ea)

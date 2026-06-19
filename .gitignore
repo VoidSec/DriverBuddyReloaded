@@ -60,3 +60,8 @@ ida_xref.py
 idc.py
 idc_bc695.py
 init.py
+# Reference clone kept as local-only comparison; never committed.
+driverbuddyrevolutionsIDA-main/
+# Cross-version smoke test working files
+smoke_results/
+smoke_tmp_*/
