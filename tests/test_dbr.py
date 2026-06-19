@@ -115,6 +115,7 @@ def main():
     sys.path.insert(0, ROOT)
 
     from DriverBuddyReloaded import config, ioctl_decoder, scoring, poc, reporting
+    from DriverBuddyReloaded import device_name_finder
 
     failures = []
 
@@ -122,6 +123,18 @@ def main():
         print(("  PASS " if cond else "  FAIL ") + label)
         if not cond:
             failures.append(label)
+
+    # ---- device_name_finder: REPEATS bytes fix ----
+    # A null-filled buffer must short-circuit without TypeError (buf[0:1] vs buf[0]).
+    check("repeat null buf exits cleanly",
+          list(device_name_finder.extract_unicode_strings(b"\x00" * 200)) == [])
+    # An 'A'-filled buffer also exits cleanly via the repeat shortcut.
+    check("repeat A buf exits cleanly",
+          list(device_name_finder.extract_unicode_strings(b"A" * 200)) == [])
+    # A real UTF-16LE device name is found correctly.
+    _dev_utf16 = "\\Device\\Test".encode("utf-16-le")
+    _found = list(device_name_finder.extract_unicode_strings(_dev_utf16))
+    check("utf16 device name found", any("Test" in s.s for s in _found))
 
     # ---- IOCTL decode ----
     d = ioctl_decoder.decode(0x222000)
@@ -167,7 +180,7 @@ def main():
     check("poc CRITICAL first", poc_src.index("0x00222003") < poc_src.index("0x00222000"))
 
     print("\n{} check(s), {} failure(s)".format(
-        7 + 3 + 6, len(failures)))
+        3 + 7 + 3 + 6, len(failures)))
     return 1 if failures else 0
 
 

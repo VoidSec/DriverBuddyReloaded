@@ -12,7 +12,7 @@ from DriverBuddyReloaded.reporting import Finding
 
 ASCII_BYTE = b" !\"#\\$%&\'\\(\\)\\*\\+,-\\./0123456789:;<=>\\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\\[\\]\\^_`abcdefghijklmnopqrstuvwxyz\\{\\|\\}\\\\~\t"
 UNICODE_RE_4 = re.compile(b"((?:[%s]\x00){%d,})" % (ASCII_BYTE, 4))
-REPEATS = ["A", "\x00", "\xfe", "\xff"]
+REPEATS = [b"A", b"\x00", b"\xfe", b"\xff"]
 SLICE_SIZE = 4096
 
 String = collections.namedtuple("String", ["s", "offset"])
@@ -44,7 +44,7 @@ def extract_unicode_strings(buf, n=4):
 
     if not buf:
         return
-    if (buf[0] in REPEATS) and buf_filled_with(buf, buf[0]):
+    if (buf[0:1] in REPEATS) and buf_filled_with(buf, buf[0:1]):
         return
     if n == 4:
         r = UNICODE_RE_4
