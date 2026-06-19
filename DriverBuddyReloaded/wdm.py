@@ -1,13 +1,19 @@
+"""
+wdm.py: WDM driver specific function calls.
+Ported to IDA 7.x/8.4/9.0+ via the ida_compat layer.
+"""
+
 import idaapi
 import idautils
 import idc
 
 from DriverBuddyReloaded import ida_compat
 
-"""
-WDM driver specific function calls.
-Ported to IDA 7.x/8.4/9.0+ via the ida_compat layer.
-"""
+# DRIVER_OBJECT.MajorFunction slot offsets matched against IDA-printed operands.
+_DDC_OFFSET = "+0E0h]"            # MajorFunction[IRP_MJ_DEVICE_CONTROL]
+_DIDC_OFFSET = "+0E8h]"           # MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL]
+_IRP_IOSTACK_OFFSET = "[rdx+0B8h]"  # IRP.Tail.Overlay.CurrentStackLocation
+_DISPATCH_ARRAY_SLOT = "+70h"     # DRIVER_OBJECT.MajorFunction base offset
 
 
 def check_for_fake_driver_entry(driver_entry_address, rep):
@@ -42,19 +48,16 @@ def locate_ddc(driver_entry_address, rep):
     """
 
     driver_entry_func = list(idautils.FuncItems(driver_entry_address))
-    # Offsets where `DispatchDeviceControl`/`DispatchInternalDeviceControl` are loaded into DRIVER_OBJECT
-    ddc_offset = "+0E0h]"
-    didc_offset = "+0E8h]"
     dispatch = {}
     prev_instruction = driver_entry_func[0]
     for i in driver_entry_func[1:]:
-        if ddc_offset in idc.print_operand(i, 0)[4:] and idc.print_insn_mnem(prev_instruction) == "lea":
+        if _DDC_OFFSET in idc.print_operand(i, 0)[4:] and idc.print_insn_mnem(prev_instruction) == "lea":
             real_ddc = idc.get_name_ea_simple(idc.print_operand(prev_instruction, 1))
             if real_ddc != ida_compat.BADADDR:
                 rep.info("[+] Found `DispatchDeviceControl` at 0x{addr:08x}".format(addr=real_ddc))
                 idc.set_name(real_ddc, "DispatchDeviceControl")
                 dispatch["ddc"] = real_ddc
-        if didc_offset in idc.print_operand(i, 0)[4:] and idc.print_insn_mnem(prev_instruction) == "lea":
+        if _DIDC_OFFSET in idc.print_operand(i, 0)[4:] and idc.print_insn_mnem(prev_instruction) == "lea":
             real_didc = idc.get_name_ea_simple(idc.print_operand(prev_instruction, 1))
             rep.info("[+] Found `DispatchInternalDeviceControl` at 0x{addr:08x}".format(addr=real_didc))
             idc.set_name(real_didc, "DispatchInternalDeviceControl")
@@ -71,9 +74,8 @@ def locate_ddc(driver_entry_address, rep):
     for f in idautils.Functions():
         instructions = list(idautils.FuncItems(f))
         iocode = "0xDEADB33F"
-        iostack_location = "[rdx+0B8h]"
         for i in instructions:
-            if iostack_location in idc.print_operand(i, 1):
+            if _IRP_IOSTACK_OFFSET in idc.print_operand(i, 1):
                 iostack_register = idc.print_operand(i, 0)
                 iocode = "[" + iostack_register + "+18h]"
             if iocode in ida_compat.disasm_text(i):
@@ -199,7 +201,7 @@ def find_dispatch_by_struct_index():
         addr = func.start_ea
         while addr < func.end_ea:
             if idc.print_insn_mnem(addr) == 'mov':
-                if '+70h' in idc.print_operand(addr, 0) and idc.get_operand_type(addr, 1) == 5:
+                if _DISPATCH_ARRAY_SLOT in idc.print_operand(addr, 0) and idc.get_operand_type(addr, 1) == 5:
                     out.add(idc.print_operand(addr, 1))
             addr = idc.next_head(addr)
     return out

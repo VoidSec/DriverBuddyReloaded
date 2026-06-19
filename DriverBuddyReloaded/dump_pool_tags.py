@@ -39,7 +39,7 @@ def find_pool_tags():
                 call_addr = xref.frm
                 caller_name = idc.get_func_name(call_addr)
                 prev = idc.prev_head(call_addr)
-                for _ in range(10):
+                for _ in range(config.POOLTAG_LOOKBACK):
                     if idc.get_cmt(prev, 0) == 'Tag' and idc.get_operand_type(prev, 1) == 5:
                         tag_raw = idc.get_operand_value(prev, 1)
                         tag = ''
