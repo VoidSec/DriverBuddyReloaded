@@ -26,6 +26,7 @@ from DriverBuddyReloaded import (
     find_opcodes,
     heuristics,
     ioctl_decoder,
+    irp_mj,
     poc,
     scoring,
     utils,
@@ -87,6 +88,8 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
     if utils.populate_data_structures(rep, ctx) is True:
         driver_type = utils.get_driver_id(driver_entry_addr, rep, ctx)
         rep.info("[+] Driver type detected: {}".format(driver_type))
+        if config.Feature.IRP_MJ_ENUM and driver_type == "WDM":
+            irp_mj.run(driver_entry_addr, rep)
         if ioctl_decoder.find_ioctls(rep) is False:
             rep.info("[!] Unable to automatically find any IOCTLs")
         if ctx.ddc_addresses:
