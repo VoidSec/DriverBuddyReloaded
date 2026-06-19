@@ -241,13 +241,75 @@ def format_row(addr, ioctl_code):
 
 _ntstatus_cache = None
 
+# Minimal fallback used when no NTSTATUS enum is loaded in the IDB.
+# Covers the most common NTSTATUS values >= IOCTL_MIN_VALUE that would
+# otherwise be misclassified as IOCTL codes.
+_NTSTATUS_FALLBACK = {
+    0x00000103,  # STATUS_PENDING
+    0x40000000,  # STATUS_OBJECT_TYPE_MISMATCH (info bit set)
+    0x80000001,  # STATUS_GUARD_PAGE_VIOLATION
+    0x80000002,  # STATUS_DATATYPE_MISALIGNMENT
+    0x80000003,  # STATUS_BREAKPOINT
+    0x80000004,  # STATUS_SINGLE_STEP
+    0x8000000A,  # STATUS_NO_MEMORY
+    0xC0000001,  # STATUS_UNSUCCESSFUL
+    0xC0000002,  # STATUS_NOT_IMPLEMENTED
+    0xC0000003,  # STATUS_INVALID_INFO_CLASS
+    0xC0000004,  # STATUS_INFO_LENGTH_MISMATCH
+    0xC0000005,  # STATUS_ACCESS_VIOLATION
+    0xC0000008,  # STATUS_INVALID_HANDLE
+    0xC000000D,  # STATUS_INVALID_PARAMETER
+    0xC0000010,  # STATUS_INVALID_DEVICE_REQUEST
+    0xC0000017,  # STATUS_NO_MEMORY
+    0xC0000022,  # STATUS_ACCESS_DENIED
+    0xC000000E,  # STATUS_NO_SUCH_DEVICE
+    0xC00000BB,  # STATUS_NOT_SUPPORTED
+    0xC0000034,  # STATUS_OBJECT_NAME_NOT_FOUND
+}
 
-def _get_ntstatus_values():
-    """Lazy loader for the NTSTATUS filter set. Replaced by dynamic IDA enum lookup in Phase 4."""
+
+def _load_enum_values(enum_id: int) -> set:
+    """Enumerate all member values from an IDA enum id."""
+    values = set()
+    _BADADDR = getattr(idc, "BADADDR", 0xFFFFFFFFFFFFFFFF)
+    try:
+        val = idc.get_first_enum_member(enum_id, -1)
+        while val != _BADADDR:
+            values.add(val)
+            val = idc.get_next_enum_member(enum_id, val, -1)
+    except Exception:
+        pass
+    return values
+
+
+def _get_ntstatus_values() -> set:
+    """
+    Return the set of known NTSTATUS values used to filter IOCTL false positives.
+
+    Strategy:
+      1. Try idc.get_enum("NTSTATUS") -- loaded by default for PE drivers.
+      2. Try idc.get_enum("_NTSTATUS") -- IDA 9.x may use this name.
+      3. Fall back to _NTSTATUS_FALLBACK (minimal hardcoded set).
+
+    Result is cached for the lifetime of the process.
+    """
     global _ntstatus_cache
-    if _ntstatus_cache is None:
-        from DriverBuddyReloaded import NTSTATUS
-        _ntstatus_cache = NTSTATUS.ntstatus_values
+    if _ntstatus_cache is not None:
+        return _ntstatus_cache
+
+    _BADADDR = getattr(idc, "BADADDR", 0xFFFFFFFFFFFFFFFF)
+    for name in ("NTSTATUS", "_NTSTATUS"):
+        try:
+            eid = idc.get_enum(name)
+            if eid not in (None, _BADADDR, -1):
+                values = _load_enum_values(eid)
+                if values:
+                    _ntstatus_cache = values
+                    return _ntstatus_cache
+        except Exception:
+            pass
+
+    _ntstatus_cache = _NTSTATUS_FALLBACK.copy()
     return _ntstatus_cache
 
 

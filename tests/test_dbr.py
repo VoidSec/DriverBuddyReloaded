@@ -88,8 +88,17 @@ def _install_ida_stubs():
         BWN_DISASM=0x29, FC_PREDS=0x10, plugin_t=_Plugin,
         action_handler_t=_ActionHandler, UI_Hooks=_UIHooks,
         compiled_binpat_vec_t=_BinPat, get_qword=lambda ea: 0, get_dword=lambda ea: 0)
-    mod("idc", BADADDR=0xFFFFFFFFFFFFFFFF, FF_DATA=0x400, FUNC_LIB=0x4,
-        get_root_filename=lambda: "stub.sys")
+    _BADADDR = 0xFFFFFFFFFFFFFFFF
+    mod("idc", BADADDR=_BADADDR, FF_DATA=0x400, FUNC_LIB=0x4,
+        get_root_filename=lambda: "stub.sys",
+        # NTSTATUS enum stubs -- return sentinel "not found" so the fallback path is exercised
+        get_enum=lambda name: _BADADDR,
+        get_first_enum_member=lambda eid, serial: _BADADDR,
+        get_next_enum_member=lambda eid, val, serial: _BADADDR,
+        SEGPERM_EXEC=0x4,
+        get_segm_start=lambda ea: 0x1000,
+        get_segm_end=lambda ea: 0x2000,
+        next_head=lambda ea, end=0: ea + 4)
     mod("idautils")
     mod("ida_funcs", get_func_name=lambda ea: "")
     mod("ida_segment")

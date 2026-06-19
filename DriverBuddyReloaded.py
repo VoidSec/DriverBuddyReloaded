@@ -10,7 +10,6 @@ all analysis work to DriverBuddyReloaded.analysis.run_analysis().
 import idaapi
 import idc
 
-from DriverBuddyReloaded import NTSTATUS
 from DriverBuddyReloaded import analysis
 from DriverBuddyReloaded import config
 from DriverBuddyReloaded import ioctl_decoder
@@ -98,7 +97,7 @@ def find_all_ioctls():
             if idc.print_insn_mnem(instr) in ['cmp', 'sub', 'mov'] and idc.get_operand_type(instr, 1) == 5:
                 value = get_operand_value(instr)
                 # value >= IOCTL_MIN_VALUE (lower false positives) and not a known NTSTATUS value (issue #15)
-                if value >= config.IOCTL_MIN_VALUE and value not in NTSTATUS.ntstatus_values:
+                if value >= config.IOCTL_MIN_VALUE and value not in ioctl_decoder._get_ntstatus_values():
                     ioctls.append((instr, value))
                     ioctl_tracker.add_ioctl(instr, value)
     return ioctls
@@ -130,7 +129,7 @@ def get_position_and_translate():
         return
     value = get_operand_value(pos)
     # value >= IOCTL_MIN_VALUE (lower false positives) and not a known NTSTATUS value (issue #15)
-    if value >= config.IOCTL_MIN_VALUE and value not in NTSTATUS.ntstatus_values:
+    if value >= config.IOCTL_MIN_VALUE and value not in ioctl_decoder._get_ntstatus_values():
         ioctl_tracker.add_ioctl(pos, value)
         make_comment(pos, ioctl_decoder.get_define(value))
         ioctls = [(inst, get_operand_value(inst)) for inst in ioctl_tracker.ioctl_locs]
