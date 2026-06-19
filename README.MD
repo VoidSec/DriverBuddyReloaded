@@ -14,6 +14,9 @@
     - [Flagging Functions](#flagging-functions)
     - [Finding DeviceName](#finding-devicename)
     - [Dumping Pooltags](#dumping-pooltags)
+    - [Heuristic Vulnerability Checks](#heuristic-vulnerability-checks)
+  - [Feature Flags](#feature-flags)
+  - [Fixed Issues](#fixed-issues)
   - [Known Caveats and Limitations](#known-caveats-and-limitations)
   - [Credits and Acknowledgements](#credits-and-acknowledgements)
 
@@ -39,7 +42,7 @@ To use the auto-analysis feature:
 3. Check the "Output" window for the analysis results, and the **Driver Buddy Reloaded - Findings** window that opens
    at the end of the run (double-click a row to jump to its address).
 4. The following files are written under IDA's DB directory (all prefixed with `<DRIVER_NAME>-YYYY-MM-DD-TIMESTAMP-`):
-   - `DriverBuddyReloaded_autoanalysis.txt` - the full text analysis log
+   - `autoanalysis.txt` - the full text analysis log
    - `findings.json` - machine-readable findings (IOCTLs, flagged functions, device names, pooltags, call chains)
    - `report.html` - a standalone, severity-grouped HTML report
    - `ioctl_pocs.c` - a `DeviceIoControl` PoC harness skeleton (severity-sorted)
@@ -79,15 +82,21 @@ To decode ALL IOCTLs within a function:
 **Driver Buddy Reloaded** is an IDA Pro Python plugin that helps automate some tedious Windows Kernel Drivers reverse
 engineering tasks. It has a number of handy features, such as:
 
-* Identifying the type of the driver
+* Identifying the type of the driver (WDM, KMDF, UMDF, Mini-Filter, Stream Minidriver, AVStream, PortCls)
 * Locating `DispatchDeviceControl` / `DispatchInternalDeviceControl` functions
 * Populating common structures for `WDF` and `WDM` drivers
     * Attempts to identify and label structures like the `IRP` and `IO_STACK_LOCATION`
     * Label calls to `WDF` functions that would normally be unlabeled
+    * Creates an `IRP_MJ_FUNCTION` IDA enum and applies it to `MajorFunction` array slots in `DriverEntry` (WDM)
 * Finding and decoding IOCTL codes
+    * Automatic flow-chart scan of identified dispatcher functions (no cursor placement required)
+    * NTSTATUS values resolved dynamically from the IDA type database (no static list)
 * Flagging functions prone to misuse
-* Finding potential `DeviceName`
-* Dumping `Pooltags`
+* Finding potential `DeviceName` (mmap scan + IDA Strings DB fallback, with source address)
+* Dumping `Pooltags` (import-based primary + register-propagated fallback for tags staged in a register)
+* **Heuristic vulnerability checks**: unvalidated user-copy, missing privilege gate, IRQL mismatch, unsafe
+  MDL mapping, stack-allocated buffers (`_alloca`) - see [Heuristic Vulnerability Checks](#heuristic-vulnerability-checks)
+* **Exports audit**: flags driver exports with zero internal cross-references (potential attack surface)
 * **Risk-scoring** decoded IOCTLs (prioritising `METHOD_NEITHER` / `FILE_ANY_ACCESS` and handlers that reach
   dangerous sinks such as `MmMapIoSpace`, `memcpy`, `__writemsr`) and presenting all findings, by severity, in a
   clickable results window (double-click to jump to the address)
@@ -150,8 +159,11 @@ If you right-click, alternatively using the
 Reloaded menu, a “**Decode All**” option appears, this attempt to decode all the IOCTL codes it can find in the
 function. This is a bit hacky but most of the time it can speed things up.
 
-- A `DriverName.sys-2021-12-10-TIME_STAMP-IOCTLs.txt`/`DriverName.sys-2021-12-10-TIME_STAMP-IOCTLs.txt_dumb.txt` file,
-  containing all the decoded IOCTLs up to that moment, will be written under IDA's DB directory.
+- An `IOCTLs.txt` file (prefixed with `<DRIVER_NAME>-YYYY-MM-DD-TIMESTAMP-`) containing all decoded IOCTLs is
+  written under IDA's DB directory.
+
+Auto-analysis additionally runs a flow-chart scan over identified dispatcher functions to discover IOCTLs
+automatically, without requiring manual cursor placement.
 
 ![](/screenshots/IOCTL-table.png)
 ![](/screenshots/decode-IOCTL.png)
@@ -182,6 +194,55 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
   IDA's DB directory.
 
 ![](/screenshots/pooltag.png)
+
+### Heuristic Vulnerability Checks
+
+The `heuristics.py` module runs after call-chain tracing and examines each identified dispatch handler function.
+It emits findings in the **heuristic** category:
+
+| Check | What is flagged | Severity |
+|---|---|---|
+| Unvalidated user copy | `memcpy`/`RtlCopyMemory`/etc. with no nearby `ProbeForRead`/`ProbeForWrite`/safe-string guard | HIGH (handler), MEDIUM (other) |
+| Missing privilege gate | `ZwOpenProcess`/`ZwAllocateVirtualMemory`/etc. with no `SeSinglePrivilegeCheck`/`SeAccessCheck` in the function | HIGH |
+| IRQL mismatch | Pageable / `Zw*` / `MmMap*` call when an IRQL-raising function is also present | MEDIUM |
+| Unsafe MDL mapping | `MmMapLockedPages`/`MmProbeAndLockPages`/etc. with `UserMode` in disassembly | HIGH, else MEDIUM |
+| Stack allocation | `_alloca`/`_malloca`/`_chkstk` call (large or dynamic stack allocation) | LOW |
+
+These are **lead generators**, not confirmed vulnerabilities. Treat HIGH/CRITICAL findings as starting points for
+manual review.
+
+## Feature Flags
+
+All optional analysis stages are controlled by `DriverBuddyReloaded/config.py`. Edit the `Feature` class to
+enable or disable them:
+
+| Flag | Default | Description |
+|---|---|---|
+| `HEURISTICS` | `True` | Heuristic vulnerability checks (copy validation, privilege gate, IRQL, MDL, alloca) |
+| `EXPORTS_AUDIT` | `True` | Flag driver exports with zero internal cross-references |
+| `POOLTAG_FALLBACK` | `True` | Register-propagated pool tag scanner (used when import-based scan finds nothing) |
+| `IRP_MJ_ENUM` | `True` | Create `IRP_MJ_FUNCTION` IDA enum and apply to `MajorFunction` slots (WDM only) |
+| `CALLCHAIN` | `True` | BFS call-chain tracing from handlers to dangerous sinks |
+| `RISK_SCORING` | `True` | IOCTL risk scoring (METHOD/ACCESS weights + sink bump) |
+| `RESULTS_WINDOW` | `True` | Show the Driver Buddy Reloaded findings window after analysis |
+| `JSON_EXPORT` | `True` | Write `findings.json` |
+| `HTML_REPORT` | `True` | Write `report.html` |
+| `POC_HARNESS` | `True` | Write `ioctl_pocs.c` PoC harness |
+| `SEGMENT_OPCODE_SCAN` | `False` | Linear segment-wide opcode scan (noisy, off by default) |
+
+## Fixed Issues
+
+The following upstream issues were resolved in v1.1.0:
+
+| Issue | Description |
+|---|---|
+| [#31](https://github.com/VoidSec/DriverBuddyReloaded/issues/31) | `GsDriverEntry` (IDA 8.2+ security-cookie wrapper) not recognised as a driver entry point |
+| [#30](https://github.com/VoidSec/DriverBuddyReloaded/issues/30) | `DeviceName` finding now includes the source address (EA) when resolved via the IDA Strings DB |
+| [#29](https://github.com/VoidSec/DriverBuddyReloaded/issues/29) | Driver type reported as "WDF" instead of "KMDF" or "UMDF" when the WDF library prefix was present |
+| [#27](https://github.com/VoidSec/DriverBuddyReloaded/issues/27) | Clear error message when loaded on IDA < 7.6; minimum supported version documented |
+| [#25](https://github.com/VoidSec/DriverBuddyReloaded/issues/25) | `IRP_MJ_FUNCTION` IDA enum created and applied to `MajorFunction` array operands in `DriverEntry` |
+| [#16](https://github.com/VoidSec/DriverBuddyReloaded/issues/16) | Pool tags propagated via a register (staged in `mov reg, 'ABCD'` before the alloc call) were missed |
+| [#15](https://github.com/VoidSec/DriverBuddyReloaded/issues/15) | NTSTATUS filter now uses the IDA type database instead of a static list (falls back to a small hardcoded set if the enum is absent) |
 
 ## Known Caveats and Limitations
 

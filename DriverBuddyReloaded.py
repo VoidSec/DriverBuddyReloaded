@@ -10,6 +10,7 @@ all analysis work to DriverBuddyReloaded.analysis.run_analysis().
 import idaapi
 import idc
 
+from DriverBuddyReloaded import __version__
 from DriverBuddyReloaded import analysis
 from DriverBuddyReloaded import config
 from DriverBuddyReloaded import ioctl_decoder
@@ -257,7 +258,8 @@ class DriverBuddyPlugin(idaapi.plugin_t):
             shortcut="Ctrl+Alt+F",
             callback=decode_all_ioctls,
         ).registerAction()
-        print("[Driver Buddy Reloaded] Loaded (IDA SDK {}).".format(idaapi.IDA_SDK_VERSION))
+        print("[Driver Buddy Reloaded] v{} loaded (IDA SDK {}).".format(
+            __version__, idaapi.IDA_SDK_VERSION))
         return idaapi.PLUGIN_KEEP
 
     def run(self, args):

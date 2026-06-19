@@ -1,0 +1,20 @@
+{
+  "name": "Driver Buddy Reloaded",
+  "description": "Automated triage for Windows kernel drivers: IOCTL discovery and decoding, WDM/WDF/KMDF/UMDF structure labelling, heuristic vulnerability checks, pool tag extraction, device name detection, risk scoring, call-chain tracing, and JSON/HTML/PoC reporting.",
+  "version": "1.1.0",
+  "author": "Paolo Stagno (VoidSec)",
+  "url": "https://github.com/VoidSec/DriverBuddyReloaded",
+  "license": "GPL-3.0",
+  "min_ida_version": "7.6",
+  "max_ida_version": "9.9",
+  "type": "idapython",
+  "plugins": [
+    {
+      "name": "DriverBuddyReloaded",
+      "script": "DriverBuddyReloaded.py",
+      "description": "Vulnerability triage plugin for Windows kernel drivers.",
+      "version": "1.1.0",
+      "hotkey": "Ctrl-Alt-A"
+    }
+  ]
+}
