@@ -31,6 +31,13 @@ SDK_VERSION = idaapi.IDA_SDK_VERSION
 IS_IDA9 = SDK_VERSION >= 900
 BADADDR = idaapi.BADADDR
 
+# Driver Buddy Reloaded requires IDA 7.6+ (compiled_binpat_vec_t / parse_binpat_str).
+# IDA 7.5 is missing these APIs; issue a clear actionable warning rather than crashing.
+if SDK_VERSION < 760:
+    print("[Driver Buddy Reloaded] WARNING: IDA 7.6 or newer is required "
+          "(detected SDK version %d).  The IOCTL search and opcode scanner will "
+          "not work.  Please upgrade IDA." % SDK_VERSION)
+
 # Resolve a couple of flag constants whose names shifted between binding generations.
 _PARSE_DECL_FLAGS = getattr(ida_typeinf, "PT_SIL", getattr(ida_typeinf, "PT_SILENT", 0))
 _HTI_DCL = getattr(ida_typeinf, "HTI_DCL", 0)

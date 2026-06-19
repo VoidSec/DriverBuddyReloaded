@@ -55,14 +55,17 @@ def add_struct(version: VersionInfo, rep: "Reporter") -> Optional[int]:
     return ida_compat.create_named_struct(STRUCT_NAME, member_names)
 
 
-def populate_wdf(rep: "Reporter") -> None:
+def populate_wdf(rep: "Reporter") -> str:
     """
     Find and define the WDF driver's function table (WdfFunctions) and apply the
     WDFFUNCTIONS structure type to it.
+
     :param rep: Reporter instance
+    :return str: "KMDF", "UMDF", or "WDF" based on the mdfLibrary prefix (issue #29)
     """
 
     ptr_size = ida_compat.ptr_size()
+    detected_type = "WDF"
     # find candidate data sections
     segments = [idaapi.get_segm_by_name('.data'),
                 idaapi.get_segm_by_name('.rdata'),
@@ -76,8 +79,14 @@ def populate_wdf(rep: "Reporter") -> None:
         idx = ida_compat.bin_search('L"mdfLibrary"', segm.start_ea, segm.end_ea)
         if idx == ida_compat.BADADDR:
             continue
-        actual_library = chr(ida_bytes.get_byte(idx - 2)) + "mdfLibrary"
-        rep.info("[WDF] Found %s string at 0x%x" % (actual_library, idx - 2))
+        prefix_char = chr(ida_bytes.get_byte(idx - 2))
+        actual_library = prefix_char + "mdfLibrary"
+        # K-prefix = KMDF, U-prefix = UMDF
+        if prefix_char == "K":
+            detected_type = "KMDF"
+        elif prefix_char == "U":
+            detected_type = "UMDF"
+        rep.info("[WDF] Found %s string at 0x%x (type: %s)" % (actual_library, idx - 2, detected_type))
         addr = idc.get_first_dref_to(idx - 2)
         version = VersionInfo(
             library=actual_library,
@@ -95,3 +104,4 @@ def populate_wdf(rep: "Reporter") -> None:
             rep.info("[WDF] Success")
         else:
             rep.info("[WDF] Failed to apply WDFFUNCTIONS type at %s" % hex(wdf_func))
+    return detected_type
