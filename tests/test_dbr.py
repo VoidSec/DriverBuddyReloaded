@@ -108,6 +108,9 @@ def _install_ida_stubs():
     mod("ida_loader", PATH_TYPE_IDB=0, get_path=lambda t: "")
     mod("ida_typeinf", PT_SIL=1, HTI_DCL=1, NTF_TYPE=1, TINFO_DEFINITE=1,
         get_idati=lambda: object())
+    mod("ida_strlist", get_strlist_qty=lambda: 0,
+        get_strlist_item=lambda sc, i: False,
+        string_info_t=_Any)
 
 
 def main():

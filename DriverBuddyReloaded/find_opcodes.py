@@ -12,12 +12,19 @@ Adapted from Hex-Rays' find-instruction sample (Copyright (c) Hex-Rays);
 ported to the ida_compat search layer for IDA 7.x/8.4/9.0+.
 """
 
+from __future__ import annotations
+
 import re
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from DriverBuddyReloaded.reporting import Reporter
 
 import ida_funcs
 import ida_idaapi
 import ida_segment
 import idautils
+import idc
 
 from DriverBuddyReloaded import config, ida_compat
 from DriverBuddyReloaded.reporting import Finding
@@ -69,6 +76,41 @@ def FindInstructions(instr, asm_where=None):
     if not ret:
         return False, "Could not match {} - [{}]".format(instr, bin_str)
     return True, ret
+
+
+def linear_scan(rep) -> None:
+    """
+    Segment-wide linear instruction decode looking for OPCODE_SEVERITY members.
+
+    This is largely redundant with the existing find(x=True) binary-pattern search;
+    it is provided as an opt-in alternative (config.Feature.SEGMENT_OPCODE_SCAN)
+    for databases where the pattern search is unreliable (e.g. Thumb2 or mixed-mode).
+    Disabled by default to avoid noisy duplicate findings.
+    :param rep: Reporter instance
+    """
+    for seg_ea in idautils.Segments():
+        seg = ida_segment.getseg(seg_ea)
+        if not seg or not (seg.perm & ida_segment.SEGPERM_EXEC):
+            continue
+        ea = seg.start_ea
+        while ea < seg.end_ea:
+            disasm = ida_compat.disasm_text(ea)
+            for opcode in config.OPCODE_SEVERITY:
+                if opcode in disasm:
+                    func_or_seg = ida_funcs.get_func_name(ea) \
+                        or (ida_segment.get_segm_name(seg) if seg else "")
+                    rep.add(Finding(
+                        category="opcode",
+                        title=opcode,
+                        ea=ea,
+                        func=func_or_seg,
+                        severity=config.OPCODE_SEVERITY[opcode],
+                        detail=disasm))
+                    break
+            nxt = idc.next_head(ea, seg.end_ea)
+            if nxt <= ea:
+                break
+            ea = nxt
 
 
 def find(rep, s=None, x=False, asm_where=None):

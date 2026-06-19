@@ -1,11 +1,28 @@
 """
-DeviceName finding functions. Using a Unicode string search
+device_name_finder.py: locate potential DeviceNames in the driver binary.
+
+Two complementary search strategies are used:
+  1. mmap UTF-16LE scan - fast regex over the raw file bytes.
+  2. IDA Strings database scan - catches strings IDA has already decoded,
+     and provides the EA where the string was found (enabling Results window
+     navigation and addressing GitHub issue #30).
+
+Both result sets are merged before filtering for device-name prefixes.
 """
+
+from __future__ import annotations
+
 import collections
 import mmap
 import re
+from typing import Optional, Set, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from DriverBuddyReloaded.reporting import Reporter
 
 import ida_nalt
+import ida_strlist
+import idc
 
 from DriverBuddyReloaded import config
 from DriverBuddyReloaded.reporting import Finding
@@ -58,39 +75,83 @@ def extract_unicode_strings(buf, n=4):
             pass
 
 
-def get_unicode_device_names():
-    """
-    Returns all Unicode strings within the binary currently being analysed in IDA which might be DeviceNames
-    """
+# All device-name prefixes we recognise (including Win32 namespace \??\)
+_DEVICE_PREFIXES = ('\\Device\\', '\\DosDevices\\', '\\??\\')
 
+
+def get_unicode_device_names() -> Set[str]:
+    """
+    mmap-based UTF-16LE scan of the raw file bytes.
+    Returns possible device-name strings (no EAs available via this path).
+    """
     path = ida_nalt.get_root_filename()
-    min_length = 4
-    possible_names = set()
-    with open(path, "rb") as f:
-        b = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+    possible: Set[str] = set()
+    try:
+        with open(path, "rb") as f:
+            b = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+            for s in extract_unicode_strings(b, n=4):
+                s_str = str(s.s)
+                if any(s_str.startswith(p) for p in _DEVICE_PREFIXES):
+                    possible.add(s_str)
+    except (OSError, ValueError):
+        pass
+    return possible
 
-        for s in extract_unicode_strings(b, n=min_length):
-            s_str = str(s.s)
-            if s_str.startswith('\\Device\\') or s_str.startswith('\\DosDevices\\'):
-                possible_names.add(str(s.s))
-    return possible_names
+
+def get_strings_device_names() -> dict:
+    """
+    IDA Strings database scan.  Returns {name: ea} for strings that start with
+    a recognised device-name prefix.  Provides EAs for Results-window navigation
+    (GitHub issue #30).
+    """
+    result: dict = {}
+    try:
+        sc = ida_strlist.string_info_t()
+        for i in range(ida_strlist.get_strlist_qty()):
+            if not ida_strlist.get_strlist_item(sc, i):
+                continue
+            try:
+                s = idc.get_strlit_contents(sc.ea, sc.length, sc.type)
+                if not s:
+                    continue
+                decoded = s.decode("utf-16-le", errors="ignore").rstrip("\x00")
+            except Exception:
+                continue
+            if any(decoded.startswith(p) for p in _DEVICE_PREFIXES):
+                result[decoded] = sc.ea
+    except Exception:
+        pass
+    return result
 
 
-def find_unicode_device_name(rep):
+def find_unicode_device_name(rep: Reporter) -> bool:
     """
     Find and report potential DeviceNames, emitting a Finding per full path.
-    :param rep: Reporter instance
-    :return boolean: True if at least one full DeviceName was found, else False
-    """
 
-    possible_names = get_unicode_device_names()
+    Merges the mmap scan and the IDA Strings DB scan, preferring the Strings DB
+    entry when both find the same name (because it carries an EA).
+    :param rep: Reporter instance
+    :return bool: True if at least one full DeviceName was found
+    """
+    mmap_names = get_unicode_device_names()
+    strings_names = get_strings_device_names()  # {name: ea}
+
+    all_names: dict = {name: None for name in mmap_names}
+    all_names.update(strings_names)  # Strings DB wins (has EA)
+
     # Keep only full paths; bare prefixes mean the real name is built elsewhere.
-    real = sorted(n for n in possible_names if n not in ('\\Device\\', '\\DosDevices\\'))
+    real = {n: ea for n, ea in all_names.items()
+            if n not in ('\\Device\\', '\\DosDevices\\', '\\??\\') and len(n) > max(len(p) for p in _DEVICE_PREFIXES)}
     if real:
-        for name in real:
-            rep.add(Finding(category="device_name", title=name, severity=config.SEV_INFO))
+        for name, ea in sorted(real.items()):
+            from DriverBuddyReloaded.reporting import BADADDR
+            rep.add(Finding(
+                category="device_name",
+                title=name,
+                ea=ea if ea is not None else BADADDR,
+                severity=config.SEV_INFO))
         return True
-    if possible_names:
+    if all_names:
         rep.info("[!] The Device prefix was found but no full Device Paths; "
                  "the DeviceName is likely obfuscated or created on the stack.")
         return False

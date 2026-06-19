@@ -22,6 +22,9 @@ from DriverBuddyReloaded import (
     config,
     device_name_finder,
     dump_pool_tags,
+    exports_audit,
+    find_opcodes,
+    heuristics,
     ioctl_decoder,
     poc,
     scoring,
@@ -93,6 +96,12 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
 
     if config.Feature.CALLCHAIN:
         callchain.trace(rep, ctx)
+    if config.Feature.HEURISTICS:
+        heuristics.run(rep, ctx)
+    if config.Feature.EXPORTS_AUDIT:
+        exports_audit.audit(rep)
+    if config.Feature.SEGMENT_OPCODE_SCAN:
+        find_opcodes.linear_scan(rep)
     if config.Feature.RISK_SCORING:
         scoring.score(rep)
     if config.Feature.JSON_EXPORT:

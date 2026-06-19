@@ -29,6 +29,11 @@ class Feature:
     HTML_REPORT = True
     POC_HARNESS = True
     CALLCHAIN = True
+    HEURISTICS = True
+    EXPORTS_AUDIT = True
+    POOLTAG_FALLBACK = True
+    SEGMENT_OPCODE_SCAN = False  # noisy with existing find(x=True); opt-in only
+    IRP_MJ_ENUM = True
 
 
 # Depth (in call edges) the name-based call-chain tracer walks out from a handler.
@@ -104,6 +109,187 @@ OPCODE_SEVERITY = {
     "wrmsr": SEV_CRITICAL,
     "rdmsr": SEV_HIGH,
     "rdpmc": SEV_MEDIUM,
+}
+
+# ---------------------------------------------------------------------------
+# Heuristic function-name sets (used by heuristics.py)
+# ---------------------------------------------------------------------------
+
+# Pointer-validation and safe-arithmetic helpers that constitute an acceptable
+# guard before a copy-sink call.  Covers ProbeFor* memory probes, MmSecure*,
+# and the full ntintsafe.h safe-arithmetic family.
+VALIDATION_FUNCS = {
+    # Memory range validation
+    "ProbeForRead",
+    "ProbeForWrite",
+    "MmIsAddressValid",
+    "MmIsNonPagedSystemAddressValid",
+    "MmSecureVirtualMemory",
+    "MmSecureVirtualMemoryEx",
+    "MmUnsecureVirtualMemory",
+    # Safe arithmetic (ntintsafe.h / RtlSafeInt variants)
+    "RtlULongAdd",
+    "RtlULongSub",
+    "RtlULongMult",
+    "RtlULongLongAdd",
+    "RtlULongLongSub",
+    "RtlULongLongMult",
+    "RtlSizeTAdd",
+    "RtlSizeTSub",
+    "RtlSizeTMult",
+    "RtlUShortAdd",
+    "RtlUShortSub",
+    "RtlUShortMult",
+    "RtlDWordPtrAdd",
+    "RtlDWordPtrSub",
+    "RtlDWordPtrMult",
+    "RtlUIntPtrAdd",
+    "RtlUIntPtrSub",
+    "RtlUIntPtrMult",
+    "RtlIntPtrAdd",
+    "RtlIntPtrSub",
+    "RtlIntPtrMult",
+    # Safe string copy (replacement for unsafe sprintf / strcpy family)
+    "RtlCopyMemory_safe",
+    "RtlStringCchCopyA",
+    "RtlStringCchCopyW",
+    "RtlStringCbCopyA",
+    "RtlStringCbCopyW",
+    "RtlStringCchCatA",
+    "RtlStringCchCatW",
+    "RtlStringCchPrintfA",
+    "RtlStringCchPrintfW",
+    "RtlStringCbPrintfA",
+    "RtlStringCbPrintfW",
+}
+
+# Functions whose presence in a function demonstrates a privilege gate.
+# If none of these appear but PRIVILEGED_SENSITIVE_OPS are called, it is
+# a strong indicator of a missing access-control check.
+PRIVILEGE_GATE_FUNCS = {
+    "SeSinglePrivilegeCheck",
+    "SePrivilegeCheck",
+    "SeAccessCheck",
+    "SeAccessCheckAndAuditAlarm",
+    "SeTokenIsAdmin",
+    "SeTokenIsWriteRestricted",
+    "PsIsProtectedProcess",
+    "PsIsProtectedProcessLight",
+    "ZwOpenProcessToken",
+    "ZwOpenProcessTokenEx",
+    "ZwOpenThreadToken",
+    "ZwOpenThreadTokenEx",
+    "ZwQueryInformationToken",
+    "SeQueryInformationToken",
+    "PsGetCurrentProcessToken",
+    "RtlCheckTokenMembership",
+    "SeCaptureSubjectContext",
+    "SeReleaseSubjectContext",
+}
+
+# High-value kernel operations that should be gated by a privilege check.
+# Presence without a corresponding PRIVILEGE_GATE_FUNCS call is HIGH severity.
+PRIVILEGED_SENSITIVE_OPS = {
+    # Process / thread control
+    "ZwOpenProcess",
+    "ZwTerminateProcess",
+    "PsCreateSystemThread",
+    "PsTerminateSystemThread",
+    # Virtual memory manipulation (common exploit primitives)
+    "ZwAllocateVirtualMemory",
+    "ZwFreeVirtualMemory",
+    "ZwWriteVirtualMemory",
+    "ZwReadVirtualMemory",
+    "ZwProtectVirtualMemory",
+    "NtCopyVirtualMemory",
+    # Section / shared-memory mapping
+    "ZwCreateSection",
+    "ZwOpenSection",
+    "ZwMapViewOfSection",
+    "ZwUnmapViewOfSection",
+    # Physical memory and I/O space access (BYOVD primitives)
+    "MmMapIoSpace",
+    "MmMapIoSpaceEx",
+    "MmGetPhysicalAddress",
+    # Driver loading / system modification
+    "ZwLoadDriver",
+    "NtLoadDriver",
+    "ZwSetSystemInformation",
+    "ZwSystemDebugControl",
+    "ZwUnloadDriver",
+}
+
+# Functions that raise, lower, or query IRQL; their presence marks an
+# IRQL-sensitive context where pageable operations become dangerous.
+IRQL_RAISING_FUNCS = {
+    "KeRaiseIrql",
+    "KeRaiseIrqlToDpcLevel",
+    "KeLowerIrql",
+    "KeGetCurrentIrql",
+    "KeAcquireSpinLock",
+    "KeReleaseSpinLock",
+    "KeAcquireSpinLockRaiseToDpc",
+    "KeReleaseSpinLockFromDpcLevel",
+    "KeAcquireSpinLockAtDpcLevel",
+    "KeAcquireInStackQueuedSpinLock",
+    "KeReleaseInStackQueuedSpinLock",
+    "KeAcquireInStackQueuedSpinLockRaiseToDpc",
+    "KeSynchronizeExecution",
+    "KeFlushQueuedDpcs",
+    "KeTryToAcquireSpinLockAtDpcLevel",
+}
+
+# MDL operations that can create user-accessible kernel mappings; HIGH when
+# UserMode context is detected nearby, MEDIUM otherwise.
+MDL_USER_FUNCS = {
+    "MmProbeAndLockPages",
+    "MmProbeAndLockSelectedPages",
+    "MmMapLockedPagesSpecifyCache",
+    "MmMapLockedPages",
+    "MmUnmapLockedPages",
+    "IoBuildPartialMdl",
+    "MmGetSystemAddressForMdlSafe",
+    "MmGetSystemAddressForMdl",
+    "MmAllocatePagesForMdl",
+    "MmAllocatePagesForMdlEx",
+    "MmFreePagesFromMdl",
+    "MmBuildMdlForNonPagedPool",
+    "IoAllocateMdl",
+    "IoFreeMdl",
+}
+
+# Copy primitives that may operate on unvalidated, user-controlled data.
+# Does not duplicate c_functions (strcpy/sprintf family) since those are
+# already flagged as flagged_function findings by utils.get_xrefs().
+COPY_SINKS = {
+    "memcpy",
+    "memmove",
+    "wmemcpy",
+    "RtlCopyMemory",
+    "RtlMoveMemory",
+    "RtlCopyBytes",
+    "RtlCopyUnicodeString",
+    "RtlCopyString",
+    "RtlAppendUnicodeStringToString",
+    "RtlAppendUnicodeToString",
+    "MmCopyMemory",
+    "ZwReadVirtualMemory",
+    "ZwWriteVirtualMemory",
+    "NtCopyVirtualMemory",
+    "RtlFillMemory",
+    "RtlZeroMemory",
+}
+
+# Stack-allocation intrinsics; presence in a dispatch handler warrants triage
+# to ensure the allocation size is bounded (LOW severity, needs manual review).
+ALLOCA_FUNCS = {
+    "_alloca",
+    "alloca",
+    "_malloca",
+    "_chkstk",
+    "_alloca_probe",
+    "__alloca_probe",
+    "__alloca_probe_16",
 }
 
 # ---------------------------------------------------------------------------
