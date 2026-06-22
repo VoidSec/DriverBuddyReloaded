@@ -89,9 +89,10 @@ class Reporter:
 
     def _format_line(self, f):
         where = " in {}".format(f.func) if f.func else ""
+        loc = (" at " + self._loc(f.ea)) if f.ea not in (None, BADADDR) else ""
         extra = " :: {}".format(f.detail) if f.detail else ""
-        return "\t- [{}] {}{} at {}{}".format(
-            config.severity_name(f.severity), f.title, where, self._loc(f.ea), extra)
+        return "\t- [{}] {}{}{}{}".format(
+            config.severity_name(f.severity), f.title, where, loc, extra)
 
     def _write(self, line):
         print(line)

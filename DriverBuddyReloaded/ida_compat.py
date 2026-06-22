@@ -210,7 +210,7 @@ def apply_struct_ptr(ea, name):
         if ida_typeinf.parse_decl(tif, til, "%s *;" % name, _PARSE_DECL_FLAGS) is None:
             return False
         return bool(ida_typeinf.apply_tinfo(ea, tif, ida_typeinf.TINFO_DEFINITE))
-    return bool(idc.set_type(ea, "%s *" % name))
+    return bool(idc.SetType(ea, "%s *" % name))
 
 
 def import_std_type(name):
