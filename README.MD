@@ -241,11 +241,9 @@ enable or disable them:
   High/Critical findings as places to look first, not as confirmed vulnerabilities. Feature toggles live in
   `DriverBuddyReloaded/config.py`.
 - Experimental `DispatchDeviceControl` searching works only for x64 drivers
-- Shortcuts are incompatible with F-Secure's [win_driver_plugin](https://github.com/FSecureLABS/win_driver_plugin)
-- Shortcuts are incompatible with [findcrypt-yara](https://github.com/polymorf/findcrypt-yara)
 - In [find_opcodes.py](DriverBuddyReloaded/find_opcodes.py), the `find_opcode_data` option will prevent Driver Buddy
   Reloaded to find opcodes in data sections. Switching it to `True` will print something along
-  this [line](https://github.com/VoidSec/DriverBuddyReloaded/issues/11):
+  this line:
   `Found jnz     short loc_15862 in sub_15820 at 0x00015852`
   Usually, going at the showed address and re-defining the selection as code will bring the searched opcode back.
   **Watch out**: It is prone to false positives!
