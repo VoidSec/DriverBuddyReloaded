@@ -195,8 +195,7 @@ def find_all_ioctls():
         for instr in range(block.start_ea, block.end_ea):
             if idc.print_insn_mnem(instr) in ['cmp', 'sub', 'mov'] and idc.get_operand_type(instr, 1) == idc.o_imm:
                 value = get_operand_value(instr)
-                # value >= IOCTL_MIN_VALUE (lower false positives) and not a known NTSTATUS value (issue #15)
-                if value >= config.IOCTL_MIN_VALUE and value not in ioctl_decoder._get_ntstatus_values():
+                if ioctl_decoder._is_valid_ctl_code(value):
                     ioctls.append((instr, value))
     return ioctls
 
@@ -226,8 +225,7 @@ def decode_ioctl_at_cursor():
     if idc.get_operand_type(pos, 1) != idc.o_imm:  # second operand must be an immediate
         return
     value = get_operand_value(pos)
-    # value >= IOCTL_MIN_VALUE (lower false positives) and not a known NTSTATUS value (issue #15)
-    if value >= config.IOCTL_MIN_VALUE and value not in ioctl_decoder._get_ntstatus_values():
+    if ioctl_decoder._is_valid_ctl_code(value):
         ioctl_tracker.add_ioctl(pos, value)
         make_comment(pos, ioctl_decoder.get_define(value))
         ioctls = [(inst, get_operand_value(inst)) for inst in ioctl_tracker.ioctl_locs]

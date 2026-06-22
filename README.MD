@@ -236,7 +236,7 @@ enable or disable them:
 
 ## Known Caveats and Limitations
 
-- Only IOCTL values >= `0x10000` will be automatically decoded, thus to prevent an high number of false positives. [Issue #15](https://github.com/VoidSec/DriverBuddyReloaded/issues/15)
+- IOCTL candidates are validated against the `CTL_CODE` structure: the DeviceType field (bits 31-16) must be non-zero, and the value must not match a known NTSTATUS code. This rules out loop counters and small immediates while preserving all valid IOCTLs including vendor-defined device types (`0x8000+`). The filter is applied by both the `IoControlCode` xref scan and the dispatcher flow-chart scan. [Issue #15](https://github.com/VoidSec/DriverBuddyReloaded/issues/15)
 - Risk scoring and call-chain tracing are **heuristic, name-based lead generators**, not dataflow analysis; treat
   High/Critical findings as places to look first, not as confirmed vulnerabilities. Feature toggles live in
   `DriverBuddyReloaded/config.py`.

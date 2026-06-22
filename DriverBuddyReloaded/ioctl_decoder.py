@@ -248,8 +248,8 @@ def format_row(addr, ioctl_code):
 _ntstatus_cache = None
 
 # Minimal fallback used when no NTSTATUS enum is loaded in the IDB.
-# Covers the most common NTSTATUS values >= IOCTL_MIN_VALUE that would
-# otherwise be misclassified as IOCTL codes.
+# Covers the most common NTSTATUS values that would otherwise be
+# misclassified as IOCTL codes.
 _NTSTATUS_FALLBACK = {
     0x00000103,  # STATUS_PENDING
     0x40000000,  # STATUS_OBJECT_TYPE_MISMATCH (info bit set)
@@ -319,9 +319,17 @@ def _get_ntstatus_values() -> set:
     return _ntstatus_cache
 
 
-def _is_ioctl_candidate(value: int) -> bool:
-    """Return True when value looks like an IOCTL code rather than a NTSTATUS."""
-    return value >= config.IOCTL_MIN_VALUE and value not in _get_ntstatus_values()
+def _is_valid_ctl_code(value: int) -> bool:
+    """Return True when value is a structurally valid CTL_CODE and not a known NTSTATUS.
+
+    CTL_CODE layout: bits[31:16]=DeviceType, bits[15:14]=Access,
+    bits[13:2]=Function, bits[1:0]=Method.  A nonzero DeviceType is the
+    only meaningful structural gate -- it rules out loop counters, array
+    indices, and other small immediates while preserving every valid IOCTL
+    including vendor-defined device types (0x8000+).
+    """
+    device_type = (value >> 16) & 0xffff
+    return device_type != 0 and value not in _get_ntstatus_values()
 
 
 def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
@@ -358,7 +366,7 @@ def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
                 value = idc.get_operand_value(instr, 1) & 0xffffffff
                 if instr in already_seen:
                     continue
-                if not _is_ioctl_candidate(value):
+                if not _is_valid_ctl_code(value):
                     continue
                 already_seen.add(instr)
                 d = decode(value)
@@ -395,6 +403,8 @@ def find_ioctls(rep: Reporter) -> bool:
             try:
                 ioctl_code = int(idc.print_operand(ea, opnd))
             except (TypeError, ValueError):
+                continue
+            if not _is_valid_ctl_code(ioctl_code):
                 continue
             d = decode(ioctl_code)
             rep.add(Finding(

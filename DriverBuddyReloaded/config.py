@@ -313,10 +313,6 @@ POOL_ALLOC_FUNCS = {
 # Analysis tuning constants
 # ---------------------------------------------------------------------------
 
-# Minimum immediate value treated as a possible IOCTL code; smaller values are
-# almost certainly loop counters, array indices, or other non-IOCTL immediates.
-IOCTL_MIN_VALUE = 0x10000
-
 # How many instructions before a pool-allocation call site to scan backwards
 # when searching for the 'Tag' immediate operand.
 POOLTAG_LOOKBACK = 10

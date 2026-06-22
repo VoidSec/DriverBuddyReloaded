@@ -104,10 +104,12 @@ export a tiny `/GS` security-cookie stub (`GsDriverEntry`) that contains no
 
 ### IOCTL decoding
 Two complementary strategies, both in `ioctl_decoder.py`:
-1. `find_ioctls()` - text/pattern search for CMP/SUB/MOV with immediate operands across all functions.
-2. `scan_dispatchers(rep, ddc_addresses)` - flow-chart scan of the specific identified dispatcher EAs. Runs automatically when `ctx.ddc_addresses` is non-empty.
+1. `find_ioctls()` - walks `IoControlCode` xrefs that IDA resolved from struct type info; fast and precise when IDA has applied `IO_STACK_LOCATION` typing, silent otherwise.
+2. `scan_dispatchers(rep, ddc_addresses)` - flow-chart brute-force scan of the identified dispatcher EAs; catches IOCTLs that `find_ioctls()` misses on stripped or poorly-typed binaries. Runs automatically when `ctx.ddc_addresses` is non-empty.
 
-NTSTATUS filter uses `_get_ntstatus_values()` which queries the IDA type DB first, falls back to a small hardcoded set. Result is cached for the run.
+Both paths run every candidate through `_is_valid_ctl_code()` (ioctl_decoder.py), which validates the CTL_CODE structure (DeviceType bits[31:16] must be non-zero) and rejects known NTSTATUS values via `_get_ntstatus_values()`. The structural check is equivalent to the old `>= 0x10000` floor but expresses the intent explicitly and is easy to tighten later (e.g. restrict to assigned device type ranges). `config.IOCTL_MIN_VALUE` was removed -- the check now lives entirely in `_is_valid_ctl_code()`.
+
+NTSTATUS filter queries the IDA type DB first (`NTSTATUS` / `_NTSTATUS` enum), falls back to a small hardcoded set. Result is cached for the run.
 
 ### Pure-Python test harness
 `tests/test_dbr.py` installs in-memory IDA stubs via `sys.modules` before any import of the plugin package. The `DBR_SDK` environment variable sets the simulated `IDA_SDK_VERSION`. Tests cover only logic that has no live-database dependency. IDA-side behaviour (structure labelling, enum creation, cross-reference walks) must be verified inside IDA via `tests/ida_smoke.py`.
