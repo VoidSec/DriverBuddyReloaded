@@ -104,10 +104,6 @@ engineering tasks. It has a number of handy features, such as:
 * Exporting results as a machine-readable **JSON** file, a standalone **HTML report**, and a generated **C/C++
   `DeviceIoControl` PoC harness** to bootstrap testing/fuzzing
 
-> The risk-scoring, reporting and PoC-generation features were inspired by ideas from the
-> *Driver Buddy Revolutions* rewrite, re-implemented here on top of Reloaded's structure-labeling and interactive
-> IOCTL decoding (which Revolutions dropped).
-
 ![](/screenshots/auto-analysis.png)
 
 ### Finding DispatchDeviceControl
@@ -156,7 +152,7 @@ disassembly view, it's possible to mark it as invalid; this will leave any non-I
 If you right-click, alternatively using the
 `Ctrl+Alt+F` shortcut, on the first instruction of the function you believe to be the IOCTL dispatcher (
 `DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`) under the Driver Buddy
-Reloaded menu, a “**Decode All**” option appears, this attempt to decode all the IOCTL codes it can find in the
+Reloaded menu, a "**Decode All**" option appears, this attempt to decode all the IOCTL codes it can find in the
 function. This is a bit hacky but most of the time it can speed things up.
 
 - An `IOCTLs.txt` file (prefixed with `<DRIVER_NAME>-YYYY-MM-DD-TIMESTAMP-`) containing all decoded IOCTLs is
@@ -181,7 +177,7 @@ can help while looking for possible user-controlled code paths reaching sensitiv
 
 The tool automatically attempts to find the drivers registered device paths (`DeviceName`), if no paths can be found by
 looking at Unicode strings inside the binary, then the analyst can manually try to use
-Madiant’s [FLOSS](https://github.com/mandiant/flare-floss/) in an attempt to find obfuscated paths.
+Madiant's [FLOSS](https://github.com/mandiant/flare-floss/) in an attempt to find obfuscated paths.
 
 ![](/screenshots/devicename.png)
 
@@ -230,20 +226,6 @@ enable or disable them:
 | `POC_HARNESS` | `True` | Write `ioctl_pocs.c` PoC harness |
 | `SEGMENT_OPCODE_SCAN` | `False` | Linear segment-wide opcode scan (noisy, off by default) |
 
-## Fixed Issues
-
-The following upstream issues were resolved in v1.1.0:
-
-| Issue | Description |
-|---|---|
-| [#31](https://github.com/VoidSec/DriverBuddyReloaded/issues/31) | `GsDriverEntry` (IDA 8.2+ security-cookie wrapper) not recognised as a driver entry point |
-| [#30](https://github.com/VoidSec/DriverBuddyReloaded/issues/30) | `DeviceName` finding now includes the source address (EA) when resolved via the IDA Strings DB |
-| [#29](https://github.com/VoidSec/DriverBuddyReloaded/issues/29) | Driver type reported as "WDF" instead of "KMDF" or "UMDF" when the WDF library prefix was present |
-| [#27](https://github.com/VoidSec/DriverBuddyReloaded/issues/27) | Clear error message when loaded on IDA < 7.6; minimum supported version documented |
-| [#25](https://github.com/VoidSec/DriverBuddyReloaded/issues/25) | `IRP_MJ_FUNCTION` IDA enum created and applied to `MajorFunction` array operands in `DriverEntry` |
-| [#16](https://github.com/VoidSec/DriverBuddyReloaded/issues/16) | Pool tags propagated via a register (staged in `mov reg, 'ABCD'` before the alloc call) were missed |
-| [#15](https://github.com/VoidSec/DriverBuddyReloaded/issues/15) | NTSTATUS filter now uses the IDA type database instead of a static list (falls back to a small hardcoded set if the enum is absent) |
-
 ## Known Caveats and Limitations
 
 - Only IOCTL values >= `0x10000` will be automatically decoded, thus to prevent an high number of false positives. [Issue #15](https://github.com/VoidSec/DriverBuddyReloaded/issues/15)
@@ -263,15 +245,6 @@ The following upstream issues were resolved in v1.1.0:
 ## Credits and Acknowledgements
 
 - Created in 2021 by [Paolo Stagno](https://voidsec.com/) aka [@Void_Sec](https://twitter.com/Void_Sec):
-    - Made it compatible with Python 3.x
-    - Made it compatible with IDA 7.x
-    - Ported to IDA 8.4 and 9.0+ via the `ida_compat` compatibility layer
-    - Added IOCTL risk scoring, a clickable findings window, and JSON/HTML/PoC reporting
-    - Refactored around a shared findings model (`reporting.Finding`/`Reporter`); added regression tests
-    - Updated C/C++ function and Windows APIs list
-    - Various bug fixing
-    - Various improvements
-    - Integrated part of the functionalities presents in F-Secure's win_driver_plugin
 - Risk-scoring, reporting and PoC-generation ideas adapted from
   [Driver Buddy Revolutions](https://github.com/jsacco/driverbuddyrevolutionsIDA) by Juan Sacco.
 - [DriverBuddy](https://github.com/nccgroup/DriverBuddy) was originally written by Braden Hollembaek and Adam Pond of
@@ -283,4 +256,4 @@ The following upstream issues were resolved in v1.1.0:
   name and pool tags, specifically Alexander Pick [fork](https://github.com/alexander-pick/win_driver_plugin).
 - The original code for adding items to the right-click menu (and possibly some other random snippets) came
   from '[herrcore](https://gist.github.com/herrcore/b3143dde185cecda7c1dee7ffbce5d2c)'.
-- Prodly developed using **PyCharm** for [Open Source development](https://www.jetbrains.com/community/opensource/#support) by JetBrains
+- Proudly developed using **PyCharm** for [Open Source development](https://www.jetbrains.com/community/opensource/#support) by JetBrains
