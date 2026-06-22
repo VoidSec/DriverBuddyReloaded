@@ -1,14 +1,15 @@
 """
 irp_mj.py: create and apply an IRP_MJ_FUNCTION IDA enum for WDM dispatch tables.
 
-When a WDM driver is identified, IDA labels the DriverObject.MajorFunction array
-as pointer-sized entries but leaves the slot indices as raw integers.  This module:
+When a WDM driver is identified this module:
 
   1. Defines the 28 IRP_MJ_* constants as a Python dict.
   2. Creates (or refreshes) an IDA enum named IRP_MJ_FUNCTION in the local type DB.
-  3. Applies that enum to operands that reference MajorFunction array slots so the
-     disassembly shows e.g. [rcx+IRP_MJ_DEVICE_CONTROL*8+70h] instead of
-     [rcx+0E0h].
+  3. Annotates every MajorFunction dispatch-table assignment in DriverEntry:
+       - Disassembly view: sets a repeatable comment (idc.set_cmt) on each MOV.
+       - Decompiler view: if HexRays is available, sets an end-of-line pseudocode
+         comment via cfunc.set_user_cmt() so the output reads:
+           DriverObject->MajorFunction[0] = ...; // IRP_MJ_CREATE
 
 Gated on config.Feature.IRP_MJ_ENUM.
 """
@@ -100,14 +101,127 @@ def _create_enum_typeinf() -> Optional[int]:
     return ida_compat.get_type_tid(_ENUM_NAME)
 
 
+def _majorfunction_offset(ptr_sz: int) -> int:
+    """
+    Return the byte offset of MajorFunction in _DRIVER_OBJECT by querying the
+    live type DB.  Falls back to the well-known constants (0x70 on x64, 0x38 on
+    x86) if the struct is unavailable.
+    """
+    try:
+        import ida_typeinf
+        til = ida_typeinf.get_idati()
+        ti = ida_typeinf.tinfo_t()
+        if ti.get_named_type(til, "_DRIVER_OBJECT"):
+            udt = ida_typeinf.udt_type_data_t()
+            if ti.get_udt_details(udt):
+                for i in range(udt.size()):
+                    mbr = udt[i]
+                    if mbr.name == "MajorFunction":
+                        return mbr.offset // 8  # tinfo stores offsets in bits
+    except Exception:
+        pass
+    return 0x70 if ptr_sz == 8 else 0x38
+
+
+def _apply_hexrays_comments(driver_entry_addr: int, mf_offset: int,
+                             rep: Reporter) -> int:
+    """
+    Decompile *driver_entry_addr* and attach an IRP_MJ name end-of-line comment
+    to every MajorFunction dispatch-table assignment in the HexRays pseudocode.
+
+    Requires the HexRays decompiler (ida_hexrays).  Returns the number of
+    comments added, or 0 if HexRays is unavailable or no assignments are found.
+    """
+    try:
+        import ida_hexrays
+    except ImportError:
+        return 0
+
+    try:
+        cfunc = ida_hexrays.decompile(driver_entry_addr)
+    except Exception:
+        return 0
+    if cfunc is None:
+        return 0
+
+    # Pull constants with fallbacks for API stability across IDA versions.
+    CV_FAST  = getattr(ida_hexrays, 'CV_FAST',  8)
+    ITP_SEMI = getattr(ida_hexrays, 'ITP_SEMI', 14)
+    cot_asg  = getattr(ida_hexrays, 'cot_asg',  None)
+    cot_idx  = getattr(ida_hexrays, 'cot_idx',  None)
+    cot_num  = getattr(ida_hexrays, 'cot_num',  None)
+    cot_cast = getattr(ida_hexrays, 'cot_cast', None)
+    MF_OPS   = frozenset(filter(None, [
+        getattr(ida_hexrays, 'cot_memptr', None),
+        getattr(ida_hexrays, 'cot_memref', None),
+    ]))
+
+    if None in (cot_asg, cot_idx, cot_num) or not MF_OPS:
+        return 0
+
+    added = [0]  # mutable counter reachable from the inner class
+
+    class _Visitor(ida_hexrays.ctree_visitor_t):
+        def __init__(self):
+            ida_hexrays.ctree_visitor_t.__init__(self, CV_FAST)
+
+        def visit_expr(self, expr):
+            # Match:  <arr>[<idx>] = <rhs>
+            if expr.op != cot_asg:
+                return 0
+            lhs = expr.x
+            if lhs.op != cot_idx:
+                return 0
+            arr = lhs.x
+            # arr must be a member dereference (-> or .) at the MajorFunction offset
+            if arr.op not in MF_OPS or arr.m != mf_offset:
+                return 0
+            # Unwrap any casts on the index expression
+            idx = lhs.y
+            while cot_cast is not None and idx.op == cot_cast:
+                idx = idx.x
+            if idx.op != cot_num:
+                return 0  # dynamic index, nothing to annotate
+            try:
+                slot = int(idx.numval())
+            except Exception:
+                return 0
+            irp_name = IRP_MJ_NAMES.get(slot)
+            if irp_name is None:
+                return 0
+            try:
+                loc = ida_hexrays.treeloc_t()
+                loc.ea = expr.ea
+                loc.itp = ITP_SEMI
+                cfunc.set_user_cmt(loc, irp_name)
+                added[0] += 1
+            except Exception:
+                pass
+            return 0
+
+    try:
+        _Visitor().apply_to(cfunc.body, None)
+    except Exception:
+        return 0
+
+    if added[0]:
+        try:
+            cfunc.save_user_cmts()
+        except Exception:
+            pass
+        try:
+            ida_hexrays.mark_cfunc_dirty(driver_entry_addr, False)
+        except Exception:
+            pass
+
+    return added[0]
+
+
 def apply_to_driver_entry(driver_entry_addr: int, rep: Reporter) -> None:
     """
-    Apply the IRP_MJ_FUNCTION enum to MajorFunction array assignment operands
-    within the DriverEntry function.
-
-    IDA typically shows these as `mov [rcx+0E0h], rax` for IRP_MJ_DEVICE_CONTROL.
-    With the enum applied the second operand becomes the slot constant, making the
-    dispatch table much easier to audit.
+    Annotate MajorFunction dispatch-table assignments in DriverEntry:
+      - Disassembly: repeatable comment on each MOV (e.g. '; IRP_MJ_DEVICE_CONTROL').
+      - Decompiler: end-of-line pseudocode comment via HexRays cfunc API.
 
     :param driver_entry_addr: EA of (real) DriverEntry
     :param rep: Reporter instance
@@ -122,9 +236,11 @@ def apply_to_driver_entry(driver_entry_addr: int, rep: Reporter) -> None:
         rep.info("[!] IRP_MJ: failed to create {} enum".format(_ENUM_NAME))
         return
 
-    ptr_sz = ida_compat.ptr_size()
+    ptr_sz   = ida_compat.ptr_size()
+    mf_off   = _majorfunction_offset(ptr_sz)
     _disp_re = re.compile(r'\+0*([0-9A-Fa-f]+)h')
-    applied = 0
+    applied  = 0
+
     for ea in idautils.FuncItems(driver_entry_addr):
         if idc.print_insn_mnem(ea) != "mov":
             continue
@@ -133,9 +249,9 @@ def apply_to_driver_entry(driver_entry_addr: int, rep: Reporter) -> None:
         if not m:
             continue
         disp = int(m.group(1), 16)
-        if disp < 0x70 or (disp - 0x70) % ptr_sz != 0:
+        if disp < mf_off or (disp - mf_off) % ptr_sz != 0:
             continue
-        slot = (disp - 0x70) // ptr_sz
+        slot = (disp - mf_off) // ptr_sz
         irp_name = IRP_MJ_NAMES.get(slot)
         if irp_name is None:
             continue
@@ -146,8 +262,10 @@ def apply_to_driver_entry(driver_entry_addr: int, rep: Reporter) -> None:
             pass
 
     if applied:
-        rep.info("[>] IRP_MJ: applied {} enum to {} operand(s) in DriverEntry".format(
-            _ENUM_NAME, applied))
+        rep.info("[>] IRP_MJ: annotated {} dispatch assignment(s) in DriverEntry".format(applied))
+        hx = _apply_hexrays_comments(driver_entry_addr, mf_off, rep)
+        if hx:
+            rep.info("[>] IRP_MJ: added {} decompiler comment(s) via HexRays".format(hx))
     else:
         rep.info("[>] IRP_MJ: {} enum created (no dispatch assignments found in DriverEntry)".format(
             _ENUM_NAME))
