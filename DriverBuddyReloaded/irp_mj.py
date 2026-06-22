@@ -7,9 +7,10 @@ When a WDM driver is identified this module:
   2. Creates (or refreshes) an IDA enum named IRP_MJ_FUNCTION in the local type DB.
   3. Annotates every MajorFunction dispatch-table assignment in DriverEntry:
        - Disassembly view: sets a repeatable comment (idc.set_cmt) on each MOV.
-       - Decompiler view: if HexRays is available, sets an end-of-line pseudocode
-         comment via cfunc.set_user_cmt() so the output reads:
-           DriverObject->MajorFunction[0] = ...; // IRP_MJ_CREATE
+       - Decompiler view: if HexRays is available, registers a user_numforms entry
+         so the array index renders as the enum member name, and adds an end-of-line
+         comment via set_user_cmt(), producing:
+           DriverObject->MajorFunction[IRP_MJ_CREATE] = ...; // IRP_MJ_CREATE
 
 Gated on config.Feature.IRP_MJ_ENUM.
 """
@@ -126,11 +127,14 @@ def _majorfunction_offset(ptr_sz: int) -> int:
 def _apply_hexrays_comments(driver_entry_addr: int, mf_offset: int,
                              rep: Reporter) -> int:
     """
-    Decompile *driver_entry_addr* and attach an IRP_MJ name end-of-line comment
-    to every MajorFunction dispatch-table assignment in the HexRays pseudocode.
+    Decompile *driver_entry_addr* and for every MajorFunction dispatch-table
+    assignment:
+      - register a user_numforms entry so the array index renders as the enum
+        member name (MajorFunction[IRP_MJ_CREATE] instead of [0]);
+      - add an end-of-line pseudocode comment via set_user_cmt() (// IRP_MJ_CREATE).
 
-    Requires the HexRays decompiler (ida_hexrays).  Returns the number of
-    comments added, or 0 if HexRays is unavailable or no assignments are found.
+    Requires the HexRays decompiler.  Returns the number of assignments
+    annotated, or 0 if HexRays is unavailable or no assignments are found.
     """
     try:
         import ida_hexrays
@@ -145,13 +149,15 @@ def _apply_hexrays_comments(driver_entry_addr: int, mf_offset: int,
         return 0
 
     # Pull constants with fallbacks for API stability across IDA versions.
-    CV_FAST  = getattr(ida_hexrays, 'CV_FAST',  8)
-    ITP_SEMI = getattr(ida_hexrays, 'ITP_SEMI', 14)
-    cot_asg  = getattr(ida_hexrays, 'cot_asg',  None)
-    cot_idx  = getattr(ida_hexrays, 'cot_idx',  None)
-    cot_num  = getattr(ida_hexrays, 'cot_num',  None)
-    cot_cast = getattr(ida_hexrays, 'cot_cast', None)
-    MF_OPS   = frozenset(filter(None, [
+    CV_FAST    = getattr(ida_hexrays, 'CV_FAST',    8)
+    ITP_SEMI   = getattr(ida_hexrays, 'ITP_SEMI',  14)
+    # OPND_OUTER is the canonical opnum for synthesized/outer decompiler constants.
+    OPND_OUTER = getattr(ida_hexrays, 'OPND_OUTER', 0xFFFE)
+    cot_asg    = getattr(ida_hexrays, 'cot_asg',   None)
+    cot_idx    = getattr(ida_hexrays, 'cot_idx',   None)
+    cot_num    = getattr(ida_hexrays, 'cot_num',   None)
+    cot_cast   = getattr(ida_hexrays, 'cot_cast',  None)
+    MF_OPS     = frozenset(filter(None, [
         getattr(ida_hexrays, 'cot_memptr', None),
         getattr(ida_hexrays, 'cot_memref', None),
     ]))
@@ -159,7 +165,12 @@ def _apply_hexrays_comments(driver_entry_addr: int, mf_offset: int,
     if None in (cot_asg, cot_idx, cot_num) or not MF_OPS:
         return 0
 
-    added = [0]  # mutable counter reachable from the inner class
+    # calc_OPND_entry(cfunc, cexpr) returns the canonical operand number for a
+    # constant expression; available IDA 7.5+.  Fall back to OPND_OUTER if absent.
+    _calc_opnum = (getattr(ida_hexrays, 'calc_OPND_entry', None) or
+                   getattr(ida_hexrays, 'calc_operand_num', None))
+
+    added = [0]
 
     class _Visitor(ida_hexrays.ctree_visitor_t):
         def __init__(self):
@@ -189,14 +200,43 @@ def _apply_hexrays_comments(driver_entry_addr: int, mf_offset: int,
             irp_name = IRP_MJ_NAMES.get(slot)
             if irp_name is None:
                 return 0
+
+            # End-of-line comment: // IRP_MJ_CREATE
             try:
                 loc = ida_hexrays.treeloc_t()
                 loc.ea = expr.ea
                 loc.itp = ITP_SEMI
                 cfunc.set_user_cmt(loc, irp_name)
-                added[0] += 1
             except Exception:
                 pass
+
+            # Enum-member index display: MajorFunction[IRP_MJ_CREATE]
+            # The array index is synthesized by HexRays from the displacement so it
+            # has no direct binary operand; seed both the calc_OPND_entry result and
+            # opnum=0 to cover all IDA versions.
+            try:
+                insn_ea = expr.ea
+                opnum = OPND_OUTER
+                if _calc_opnum is not None:
+                    try:
+                        opnum = int(_calc_opnum(cfunc, idx))
+                    except Exception:
+                        pass
+                for op in set([opnum, 0]):
+                    try:
+                        nf = ida_hexrays.number_format_t()
+                        nf.opnum = op & 0xFF
+                        nf.type_name = _ENUM_NAME
+                        nloc = ida_hexrays.operand_locator_t()
+                        nloc.ea = insn_ea
+                        nloc.opnum = op
+                        cfunc.user_numforms[nloc] = nf
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+            added[0] += 1
             return 0
 
     try:
@@ -207,6 +247,10 @@ def _apply_hexrays_comments(driver_entry_addr: int, mf_offset: int,
     if added[0]:
         try:
             cfunc.save_user_cmts()
+        except Exception:
+            pass
+        try:
+            cfunc.save_user_numforms()
         except Exception:
             pass
         try:
