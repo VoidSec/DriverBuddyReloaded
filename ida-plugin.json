@@ -3,6 +3,7 @@
   "plugin": {
     "name": "DriverBuddyReloaded",
     "entryPoint": "DriverBuddyReloaded.py",
+    "logoPath": "logo.png",
     "version": "2.0.0",
     "description": "Automated triage for Windows kernel drivers: IOCTL discovery and decoding, WDM/WDF/KMDF/UMDF structure labelling, heuristic vulnerability checks, pool tag extraction, device name detection, risk scoring, call-chain tracing, and JSON/HTML/PoC reporting.",
     "urls": {
