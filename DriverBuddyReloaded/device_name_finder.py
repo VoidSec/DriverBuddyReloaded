@@ -20,8 +20,11 @@ from typing import Optional, Set, TYPE_CHECKING
 if TYPE_CHECKING:
     from DriverBuddyReloaded.reporting import Reporter
 
+import ida_bytes
 import ida_nalt
+import ida_segment
 import ida_strlist
+import idautils
 import idc
 
 from DriverBuddyReloaded import config
@@ -84,7 +87,7 @@ def get_unicode_device_names() -> Set[str]:
     mmap-based UTF-16LE scan of the raw file bytes.
     Returns possible device-name strings (no EAs available via this path).
     """
-    path = ida_nalt.get_root_filename()
+    path = idc.get_input_file_path() or ida_nalt.get_root_filename()
     possible: Set[str] = set()
     try:
         with open(path, "rb") as f:
@@ -124,6 +127,26 @@ def get_strings_device_names() -> dict:
     return result
 
 
+def _scan_segments_for_device_names() -> dict:
+    """
+    Last-resort: walk every IDA segment's byte array for UTF-16LE device-name strings.
+    Used when the input file is not accessible on disk and IDA's string list missed the literal.
+    Returns {name: ea}.
+    """
+    result: dict = {}
+    for seg_ea in idautils.Segments():
+        seg = ida_segment.getseg(seg_ea)
+        if not seg or seg.size() == 0 or seg.size() > 0x200000:
+            continue
+        buf = ida_bytes.get_bytes(seg_ea, seg.size())
+        if not buf:
+            continue
+        for s in extract_unicode_strings(buf, n=4):
+            if any(s.s.startswith(p) for p in _DEVICE_PREFIXES):
+                result[s.s] = seg_ea + s.offset
+    return result
+
+
 def find_unicode_device_name(rep: Reporter) -> bool:
     """
     Find and report potential DeviceNames, emitting a Finding per full path.
@@ -139,9 +162,16 @@ def find_unicode_device_name(rep: Reporter) -> bool:
     all_names: dict = {name: None for name in mmap_names}
     all_names.update(strings_names)  # Strings DB wins (has EA)
 
+    # Enrich None-EA entries (mmap found the name but not its address) and run as
+    # primary fallback when both the file scan and the string-list came up empty.
+    if not all_names or any(ea is None for ea in all_names.values()):
+        for name, ea in _scan_segments_for_device_names().items():
+            if all_names.get(name) is None:
+                all_names[name] = ea
+
     # Keep only full paths; bare prefixes mean the real name is built elsewhere.
     real = {n: ea for n, ea in all_names.items()
-            if n not in ('\\Device\\', '\\DosDevices\\', '\\??\\') and len(n) > max(len(p) for p in _DEVICE_PREFIXES)}
+            if any(n.startswith(p) and len(n) > len(p) for p in _DEVICE_PREFIXES)}
     if real:
         for name, ea in sorted(real.items()):
             from DriverBuddyReloaded.reporting import BADADDR

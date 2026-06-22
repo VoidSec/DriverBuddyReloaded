@@ -132,7 +132,7 @@ def collect(rep: "Reporter") -> str:
 
     tags = find_pool_tags()
     if not tags and config.Feature.POOLTAG_FALLBACK:
-        rep.info("[>] No import-annotated tags; trying register-propagated fallback (issue #16)...")
+        rep.info("[>] No import-annotated tags; trying register-propagated fallback...")
         tags = collect_fallback()
         if tags:
             rep.info("[>] Fallback found {} tag candidate(s) via immediate heuristic".format(len(tags)))

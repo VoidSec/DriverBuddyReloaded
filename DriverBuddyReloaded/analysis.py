@@ -87,13 +87,16 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
     driver_type = "unknown"
     if utils.populate_data_structures(rep, ctx):
         driver_type = utils.get_driver_id(driver_entry_addr, rep, ctx)
-        rep.info("[+] Driver type detected: {}".format(driver_type))
+        if driver_type != "WDM":
+            rep.info("[+] Driver type detected: {}".format(driver_type))
         if config.Feature.IRP_MJ_ENUM and driver_type == "WDM":
             irp_mj.run(driver_entry_addr, rep)
-        if not ioctl_decoder.find_ioctls(rep):
-            rep.info("[!] Unable to automatically find any IOCTLs")
+        found_by_pattern = ioctl_decoder.find_ioctls(rep)
+        found_by_dispatcher = False
         if ctx.ddc_addresses:
-            ioctl_decoder.scan_dispatchers(rep, ctx.ddc_addresses)
+            found_by_dispatcher = ioctl_decoder.scan_dispatchers(rep, ctx.ddc_addresses)
+        if not found_by_pattern and not found_by_dispatcher:
+            rep.info("[!] Unable to automatically find any IOCTLs")
     else:
         rep.info("[!] ERR: Unable to enumerate functions")
 

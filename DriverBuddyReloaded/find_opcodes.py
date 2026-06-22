@@ -129,7 +129,6 @@ def find(rep: "Reporter", instruction: str | None = None, exec_only: bool = Fals
 
     ok, result = find_instructions(instruction, asm_where)
     if not ok:
-        rep.info('[find_opcodes] {}'.format(result))
         return
     for ea in result:
         seg = ida_segment.getseg(ea)

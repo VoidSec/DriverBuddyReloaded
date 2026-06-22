@@ -45,7 +45,7 @@ def audit(rep: Reporter) -> None:
 
     rep.info("[>] Auditing {} export(s)...".format(len(exports)))
     hidden = 0
-    for ordinal, ea, name in exports:
+    for _index, ordinal, ea, name in exports:
         if not name or name in _EXPECTED_ROOTS:
             continue
         xrefs = list(idautils.CodeRefsTo(ea, 0))

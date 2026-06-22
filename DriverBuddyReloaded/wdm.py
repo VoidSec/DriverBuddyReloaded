@@ -253,8 +253,12 @@ def find_dispatch_function(rep):
 
     index_funcs = find_dispatch_by_struct_index()
     cfg_funcs = find_dispatch_by_cfg()
-    excluded_functions = ["__security_check_cookie", "start", "DriverEntry", "Real_Driver_Entry",
-                          "__GSHandlerCheck_SEH"]
+    excluded_functions = [
+        "__security_check_cookie", "start", "DriverEntry", "Real_Driver_Entry",
+        "__GSHandlerCheck_SEH", "GsDriverEntry",
+        "_guard_xfg_dispatch_icall_nop", "_guard_xfg_dispatch_icall",
+        "_guard_dispatch_icall_nop", "_guard_dispatch_icall",
+    ]
     if len(index_funcs) == 0:
         cfg_finds_to_print = min(len(cfg_funcs), 3)
         rep.info("[>] Based off basic CFG analysis, potential dispatch functions are:")

@@ -15,6 +15,7 @@ Gated on config.Feature.IRP_MJ_ENUM.
 
 from __future__ import annotations
 
+import re
 from typing import Dict, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -122,19 +123,24 @@ def apply_to_driver_entry(driver_entry_addr: int, rep: Reporter) -> None:
         return
 
     ptr_sz = ida_compat.ptr_size()
+    _disp_re = re.compile(r'\+0*([0-9A-Fa-f]+)h')
     applied = 0
     for ea in idautils.FuncItems(driver_entry_addr):
         if idc.print_insn_mnem(ea) != "mov":
             continue
         op0 = idc.print_operand(ea, 0)
-        # Match [reg+XXXh] writes into the MajorFunction array (+70h base, each slot is ptr_sz)
-        if "+70h" not in op0 and not any(
-                "+%02Xh" % (0x70 + i * ptr_sz) in op0 for i in range(len(IRP_MJ_NAMES))):
+        m = _disp_re.search(op0)
+        if not m:
             continue
-        # Attempt to apply enum to the immediate second operand (the function pointer)
-        # or as an array index comment.  Best-effort; silently skip on failure.
+        disp = int(m.group(1), 16)
+        if disp < 0x70 or (disp - 0x70) % ptr_sz != 0:
+            continue
+        slot = (disp - 0x70) // ptr_sz
+        irp_name = IRP_MJ_NAMES.get(slot)
+        if irp_name is None:
+            continue
         try:
-            idc.op_enum(ea, 1, eid, 0)
+            idc.set_cmt(ea, irp_name, 0)
             applied += 1
         except Exception:
             pass
