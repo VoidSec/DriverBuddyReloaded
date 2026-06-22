@@ -1,4 +1,5 @@
 {
+  "IDAMetadataDescriptorVersion": 1,
   "plugin": {
     "name": "DriverBuddyReloaded",
     "entryPoint": "DriverBuddyReloaded.py",
