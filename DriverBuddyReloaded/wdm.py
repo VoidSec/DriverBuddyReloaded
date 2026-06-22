@@ -249,6 +249,7 @@ def find_dispatch_function(rep):
     Compares and processes results of `find_dispatch_by_struct_index` and
     `find_dispatch_by_cfg` to output potential dispatch function addresses.
     :param rep: Reporter instance
+    :return: list of resolved EAs for the selected candidates
     """
 
     index_funcs = find_dispatch_by_struct_index()
@@ -259,22 +260,35 @@ def find_dispatch_function(rep):
         "_guard_xfg_dispatch_icall_nop", "_guard_xfg_dispatch_icall",
         "_guard_dispatch_icall_nop", "_guard_dispatch_icall",
     ]
+    candidates = []
     if len(index_funcs) == 0:
         cfg_finds_to_print = min(len(cfg_funcs), 3)
         rep.info("[>] Based off basic CFG analysis, potential dispatch functions are:")
         for i in range(cfg_finds_to_print):
             if cfg_funcs[i] and cfg_funcs[i] not in excluded_functions:
                 rep.info("\t- {}".format(cfg_funcs[i]))
+                candidates.append(cfg_funcs[i])
     elif len(index_funcs) == 1:
         func = index_funcs.pop()
         if func in cfg_funcs:
             rep.info("[>] The likely dispatch function is: {}".format(func))
+            candidates.append(func)
         else:
             rep.info("[>] Based off the offset it is loaded at, a potential dispatch function is: {}".format(func))
+            candidates.append(func)
             if cfg_funcs:
                 rep.info("[>] Based off basic CFG analysis, the likely dispatch function is: {}".format(cfg_funcs[0]))
+                candidates.append(cfg_funcs[0])
     else:
         rep.info("[>] Potential dispatch functions:")
         for i in index_funcs:
             if i in cfg_funcs:
                 rep.info("\t- {}".format(i))
+                candidates.append(i)
+
+    eas = []
+    for name in candidates:
+        ea = idc.get_name_ea_simple(name)
+        if ea not in (None, ida_compat.BADADDR):
+            eas.append(ea)
+    return eas

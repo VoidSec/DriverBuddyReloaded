@@ -64,17 +64,28 @@ def score(rep: Reporter) -> None:
     sink_by_func = {}
     for f in rep.by_category("callchain"):
         if f.func:
-            sink_by_func[f.func] = max(sink_by_func.get(f.func, 0), f.severity)
+            prev_sev, prev_names = sink_by_func.get(f.func, (0, set()))
+            sink_name = f.data.get("sink", "") if f.data else ""
+            sink_by_func[f.func] = (
+                max(prev_sev, f.severity),
+                prev_names | ({sink_name} if sink_name else set()),
+            )
 
     for f in ioctls:
         sev, reasons = score_ioctl(f.data)
-        sink_sev = sink_by_func.get(f.func, 0)
-        if sink_sev:
-            reasons.append("handler reaches a dangerous sink")
-            sev = max(sev, sink_sev)
-            # A raw-pointer IOCTL that also reaches a sink is the worst case.
-            if f.data.get("method_name") == "METHOD_NEITHER":
-                sev = config.SEV_CRITICAL
+        entry = sink_by_func.get(f.func)
+        if entry:
+            sink_sev, sink_names = entry
+            if sink_sev:
+                sinks_sorted = sorted(sink_names)
+                reasons.extend("-> {}".format(s) for s in sinks_sorted)
+                f.data["sinks"] = sinks_sorted
+                if sinks_sorted:
+                    f.detail = f.detail + " | sinks: " + ", ".join(sinks_sorted)
+                sev = max(sev, sink_sev)
+                # A raw-pointer IOCTL that also reaches a sink is the worst case.
+                if f.data.get("method_name") == "METHOD_NEITHER":
+                    sev = config.SEV_CRITICAL
         f.severity = config.clamp_severity(sev)
         f.data["risk_reasons"] = reasons
 

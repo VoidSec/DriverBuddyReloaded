@@ -227,7 +227,8 @@ def get_driver_id(driver_entry_addr: int, rep: Reporter, ctx: AnalysisContext) -
                 define_ddc(ddc, rep)
                 ctx.ddc_addresses.append(ddc)
         if ddc_map is None:
-            find_dispatch_function(rep)
+            for ea in find_dispatch_function(rep):
+                ctx.ddc_addresses.append(ea)
 
     return driver_type
 

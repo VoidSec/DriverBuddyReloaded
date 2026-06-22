@@ -99,7 +99,7 @@ class IOCTLChooser(ida_kernwin.Choose):
             self,
             title,
             [["Severity", 9], ["Address", 12], ["Code", 12],
-             ["Device", 28], ["Method", 18], ["Access", 28], ["Fn#", 7]],
+             ["Device", 28], ["Method", 18], ["Access", 28], ["Fn#", 7], ["Sinks", 30]],
             flags=getattr(ida_kernwin.Choose, "CH_CAN_REFRESH", 0))
         # Highest severity first.
         self._items = sorted(findings, key=lambda f: -f.severity)
@@ -137,6 +137,7 @@ class IOCTLChooser(ida_kernwin.Choose):
             d.get("method_name", "") if d else "",
             d.get("access_name", "") if d else "",
             str(d.get("function", "")) if d else "-",
+            ", ".join(d.get("sinks", [])) if d else "",
         ]
 
     def OnSelectLine(self, n):
@@ -401,6 +402,12 @@ class DriverBuddyPlugin(idaapi.plugin_t):
         finally:
             rep.close()
             _last_rep = rep
+            for f in rep.by_category("ioctl"):
+                if f.ea not in (None, reporting.BADADDR) and f.data:
+                    code = f.data.get("code")
+                    if code is not None and f.ea not in ioctl_tracker.ioctl_locs:
+                        make_comment(f.ea, ioctl_decoder.get_define(code))
+                        ioctl_tracker.add_ioctl(f.ea, code)
             if config.Feature.RESULTS_WINDOW:
                 # Findings window: all categories, severity-sorted.
                 rep.show_window()

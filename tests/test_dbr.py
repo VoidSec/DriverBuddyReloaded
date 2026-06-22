@@ -176,12 +176,14 @@ def main():
         rep.add_finding("ioctl", "IOCTL 0x%08X" % code, ea=0x14000000 + code,
                         func="DispatchDeviceControl", **ioctl_decoder.decode(code))
     rep.add_finding("callchain", "handler -> memcpy", func="DispatchDeviceControl",
-                    severity=config.SEV_HIGH, detail="sink: memcpy")
+                    severity=config.SEV_HIGH, detail="sink: memcpy", sink="memcpy")
     scoring.score(rep)
     crit = next((f for f in rep.by_category("ioctl") if f.data["code"] == 0x222003), None)
     check(crit is not None, "critical ioctl finding exists")
     if crit is not None:
         check(crit.severity == config.SEV_CRITICAL, "NEITHER + sink => CRITICAL")
+        check(crit.data.get("sinks") == ["memcpy"], "sink name stored in finding data")
+        check("memcpy" in crit.detail, "sink name visible in detail")
 
     # ---- JSON / HTML / PoC ----
     out = tempfile.mkdtemp()
