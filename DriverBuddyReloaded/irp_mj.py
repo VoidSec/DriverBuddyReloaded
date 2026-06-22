@@ -151,8 +151,6 @@ def _apply_hexrays_comments(driver_entry_addr: int, mf_offset: int,
     # Pull constants with fallbacks for API stability across IDA versions.
     CV_FAST    = getattr(ida_hexrays, 'CV_FAST',    8)
     ITP_SEMI   = getattr(ida_hexrays, 'ITP_SEMI',  14)
-    # OPND_OUTER is the canonical opnum for synthesized/outer decompiler constants.
-    OPND_OUTER = getattr(ida_hexrays, 'OPND_OUTER', 0xFFFE)
     cot_asg    = getattr(ida_hexrays, 'cot_asg',   None)
     cot_idx    = getattr(ida_hexrays, 'cot_idx',   None)
     cot_num    = getattr(ida_hexrays, 'cot_num',   None)
@@ -165,12 +163,12 @@ def _apply_hexrays_comments(driver_entry_addr: int, mf_offset: int,
     if None in (cot_asg, cot_idx, cot_num) or not MF_OPS:
         return 0
 
-    # calc_OPND_entry(cfunc, cexpr) returns the canonical operand number for a
-    # constant expression; available IDA 7.5+.  Fall back to OPND_OUTER if absent.
-    _calc_opnum = (getattr(ida_hexrays, 'calc_OPND_entry', None) or
-                   getattr(ida_hexrays, 'calc_operand_num', None))
-
     added = [0]
+    # Collect (num_ea, opnum) pairs here so numform writes happen outside the
+    # visitor where we can use the standalone restore/save API safely.
+    # opnum=0 is what IDA's own 'M' key stores for synthesized array-index
+    # constants (confirmed on IDA 7.6 and 8.x by reading back manual entries).
+    numform_targets = []
 
     class _Visitor(ida_hexrays.ctree_visitor_t):
         def __init__(self):
@@ -210,29 +208,10 @@ def _apply_hexrays_comments(driver_entry_addr: int, mf_offset: int,
             except Exception:
                 pass
 
-            # Enum-member index display: MajorFunction[IRP_MJ_CREATE]
-            # The array index is synthesized by HexRays from the displacement so it
-            # has no direct binary operand; seed both the calc_OPND_entry result and
-            # opnum=0 to cover all IDA versions.
+            # Collect the instruction EA for this synthesized index constant.
             try:
-                insn_ea = expr.ea
-                opnum = OPND_OUTER
-                if _calc_opnum is not None:
-                    try:
-                        opnum = int(_calc_opnum(cfunc, idx))
-                    except Exception:
-                        pass
-                for op in set([opnum, 0]):
-                    try:
-                        nf = ida_hexrays.number_format_t()
-                        nf.opnum = op & 0xFF
-                        nf.type_name = _ENUM_NAME
-                        nloc = ida_hexrays.operand_locator_t()
-                        nloc.ea = insn_ea
-                        nloc.opnum = op
-                        cfunc.user_numforms[nloc] = nf
-                    except Exception:
-                        pass
+                num_ea = idx.ea if (idx.ea and idx.ea != idc.BADADDR) else expr.ea
+                numform_targets.append((num_ea, 0))
             except Exception:
                 pass
 
@@ -249,16 +228,75 @@ def _apply_hexrays_comments(driver_entry_addr: int, mf_offset: int,
             cfunc.save_user_cmts()
         except Exception:
             pass
-        try:
-            cfunc.save_user_numforms()
-        except Exception:
-            pass
+
+        # Write numforms via the standalone restore/save API.  In IDA 7.x
+        # cfuncptr_t does not expose user_numforms as a Python attribute, so we
+        # cannot use cfunc.user_numforms directly; the standalone functions work
+        # across all supported IDA versions.
+        if numform_targets:
+            _save_numforms(driver_entry_addr, numform_targets, ida_hexrays, rep)
+
         try:
             ida_hexrays.mark_cfunc_dirty(driver_entry_addr, False)
         except Exception:
             pass
 
     return added[0]
+
+
+def _save_numforms(func_ea, targets, ida_hexrays, rep):
+    """
+    Write IRP_MJ_FUNCTION number-format entries to the IDB using the standalone
+    restore_user_numforms / save_user_numforms API (works in IDA 7.x and 8.x).
+
+    *targets* is a list of (num_ea, opnum_set) pairs collected by the ctree visitor.
+    """
+    _restore = getattr(ida_hexrays, 'restore_user_numforms', None)
+    _save    = getattr(ida_hexrays, 'save_user_numforms',    None)
+    _nf_t    = getattr(ida_hexrays, 'user_numforms_t',       None)
+
+    if not (_restore and _save and _nf_t):
+        rep.info("[!] IRP_MJ: restore_user_numforms not available; decompiler enum index skipped")
+        return
+
+    try:
+        nf_map = _restore(func_ea)
+        if nf_map is None:
+            nf_map = _nf_t()
+    except Exception:
+        try:
+            nf_map = _nf_t()
+        except Exception:
+            rep.info("[!] IRP_MJ: could not create user_numforms_t; decompiler enum index skipped")
+            return
+
+    # flags value that sets is_enum() True and causes IDA to serialize type_name.
+    # Confirmed by brute-force scan: bit 23 (0x00800000). IDA normalises this to
+    # 0x08800000 on the save/restore round-trip, but the bit we must supply is
+    # 0x00800000 -- without it type_name is silently dropped during serialisation.
+    NF_ENUM_FLAG = 0x00800000
+
+    nf_added = 0
+    for (num_ea, op) in targets:
+        try:
+            nf = ida_hexrays.number_format_t()
+            if hasattr(nf, 'reset'):
+                nf.reset()
+            nf.flags = NF_ENUM_FLAG
+            nf.type_name = _ENUM_NAME
+            # operand_locator_t requires (ea, opnum) in IDA 7.x;
+            # no default constructor exists.
+            nloc = ida_hexrays.operand_locator_t(num_ea, op)
+            nf_map[nloc] = nf
+            nf_added += 1
+        except Exception:
+            pass
+
+    if nf_added:
+        try:
+            _save(func_ea, nf_map)
+        except Exception as e:
+            rep.info("[!] IRP_MJ: save_user_numforms failed: {}".format(e))
 
 
 def apply_to_driver_entry(driver_entry_addr: int, rep: Reporter) -> None:

@@ -79,7 +79,28 @@ All IDA-version-divergent API calls go through `ida_compat.py`. No other module 
 `config.Feature` class controls every optional analysis stage. Flip a flag to `False` to disable the stage without touching pipeline logic. `SEGMENT_OPCODE_SCAN` defaults to `False` (noisy). Adding a new stage: add a `Feature.X` flag, gate the call in `analysis.run_analysis()`, document it in `README.MD`.
 
 ### AnalysisContext
-`utils.AnalysisContext` (dataclass) holds all per-run mutable state (maps populated by `utils.populate_data_structures()`, discovered DDC addresses, etc.). It is created fresh at the top of `run_analysis()` and threaded through all modules. Never store analysis state in module-level mutable variables.
+`utils.AnalysisContext` (dataclass) holds all per-run mutable state (maps populated by `utils.populate_data_structures()`, discovered DDC addresses, `real_entry_addr` for the real DriverEntry after stripping any GsDriverEntry stub, etc.). It is created fresh at the top of `run_analysis()` and threaded through all modules. Never store analysis state in module-level mutable variables.
+
+### HexRays enum annotations (irp_mj.py)
+`irp_mj.py` writes `user_numforms` entries so the decompiler renders
+`MajorFunction[IRP_MJ_CREATE]` instead of `MajorFunction[0]`. Three non-obvious
+requirements discovered through live debugging:
+
+1. **Enum flag**: `number_format_t.flags` must have bit 23 set (`0x00800000`) for
+   `type_name` to survive a `save_user_numforms` / `restore_user_numforms`
+   round-trip. Without it IDA silently discards `type_name` during serialisation.
+2. **opnum = 0**: synthesised array-index constants (the `2` in `MajorFunction[2]`)
+   use `opnum=0` in `operand_locator_t` -- matching what IDA's own `M` key stores.
+   Inserting at `OPND_OUTER` (0xFFFE) as well causes silent save corruption in
+   IDA 7.6, so only `opnum=0` is used.
+3. **Standalone API**: `cfuncptr_t.user_numforms` is not exposed as a Python
+   attribute in IDA 7.6. Use the standalone `restore_user_numforms(func_ea)` /
+   `save_user_numforms(func_ea, nf_map)` instead.
+
+`ctx.real_entry_addr` (set in `get_driver_id()` via `check_for_fake_driver_entry()`)
+is passed to `irp_mj.run()` instead of the raw `driver_entry_addr`. Some drivers
+export a tiny `/GS` security-cookie stub (`GsDriverEntry`) that contains no
+`MajorFunction` assignments; the ctree visitor finds nothing in the stub.
 
 ### IOCTL decoding
 Two complementary strategies, both in `ioctl_decoder.py`:

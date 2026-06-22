@@ -53,6 +53,8 @@ class AnalysisContext:
     driver_map: dict = field(default_factory=dict)
     # Addresses of identified WDM dispatch handlers; populated by get_driver_id().
     ddc_addresses: list = field(default_factory=list)
+    # Real DriverEntry EA after resolving GsDriverEntry / fake-entry wrappers.
+    real_entry_addr: int = 0
 
 
 # ---------------------------------------------------------------------------
@@ -218,6 +220,7 @@ def get_driver_id(driver_entry_addr: int, rep: Reporter, ctx: AnalysisContext) -
         rep.info("[!] Unable to determine driver type; assuming WDM")
         driver_type = "WDM"
         real_entry = check_for_fake_driver_entry(driver_entry_addr, rep)
+        ctx.real_entry_addr = real_entry
         ddc_map = locate_ddc(real_entry, rep)
         if ddc_map is not None:
             for ddc in ddc_map.values():

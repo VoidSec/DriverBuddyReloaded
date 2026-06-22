@@ -90,7 +90,7 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
         if driver_type != "WDM":
             rep.info("[+] Driver type detected: {}".format(driver_type))
         if config.Feature.IRP_MJ_ENUM and driver_type == "WDM":
-            irp_mj.run(driver_entry_addr, rep)
+            irp_mj.run(ctx.real_entry_addr or driver_entry_addr, rep)
         found_by_pattern = ioctl_decoder.find_ioctls(rep)
         found_by_dispatcher = False
         if ctx.ddc_addresses:
