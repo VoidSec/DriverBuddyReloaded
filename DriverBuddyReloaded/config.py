@@ -292,6 +292,23 @@ ALLOCA_FUNCS = {
     "__alloca_probe_16",
 }
 
+# Pool-allocation functions.  Presence in an IOCTL handler without nearby
+# safe-arithmetic guards is the canonical integer-overflow-in-allocation pattern.
+POOL_ALLOC_FUNCS = {
+    "ExAllocatePool",
+    "ExAllocatePoolWithTag",
+    "ExAllocatePool2",
+    "ExAllocatePool3",
+    "ExAllocatePoolWithTagPriority",
+    "ExAllocatePoolWithQuotaTag",
+    "ExAllocatePoolZero",
+    "ExAllocatePoolQuotaZero",
+    "ExAllocatePoolQuotaUninitialized",
+    "ExAllocatePoolPriorityZero",
+    "ExAllocatePoolPriorityUninitialized",
+    "ExAllocatePoolUninitialized",
+}
+
 # ---------------------------------------------------------------------------
 # Analysis tuning constants
 # ---------------------------------------------------------------------------

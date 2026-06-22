@@ -188,6 +188,67 @@ def check_alloca(rep: Reporter, handler_eas: Set[int]) -> None:
                     detail="Manual triage: verify size is bounded"))
 
 
+def check_pool_alloc_trust(rep: Reporter, handler_eas: Set[int]) -> None:
+    """
+    Flag ExAllocatePool* calls in IOCTL handlers that lack nearby safe-arithmetic
+    guards.  A pool allocation whose size argument is derived from user-controlled
+    data without integer-safety checks is a classic integer-overflow-before-alloc bug.
+    """
+    for func_ea in handler_eas:
+        func_name = ida_funcs.get_func_name(func_ea) or ""
+        for head in idautils.FuncItems(func_ea):
+            callee = idc.print_operand(head, 0)
+            if callee not in config.POOL_ALLOC_FUNCS:
+                continue
+            validated = False
+            for win_ea in _instructions_window(head, _VALID_LOOKBACK, _VALID_LOOKAHEAD):
+                if idc.print_operand(win_ea, 0) in config.VALIDATION_FUNCS:
+                    validated = True
+                    break
+            if validated:
+                continue
+            rep.add(Finding(
+                category="heuristic",
+                title="Allocation without size validation: {}".format(callee),
+                ea=head,
+                func=func_name,
+                severity=config.SEV_HIGH,
+                detail="No safe-arithmetic guard near pool alloc in IOCTL handler"))
+
+
+def check_physical_mem_ref(rep: Reporter, handler_eas: Set[int]) -> None:
+    """
+    Scan the IDA string database for '\\Device\\PhysicalMemory' and flag every
+    cross-reference to that string.  References from known IOCTL handlers are HIGH;
+    others MEDIUM.  This string is a canonical indicator of BYOVD physical-memory
+    access via ZwOpenSection -> ZwMapViewOfSection.
+    """
+    try:
+        s_iter = idautils.Strings()
+        s_iter.setup()
+    except Exception:
+        return
+    for s in s_iter:
+        try:
+            sval = str(s)
+        except Exception:
+            continue
+        if sval != "\\Device\\PhysicalMemory":
+            continue
+        for xr in idautils.XrefsTo(s.ea, 0):
+            fn = ida_funcs.get_func(xr.frm)
+            func_ea = fn.start_ea if fn else None
+            func_name = ida_funcs.get_func_name(func_ea) or "" if func_ea is not None else ""
+            is_handler = func_ea in handler_eas if func_ea is not None else False
+            rep.add(Finding(
+                category="heuristic",
+                title="\\Device\\PhysicalMemory reference",
+                ea=xr.frm,
+                func=func_name,
+                severity=config.SEV_HIGH if is_handler else config.SEV_MEDIUM,
+                detail="Reference to physical memory device object - possible BYOVD pattern"))
+
+
 def run(rep: Reporter, ctx: AnalysisContext) -> None:
     """
     Run all heuristic checks.  Seeds handlers from callchain.handler_seed_eas()
@@ -205,5 +266,7 @@ def run(rep: Reporter, ctx: AnalysisContext) -> None:
     check_irql(rep, handler_eas)
     check_mdl(rep, handler_eas)
     check_alloca(rep, handler_eas)
+    check_pool_alloc_trust(rep, handler_eas)
+    check_physical_mem_ref(rep, handler_eas)
     n = len(rep.by_category("heuristic"))
     rep.info("[>] Heuristics: {} finding(s) emitted".format(n))

@@ -15,11 +15,15 @@ from DriverBuddyReloaded import analysis
 from DriverBuddyReloaded import config
 from DriverBuddyReloaded import ioctl_decoder
 from DriverBuddyReloaded import reporting
+from DriverBuddyReloaded import scoring
 from DriverBuddyReloaded import utils
 
 # Shared state, initialised in DriverBuddyPlugin.init()
 ioctl_tracker = None
 hooks = None
+# Stored after each auto-analysis run so the IOCTL/findings windows can be
+# re-opened at any time via the menu actions.
+_last_rep = None
 
 
 def make_comment(pos, string):
@@ -81,6 +85,96 @@ class IOCTLTracker:
             print("\n[>] Saved decoded IOCTLs to \"{}\"".format(path))
         except IOError as e:
             print("[!] ERR: can't save decoded IOCTLs to \"{}\": {}".format(path, e))
+
+
+class IOCTLChooser(ida_kernwin.Choose):
+    """
+    Standalone IDA window listing decoded IOCTL codes with full field breakdown.
+    Double-clicking a row jumps to the address where the IOCTL code appears.
+    """
+
+    def __init__(self, findings, title="Driver Buddy Reloaded - IOCTLs"):
+        ida_kernwin.Choose.__init__(
+            self,
+            title,
+            [["Severity", 9], ["Address", 12], ["Code", 12],
+             ["Device", 28], ["Method", 18], ["Access", 28], ["Fn#", 7]],
+            flags=getattr(ida_kernwin.Choose, "CH_CAN_REFRESH", 0))
+        # Highest severity first.
+        self._items = sorted(findings, key=lambda f: -f.severity)
+
+    @classmethod
+    def from_pairs(cls, pairs):
+        """Build from (address, code) tuples produced by the interactive decoder."""
+        items = []
+        for addr, code in pairs:
+            d = ioctl_decoder.decode(code)
+            sev, reasons = scoring.score_ioctl(d)
+            d["risk_reasons"] = reasons
+            items.append(reporting.Finding(
+                category="ioctl",
+                title="IOCTL 0x{:08X}".format(code),
+                ea=addr,
+                severity=sev,
+                detail="{} / {} / {}".format(
+                    d["device_name"], d["method_name"], d["access_name"]),
+                data=d))
+        return cls(items)
+
+    def OnGetSize(self):
+        return len(self._items)
+
+    def OnGetLine(self, n):
+        f = self._items[n]
+        loc = "0x{:08x}".format(f.ea) if f.ea not in (None, reporting.BADADDR) else "-"
+        d = f.data
+        return [
+            config.severity_name(f.severity),
+            loc,
+            "0x{:08X}".format(d.get("code", 0)) if d else "-",
+            d.get("device_name", "") if d else "",
+            d.get("method_name", "") if d else "",
+            d.get("access_name", "") if d else "",
+            str(d.get("function", "")) if d else "-",
+        ]
+
+    def OnSelectLine(self, n):
+        f = self._items[n]
+        if f.ea not in (None, reporting.BADADDR):
+            ida_kernwin.jumpto(f.ea)
+
+    def OnGetLineAttr(self, n):
+        color = reporting._SEVERITY_COLORS.get(self._items[n].severity)
+        if color is not None:
+            return [color, 0]
+        return None
+
+
+def show_all_ioctls():
+    """
+    Open (or refresh) the IOCTLs chooser window.
+    Prefers IOCTLs from the most recent auto-analysis; falls back to the
+    interactive decode session (ioctl_tracker).
+    """
+    if _last_rep is not None:
+        ioctls = _last_rep.by_category("ioctl")
+        if ioctls:
+            IOCTLChooser(ioctls).Show()
+            return
+    if ioctl_tracker and ioctl_tracker.ioctls:
+        IOCTLChooser.from_pairs(ioctl_tracker.ioctls).Show()
+    else:
+        print("[Driver Buddy Reloaded] No IOCTLs found yet. "
+              "Run auto-analysis (Ctrl+Alt+A) or use 'Decode IOCTL' first.")
+
+
+def show_findings():
+    """Re-open the findings window from the most recent auto-analysis run."""
+    if _last_rep is not None and _last_rep.findings:
+        _last_rep.show_window()
+    else:
+        print("[Driver Buddy Reloaded] No findings yet. "
+              "Run auto-analysis first (Ctrl+Alt+A).")
 
 
 def find_all_ioctls():
@@ -186,6 +280,16 @@ class DecodeAllHandler(ActionHandler):
         decode_all_ioctls()
 
 
+class ShowAllIOCTLsHandler(ActionHandler):
+    def activate(self, ctx):
+        show_all_ioctls()
+
+
+class ShowFindingsHandler(ActionHandler):
+    def activate(self, ctx):
+        show_findings()
+
+
 class InvalidHandler(ActionHandler):
     """
     Removes an address marked as an IOCTL code location and deletes its C-define comment,
@@ -217,6 +321,8 @@ class WinDriverHooks(idaapi.UI_Hooks):
             return
         pos = idc.get_screen_ea()
         register_dynamic_action(form, popup, 'Decode All IOCTLs in Function', DecodeAllHandler())
+        register_dynamic_action(form, popup, 'Show all IOCTLs', ShowAllIOCTLsHandler())
+        register_dynamic_action(form, popup, 'Show Findings', ShowFindingsHandler())
         if idc.get_operand_type(pos, 1) == 5:
             register_dynamic_action(form, popup, 'Decode IOCTL', DecodeHandler())
             if pos in ioctl_tracker.ioctl_locs:
@@ -258,6 +364,22 @@ class DriverBuddyPlugin(idaapi.plugin_t):
             shortcut="Ctrl+Alt+F",
             callback=decode_all_ioctls,
         ).registerAction()
+        UiAction(
+            id="ioctl:show_all",
+            name="Show all IOCTLs",
+            tooltip="Open the IOCTLs table window (from last analysis or interactive session).",
+            menuPath="",
+            shortcut="Ctrl+Alt+I",
+            callback=show_all_ioctls,
+        ).registerAction()
+        UiAction(
+            id="dbr:show_findings",
+            name="Show Findings",
+            tooltip="Re-open the Driver Buddy Reloaded findings window.",
+            menuPath="",
+            shortcut="Ctrl+Alt+W",
+            callback=show_findings,
+        ).registerAction()
         print("[Driver Buddy Reloaded] v{} loaded (IDA SDK {}).".format(
             __version__, idaapi.IDA_SDK_VERSION))
         return idaapi.PLUGIN_KEEP
@@ -265,6 +387,7 @@ class DriverBuddyPlugin(idaapi.plugin_t):
     def run(self, args):
         """Driver Buddy Reloaded auto-analysis entry point."""
 
+        global _last_rep
         idc.auto_wait()  # wait for IDA's own analysis to complete
         # Fresh timestamp so all output artefacts for this run share one stamp.
         config._run_stamp = None
@@ -275,8 +398,14 @@ class DriverBuddyPlugin(idaapi.plugin_t):
             analysis.run_analysis(rep)
         finally:
             rep.close()
+            _last_rep = rep
             if config.Feature.RESULTS_WINDOW:
+                # Findings window: all categories, severity-sorted.
                 rep.show_window()
+                # IOCTL recap window: decoded fields + severity for quick triage.
+                ioctls = rep.by_category("ioctl")
+                if ioctls:
+                    IOCTLChooser(ioctls).Show()
 
     def term(self):
         pass
