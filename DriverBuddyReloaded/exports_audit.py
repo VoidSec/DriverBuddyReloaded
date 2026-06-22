@@ -12,7 +12,7 @@ avoid flooding the results window with expected exports.
 
 from __future__ import annotations
 
-from typing import Set, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from DriverBuddyReloaded.reporting import Reporter

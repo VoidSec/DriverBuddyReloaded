@@ -41,7 +41,7 @@ def _write_pool_file(rep: Reporter, pool: str) -> None:
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(pool)
         rep.info('[>] Saved Pooltags file to "{}"'.format(path))
-    except IOError as e:
+    except OSError as e:
         rep.info('[!] Can\'t write pool file to "{}": {}'.format(path, e))
 
 
@@ -70,7 +70,7 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
         return {"error": "not_pe"}
 
     driver_entry_addr = utils.is_driver()
-    if driver_entry_addr is False:
+    if not driver_entry_addr:
         rep.info("[!] ERR: Loaded file is not a Driver")
         return {"error": "not_driver"}
 
@@ -85,12 +85,12 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
         _write_pool_file(rep, pool)
 
     driver_type = "unknown"
-    if utils.populate_data_structures(rep, ctx) is True:
+    if utils.populate_data_structures(rep, ctx):
         driver_type = utils.get_driver_id(driver_entry_addr, rep, ctx)
         rep.info("[+] Driver type detected: {}".format(driver_type))
         if config.Feature.IRP_MJ_ENUM and driver_type == "WDM":
             irp_mj.run(driver_entry_addr, rep)
-        if ioctl_decoder.find_ioctls(rep) is False:
+        if not ioctl_decoder.find_ioctls(rep):
             rep.info("[!] Unable to automatically find any IOCTLs")
         if ctx.ddc_addresses:
             ioctl_decoder.scan_dispatchers(rep, ctx.ddc_addresses)

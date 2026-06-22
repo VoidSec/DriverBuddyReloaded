@@ -1,6 +1,6 @@
 # List of C/C++ functions that are commonly vulnerable or that can facilitate buffer overflow conditions
-c_functions = [
-    # String Copy Functions
+c_functions: frozenset[str] = frozenset({
+    # -- String Copy Functions --
     "strcpy",
     "strcpyA",
     "strcpyW",
@@ -41,8 +41,7 @@ c_functions = [
     "_mbsnbcpy_l",
     "_tcsncpy",
     "_fstrncpy",
-    ######################################################
-    # String Concatenation Functions
+    # -- String Concatenation Functions --
     "lstrcat",
     "lstrcatA",
     "lstrcatW",
@@ -85,8 +84,7 @@ c_functions = [
     "_mbsnbcat_l",
     "_tcsncat",
     "_fstrncat",
-    ######################################################
-    # String Tokenizing Functions
+    # -- String Tokenizing Functions --
     "strtok",  # not always thread-safe
     "_strtok_l",
     "wcstok",
@@ -94,8 +92,7 @@ c_functions = [
     "_mbstok",
     "_mbstok_l",
     "_tcstok",
-    ######################################################
-    # Makepath/Splitpath Functions
+    # -- Makepath/Splitpath Functions --
     # Use the safer alternative: _makepath_s, _splitpath_s
     "makepath",
     "_makepath",
@@ -104,8 +101,7 @@ c_functions = [
     "_tsplitpath",
     "_wmakepath",
     "_wsplitpath",
-    ######################################################
-    # Numeric Conversion Functions
+    # -- Numeric Conversion Functions --
     # do not perform a safe conversion on account of a failure to distinguish between 'signed' and 'unsigned'
     "_itoa",
     "_i64toa",
@@ -117,8 +113,7 @@ c_functions = [
     "_ultoa",
     "_ultot",
     "_ultow",
-    ######################################################
-    # Scanf Functions
+    # -- Scanf Functions --
     # directs user defined input to a buffer, can facilitate buffer overflows
     "scanf",
     "cscanf",
@@ -150,8 +145,7 @@ c_functions = [
     "_snscanf_l",
     "_snwscanf",
     "_snwscanf_l",
-    ######################################################
-    # Gets Functions
+    # -- Gets Functions --
     # reads characters from STDIN and writes to buffer until EOL, can facilitate buffer overflows
     "_getts",
     "_gettws",
@@ -160,8 +154,7 @@ c_functions = [
     "cgets",
     "_cgets",
     "_cgetws",
-    ######################################################
-    # String Length functions
+    # -- String Length Functions --
     # can become victims of integer overflow or 'wraparound' errors
     "strlen",
     "_mbslen",
@@ -171,8 +164,7 @@ c_functions = [
     "lstrlen",
     "StrLen",
     "wcslen",
-    ######################################################
-    # Memory Copy Functions
+    # -- Memory Copy Functions --
     # can facilitate buffer overflow conditions and other memory mis-management situations
     "CopyMemory",
     "RtlCopyMemory",
@@ -180,14 +172,12 @@ c_functions = [
     "wmemcpy",
     "memccpy",
     "_memccpy",
-    ######################################################
-    # Stack Dynamic Memory Allocation Functions
+    # -- Stack Allocation Functions (_alloca family) --
     # can facilitate buffer overflow conditions and other memory mis-management situations
     "_alloca",
     "alloca",
     "_malloca",
-    ######################################################
-    # Unrestricted Memory Manipulation
+    # -- Unrestricted Memory Manipulation --
     # can facilitate buffer overflow conditions and other memory mis-management situations
     "memmove",
     "wmemmove",
@@ -205,8 +195,7 @@ c_functions = [
     "_aligned_recalloc_dbg",
     # can expose residual memory contents or render existing buffers impossible to securely erase.
     # do not use realloc on memory intended to be secure as the old structure will not be zeroed out
-    ######################################################
-    # *printf Family
+    # -- *printf Family --
     # can facilitate format string bugs
     "_snprintf",
     "_snwprintf",
@@ -239,8 +228,7 @@ c_functions = [
     "_vsntprintf",
     "_vsnwprintf",
     "_vstprintf",
-    ######################################################
-    # File Handling
+    # -- File Handling --
     # verify that user cannot modify filename for malicious purposes
     # and that file is not 'opened' more than once simultaneously
     "fopen",
@@ -261,8 +249,7 @@ c_functions = [
     "_wsopen",
     "_sopen_s",
     "_wsopen_s",
-    ######################################################
-    # Considered Harmful
+    # -- Considered Harmful --
     # The 'rewind' function is considered unsafe and obsolete.
     # Rewind() makes it impossible to determine if the file position indicator was set back to the beginning of the file,
     # potentially resulting in improper control flow. fseek() is considered a safer alternative
@@ -313,5 +300,4 @@ c_functions = [
     "umask",
     "_umask",
     "_umask_s",
-    ######################################################
-]
+})

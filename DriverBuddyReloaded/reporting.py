@@ -53,7 +53,7 @@ class Reporter:
         if log_path:
             try:
                 self._log = open(log_path, "w", encoding="utf-8")
-            except IOError as e:
+            except OSError as e:
                 print("[!] Could not open log file \"{}\": {}".format(log_path, e))
 
     # ---- emit --------------------------------------------------------------
@@ -98,7 +98,7 @@ class Reporter:
         if self._log:
             try:
                 self._log.write(line + "\n")
-            except IOError:  # pragma: no cover
+            except OSError:  # pragma: no cover
                 pass
 
     def close(self):
@@ -128,7 +128,7 @@ class Reporter:
             with open(path, "w", encoding="utf-8") as fh:
                 json.dump(payload, fh, indent=2, default=str)
             self.info("[>] Saved JSON findings to \"{}\"".format(path))
-        except IOError as e:
+        except OSError as e:
             self.info("[!] Could not write JSON to \"{}\": {}".format(path, e))
 
     def to_html(self, path):
@@ -136,7 +136,7 @@ class Reporter:
             with open(path, "w", encoding="utf-8") as fh:
                 fh.write(self._render_html())
             self.info("[>] Saved HTML report to \"{}\"".format(path))
-        except IOError as e:
+        except OSError as e:
             self.info("[!] Could not write HTML to \"{}\": {}".format(path, e))
 
     def _render_html(self):

@@ -26,11 +26,16 @@ def check_for_fake_driver_entry(driver_entry_address, rep):
 
     address = idaapi.get_func(driver_entry_address)
     end_address = address.end_ea
+    MAX_WALK = 256
+    _walk_count = 0
     while idc.print_insn_mnem(end_address) != "jmp" and idc.print_insn_mnem(end_address) != "call":
         end_address -= 0x1
+        _walk_count += 1
+        if _walk_count >= MAX_WALK:
+            break
     # e.g print_operand(end_address, 0) = sub_11008
     real_driver_entry_address = idc.get_name_ea_simple(idc.print_operand(end_address, 0))
-    if real_driver_entry_address not in (ida_compat.BADADDR, 0xffffffff):
+    if real_driver_entry_address not in (ida_compat.BADADDR, idaapi.BADADDR):
         rep.info("[+] Found REAL `DriverEntry` address at 0x{addr:08x}".format(addr=real_driver_entry_address))
         idc.set_name(real_driver_entry_address, "Real_Driver_Entry")
         return real_driver_entry_address

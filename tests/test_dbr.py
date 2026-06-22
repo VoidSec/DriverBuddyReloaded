@@ -13,21 +13,25 @@ scoring, JSON/HTML/PoC generation and full plugin import on 7.x/8.4/9.0 SDKs).
 Behaviour that touches the live database must still be checked inside IDA.
 """
 
+import json
 import os
 import sys
+import tempfile
 import types
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+_BADADDR = 0xFFFFFFFFFFFFFFFF
 
 
 def _install_ida_stubs():
     """Register permissive stand-ins for the IDA Python modules in sys.modules."""
 
     class _Any:
-        def __init__(self, *a, **k):
+        def __init__(self, *args, **kwargs):
             pass
 
-        def __call__(self, *a, **k):
+        def __call__(self, *args, **kwargs):
             return _ANY
 
         def __getattr__(self, n):
@@ -58,21 +62,21 @@ def _install_ida_stubs():
     class _Choose:
         CH_CAN_REFRESH = 1
 
-        def __init__(self, *a, **k):
+        def __init__(self, *args, **kwargs):
             pass
 
-        def Show(self, *a, **k):
+        def Show(self, *args, **kwargs):
             return 0
 
     class _Plugin:
         pass
 
     class _ActionHandler:
-        def __init__(self, *a, **k):
+        def __init__(self, *args, **kwargs):
             pass
 
     class _UIHooks:
-        def __init__(self, *a, **k):
+        def __init__(self, *args, **kwargs):
             pass
 
         def hook(self):
@@ -83,12 +87,11 @@ def _install_ida_stubs():
             return len(self)
 
     sdk = int(os.environ.get("DBR_SDK", "840"))
-    mod("idaapi", IDA_SDK_VERSION=sdk, BADADDR=0xFFFFFFFFFFFFFFFF,
+    mod("idaapi", IDA_SDK_VERSION=sdk, BADADDR=_BADADDR,
         PLUGIN_UNL=0, PLUGIN_KEEP=1, PLUGIN_OK=0, AST_ENABLE_ALWAYS=1,
         BWN_DISASM=0x29, FC_PREDS=0x10, plugin_t=_Plugin,
         action_handler_t=_ActionHandler, UI_Hooks=_UIHooks,
         compiled_binpat_vec_t=_BinPat, get_qword=lambda ea: 0, get_dword=lambda ea: 0)
-    _BADADDR = 0xFFFFFFFFFFFFFFFF
     mod("idc", BADADDR=_BADADDR, FF_DATA=0x400, FUNC_LIB=0x4,
         get_root_filename=lambda: "stub.sys",
         # NTSTATUS enum stubs -- return sentinel "not found" so the fallback path is exercised
@@ -111,7 +114,7 @@ def _install_ida_stubs():
         BIN_SEARCH_NOCASE=1, BIN_SEARCH_CASE=0, BIN_SEARCH_FORWARD=2)
     mod("ida_ida", inf_is_64bit=lambda: True,
         inf_get_min_ea=lambda: 0x1000, inf_get_max_ea=lambda: 0x2000)
-    mod("ida_idaapi", BADADDR=0xFFFFFFFFFFFFFFFF)
+    mod("ida_idaapi", BADADDR=_BADADDR)
     mod("ida_kernwin", Choose=_Choose, jumpto=lambda ea: True)
     mod("ida_lines", generate_disasm_line=lambda ea, f=0: "", tag_remove=lambda s: s or "")
     mod("ida_loader", PATH_TYPE_IDB=0, get_path=lambda t: "")
@@ -130,38 +133,41 @@ def main():
     from DriverBuddyReloaded import device_name_finder
 
     failures = []
+    total = [0]
 
-    def check(label, cond):
+    def check(cond, label):
+        total[0] += 1
         print(("  PASS " if cond else "  FAIL ") + label)
         if not cond:
             failures.append(label)
 
     # ---- device_name_finder: REPEATS bytes fix ----
     # A null-filled buffer must short-circuit without TypeError (buf[0:1] vs buf[0]).
-    check("repeat null buf exits cleanly",
-          list(device_name_finder.extract_unicode_strings(b"\x00" * 200)) == [])
+    check(list(device_name_finder.extract_unicode_strings(b"\x00" * 200)) == [],
+          "repeat null buf exits cleanly")
     # An 'A'-filled buffer also exits cleanly via the repeat shortcut.
-    check("repeat A buf exits cleanly",
-          list(device_name_finder.extract_unicode_strings(b"A" * 200)) == [])
+    check(list(device_name_finder.extract_unicode_strings(b"A" * 200)) == [],
+          "repeat A buf exits cleanly")
     # A real UTF-16LE device name is found correctly.
-    _dev_utf16 = "\\Device\\Test".encode("utf-16-le")
-    _found = list(device_name_finder.extract_unicode_strings(_dev_utf16))
-    check("utf16 device name found", any("Test" in s.s for s in _found))
+    dev_utf16 = "\\Device\\Test".encode("utf-16-le")
+    found_strings = list(device_name_finder.extract_unicode_strings(dev_utf16))
+    check(any("Test" in s.s for s in found_strings), "utf16 device name found")
 
     # ---- IOCTL decode ----
     d = ioctl_decoder.decode(0x222000)
-    check("decode device", d["device_name"] == "FILE_DEVICE_UNKNOWN")
-    check("decode method", d["method_name"] == "METHOD_BUFFERED")
-    check("decode access", d["access_name"] == "FILE_ANY_ACCESS")
-    check("decode function", d["function"] == 0x800)
-    check("get_define", ioctl_decoder.get_define(0x222000)
-          == "#define stub_0x00222000 CTL_CODE(0x22, 0x800, METHOD_BUFFERED, FILE_ANY_ACCESS)")
+    check(d["device_name"] == "FILE_DEVICE_UNKNOWN", "decode device")
+    check(d["method_name"] == "METHOD_BUFFERED", "decode method")
+    check(d["access_name"] == "FILE_ANY_ACCESS", "decode access")
+    check(d["function"] == 0x800, "decode function")
+    check(ioctl_decoder.get_define(0x222000)
+          == "#define stub_0x00222000 CTL_CODE(0x22, 0x800, METHOD_BUFFERED, FILE_ANY_ACCESS)",
+          "get_define")
 
     # ---- risk scoring ----
     sev_neither, _ = scoring.score_ioctl(ioctl_decoder.decode(0x222003))  # METHOD_NEITHER + ANY
     sev_buffered, _ = scoring.score_ioctl(ioctl_decoder.decode(0x222000))  # BUFFERED + ANY
-    check("NEITHER+ANY scores HIGH", sev_neither == config.SEV_HIGH)
-    check("BUFFERED+ANY below HIGH", sev_buffered < config.SEV_HIGH)
+    check(sev_neither == config.SEV_HIGH, "NEITHER+ANY scores HIGH")
+    check(sev_buffered < config.SEV_HIGH, "BUFFERED+ANY below HIGH")
 
     # sink bump promotes NEITHER handler to CRITICAL
     rep = reporting.Reporter()
@@ -172,27 +178,30 @@ def main():
     rep.add_finding("callchain", "handler -> memcpy", func="DispatchDeviceControl",
                     severity=config.SEV_HIGH, detail="sink: memcpy")
     scoring.score(rep)
-    crit = [f for f in rep.by_category("ioctl") if f.data["code"] == 0x222003][0]
-    check("NEITHER + sink => CRITICAL", crit.severity == config.SEV_CRITICAL)
+    crit = next((f for f in rep.by_category("ioctl") if f.data["code"] == 0x222003), None)
+    check(crit is not None, "critical ioctl finding exists")
+    if crit is not None:
+        check(crit.severity == config.SEV_CRITICAL, "NEITHER + sink => CRITICAL")
 
     # ---- JSON / HTML / PoC ----
-    import tempfile
     out = tempfile.mkdtemp()
-    jp, hp, cp = (os.path.join(out, n) for n in ("f.json", "r.html", "poc.c"))
-    rep.to_json(jp)
-    rep.to_html(hp)
-    poc.generate(rep, cp)
-    import json
-    j = json.load(open(jp))
-    check("json has findings", bool(j["findings"]) and "severity_counts" in j)
-    check("html renders driver", "stub.sys" in open(hp).read())
-    poc_src = open(cp).read()
-    check("poc has CreateFileW", 'CreateFileW(L"\\\\\\\\.\\\\Stub"' in poc_src)
-    check("poc has DeviceIoControl", "DeviceIoControl(h," in poc_src)
-    check("poc CRITICAL first", poc_src.index("0x00222003") < poc_src.index("0x00222000"))
+    json_path, html_path, poc_path = (os.path.join(out, n) for n in ("f.json", "r.html", "poc.c"))
+    rep.to_json(json_path)
+    rep.to_html(html_path)
+    poc.generate(rep, poc_path)
+    with open(json_path) as fh:
+        j = json.load(fh)
+    check(bool(j["findings"]) and "severity_counts" in j, "json has findings")
+    with open(html_path) as fh:
+        h = fh.read()
+    check("stub.sys" in h, "html renders driver")
+    with open(poc_path) as fh:
+        c = fh.read()
+    check('CreateFileW(L"\\\\\\\\.\\\\Stub"' in c, "poc has CreateFileW")
+    check("DeviceIoControl(h," in c, "poc has DeviceIoControl")
+    check(c.index("0x00222003") < c.index("0x00222000"), "poc CRITICAL first")
 
-    print("\n{} check(s), {} failure(s)".format(
-        3 + 7 + 3 + 6, len(failures)))
+    print("\n{} check(s), {} failure(s)".format(total[0], len(failures)))
     return 1 if failures else 0
 
 

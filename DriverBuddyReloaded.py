@@ -8,6 +8,7 @@ all analysis work to DriverBuddyReloaded.analysis.run_analysis().
 """
 
 import idaapi
+import ida_kernwin
 import idc
 
 from DriverBuddyReloaded import __version__
@@ -16,7 +17,6 @@ from DriverBuddyReloaded import config
 from DriverBuddyReloaded import ioctl_decoder
 from DriverBuddyReloaded import reporting
 from DriverBuddyReloaded import scoring
-from DriverBuddyReloaded import utils
 
 # Shared state, initialised in DriverBuddyPlugin.init()
 ioctl_tracker = None
@@ -62,8 +62,9 @@ class IOCTLTracker:
         self.ioctls.append((addr, value))
 
     def remove_ioctl(self, addr, value):
-        self.ioctl_locs.remove(addr)
-        self.ioctls.remove((addr, value))
+        self.ioctl_locs.discard(addr)
+        if (addr, value) in self.ioctls:
+            self.ioctls.remove((addr, value))
 
     def print_table(self, ioctls):
         """
@@ -83,7 +84,7 @@ class IOCTLTracker:
             with open(path, "w", encoding="utf-8") as ioctl_file:
                 ioctl_file.write(text + "\n")
             print("\n[>] Saved decoded IOCTLs to \"{}\"".format(path))
-        except IOError as e:
+        except OSError as e:
             print("[!] ERR: can't save decoded IOCTLs to \"{}\": {}".format(path, e))
 
 
@@ -186,15 +187,16 @@ def find_all_ioctls():
     ioctls = []
     addr = idc.get_screen_ea()
     f = idaapi.get_func(addr)
+    if f is None:
+        return []
     fc = idaapi.FlowChart(f, flags=idaapi.FC_PREDS)
     for block in fc:
         for instr in range(block.start_ea, block.end_ea):
-            if idc.print_insn_mnem(instr) in ['cmp', 'sub', 'mov'] and idc.get_operand_type(instr, 1) == 5:
+            if idc.print_insn_mnem(instr) in ['cmp', 'sub', 'mov'] and idc.get_operand_type(instr, 1) == idc.o_imm:
                 value = get_operand_value(instr)
                 # value >= IOCTL_MIN_VALUE (lower false positives) and not a known NTSTATUS value (issue #15)
                 if value >= config.IOCTL_MIN_VALUE and value not in ioctl_decoder._get_ntstatus_values():
                     ioctls.append((instr, value))
-                    ioctl_tracker.add_ioctl(instr, value)
     return ioctls
 
 
@@ -213,14 +215,14 @@ def decode_all_ioctls():
     track_ioctls(find_all_ioctls())
 
 
-def get_position_and_translate():
+def decode_ioctl_at_cursor():
     """
     Decode the immediate second operand of the currently selected instruction (if any), add the C-define
     comment and print a summary table of all decoded IOCTL codes.
     """
 
     pos = idc.get_screen_ea()
-    if idc.get_operand_type(pos, 1) != 5:  # second operand must be an immediate
+    if idc.get_operand_type(pos, 1) != idc.o_imm:  # second operand must be an immediate
         return
     value = get_operand_value(pos)
     # value >= IOCTL_MIN_VALUE (lower false positives) and not a known NTSTATUS value (issue #15)
@@ -234,26 +236,26 @@ def get_position_and_translate():
 class UiAction(idaapi.action_handler_t):
     """Wrapper for creating action handlers which add options to menus and are triggered via hot keys."""
 
-    def __init__(self, id, name, tooltip, menuPath, callback, shortcut):
+    def __init__(self, action_id, name, tooltip, menu_path, callback, shortcut):
         idaapi.action_handler_t.__init__(self)
-        self.id = id
+        self.action_id = action_id
         self.name = name
         self.tooltip = tooltip
-        self.menuPath = menuPath
+        self.menu_path = menu_path
         self.callback = callback
         self.shortcut = shortcut
 
-    def registerAction(self):
-        action_desc = idaapi.action_desc_t(self.id, self.name, self, self.shortcut, self.tooltip, 0)
+    def register_action(self):
+        action_desc = idaapi.action_desc_t(self.action_id, self.name, self, self.shortcut, self.tooltip, 0)
         if not idaapi.register_action(action_desc):
             return False
-        if not idaapi.attach_action_to_menu(self.menuPath, self.id, 0):
+        if not idaapi.attach_action_to_menu(self.menu_path, self.action_id, 0):
             return False
         return True
 
-    def unregisterAction(self):
-        idaapi.detach_action_from_menu(self.menuPath, self.id)
-        idaapi.unregister_action(self.id)
+    def unregister_action(self):
+        idaapi.detach_action_from_menu(self.menu_path, self.action_id)
+        idaapi.unregister_action(self.action_id)
 
     def activate(self, ctx):
         self.callback()
@@ -272,7 +274,7 @@ class ActionHandler(idaapi.action_handler_t):
 
 class DecodeHandler(ActionHandler):
     def activate(self, ctx):
-        get_position_and_translate()
+        decode_ioctl_at_cursor()
 
 
 class DecodeAllHandler(ActionHandler):
@@ -298,7 +300,7 @@ class InvalidHandler(ActionHandler):
 
     def activate(self, ctx):
         pos = idc.get_screen_ea()
-        comment = idc.get_cmt(pos, 0)
+        comment = idc.get_cmt(pos, 0) or ""
         code = get_operand_value(pos)
         define = ioctl_decoder.get_define(code)
         comment = comment.replace(define, "")
@@ -323,7 +325,7 @@ class WinDriverHooks(idaapi.UI_Hooks):
         register_dynamic_action(form, popup, 'Decode All IOCTLs in Function', DecodeAllHandler())
         register_dynamic_action(form, popup, 'Show all IOCTLs', ShowAllIOCTLsHandler())
         register_dynamic_action(form, popup, 'Show Findings', ShowFindingsHandler())
-        if idc.get_operand_type(pos, 1) == 5:
+        if idc.get_operand_type(pos, 1) == idc.o_imm:
             register_dynamic_action(form, popup, 'Decode IOCTL', DecodeHandler())
             if pos in ioctl_tracker.ioctl_locs:
                 register_dynamic_action(form, popup, 'Invalid IOCTL', InvalidHandler())
@@ -349,37 +351,37 @@ class DriverBuddyPlugin(idaapi.plugin_t):
         hooks = WinDriverHooks()
         hooks.hook()
         UiAction(
-            id="ioctl:decode",
+            action_id="ioctl:decode",
             name="Decode IOCTL",
             tooltip="Decodes the currently selected constant into its IOCTL details.",
-            menuPath="",
+            menu_path="",
             shortcut="Ctrl+Alt+D",
-            callback=get_position_and_translate,
-        ).registerAction()
+            callback=decode_ioctl_at_cursor,
+        ).register_action()
         UiAction(
-            id="ioctl:decode_all",
+            action_id="ioctl:decode_all",
             name="Decode ALL IOCTLs in a Function",
             tooltip="Decodes ALL IOCTLs in a Function into their IOCTL details.",
-            menuPath="",
+            menu_path="",
             shortcut="Ctrl+Alt+F",
             callback=decode_all_ioctls,
-        ).registerAction()
+        ).register_action()
         UiAction(
-            id="ioctl:show_all",
+            action_id="ioctl:show_all",
             name="Show all IOCTLs",
             tooltip="Open the IOCTLs table window (from last analysis or interactive session).",
-            menuPath="",
+            menu_path="",
             shortcut="Ctrl+Alt+I",
             callback=show_all_ioctls,
-        ).registerAction()
+        ).register_action()
         UiAction(
-            id="dbr:show_findings",
+            action_id="dbr:show_findings",
             name="Show Findings",
             tooltip="Re-open the Driver Buddy Reloaded findings window.",
-            menuPath="",
+            menu_path="",
             shortcut="Ctrl+Alt+W",
             callback=show_findings,
-        ).registerAction()
+        ).register_action()
         print("[Driver Buddy Reloaded] v{} loaded (IDA SDK {}).".format(
             __version__, idaapi.IDA_SDK_VERSION))
         return idaapi.PLUGIN_KEEP

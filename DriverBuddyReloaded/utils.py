@@ -151,7 +151,7 @@ def populate_data_structures(rep: Reporter, ctx: AnalysisContext) -> bool:
 
     rep.info("[>] Searching for interesting opcodes...")
     for opcode in opcodes:
-        find(rep, opcode, x=True)
+        find(rep, opcode, exec_only=True)
 
     rep.info("[>] Searching for interesting C/C++ functions...")
     if populate_c_map(ctx):

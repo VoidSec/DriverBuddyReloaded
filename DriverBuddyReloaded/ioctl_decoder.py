@@ -110,6 +110,12 @@ def get_ioctl_code(ioctl_code):
         "FILE_DEVICE_DEVAPI",  # 0x00000047
         "FILE_DEVICE_GPIO",  # 0x00000048
         "FILE_DEVICE_USBEX",  # 0x00000049
+        device_name_unknown,  # 0x0000004A
+        device_name_unknown,  # 0x0000004B
+        device_name_unknown,  # 0x0000004C
+        device_name_unknown,  # 0x0000004D
+        device_name_unknown,  # 0x0000004E
+        device_name_unknown,  # 0x0000004F
         "FILE_DEVICE_CONSOLE",  # 0x00000050
         "FILE_DEVICE_NFP",  # 0x00000051
         "FILE_DEVICE_SYSENV",  # 0x00000052
@@ -313,6 +319,11 @@ def _get_ntstatus_values() -> set:
     return _ntstatus_cache
 
 
+def _is_ioctl_candidate(value: int) -> bool:
+    """Return True when value looks like an IOCTL code rather than a NTSTATUS."""
+    return value >= config.IOCTL_MIN_VALUE and value not in _get_ntstatus_values()
+
+
 def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
     """
     Flow-chart IOCTL scan over every identified WDM dispatch handler.
@@ -330,7 +341,6 @@ def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
         return False
 
     already_seen = {f.ea for f in rep.by_category("ioctl")}
-    ntstatus = _get_ntstatus_values()
     result = False
 
     for func_ea in ddc_addresses:
@@ -343,14 +353,12 @@ def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
             for instr in range(block.start_ea, block.end_ea):
                 if idc.print_insn_mnem(instr) not in ('cmp', 'sub', 'mov'):
                     continue
-                if idc.get_operand_type(instr, 1) != 5:
+                if idc.get_operand_type(instr, 1) != idc.o_imm:
                     continue
                 value = idc.get_operand_value(instr, 1) & 0xffffffff
-                if value < config.IOCTL_MIN_VALUE:
-                    continue
                 if instr in already_seen:
                     continue
-                if value in ntstatus:
+                if not _is_ioctl_candidate(value):
                     continue
                 already_seen.add(instr)
                 d = decode(value)
@@ -381,7 +389,7 @@ def find_ioctls(rep: Reporter) -> bool:
     rep.info("[>] Searching for IOCTLs found by IDA...")
     for ea in ida_compat.iter_text_matches("IoControlCode"):
         for opnd in (0, 1):
-            if idc.get_operand_type(ea, opnd) != 5:  # o_imm
+            if idc.get_operand_type(ea, opnd) != idc.o_imm:
                 continue
             idc.op_dec(ea, opnd)
             try:
