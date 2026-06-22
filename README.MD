@@ -59,8 +59,13 @@ To decode ALL IOCTLs within a function:
    `DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`)
 2. Right-click and select `Driver Buddy Reloaded -> Decode ALL IOCTLs in Function`; alternatively, press the `CTRL+ALT+F`
    shortcut.
-3. A `DriverName.sys-2021-12-10-TIME_STAMP-IOCTLs.txt`/`DriverName.sys-2021-12-10-TIME_STAMP-IOCTLs.txt_dumb.txt` file,
+3. A `DriverName.sys-DATE-TIME_STAMP-IOCTLs.txt` file,
    containing all the decoded IOCTLs up to that moment, will be written under IDA's DB directory.
+
+To reopen the IOCTLs window or findings window at any time (without re-running analysis):
+
+- Press `CTRL+ALT+I` to open the IOCTLs window.
+- Press `CTRL+ALT+W` to open the findings window.
 
 ### Advanced Usage
 
@@ -95,7 +100,8 @@ engineering tasks. It has a number of handy features, such as:
 * Finding potential `DeviceName` (mmap scan + IDA Strings DB fallback, with source address)
 * Dumping `Pooltags` (import-based primary + register-propagated fallback for tags staged in a register)
 * **Heuristic vulnerability checks**: unvalidated user-copy, missing privilege gate, IRQL mismatch, unsafe
-  MDL mapping, stack-allocated buffers (`_alloca`) - see [Heuristic Vulnerability Checks](#heuristic-vulnerability-checks)
+  MDL mapping, stack-allocated buffers (`_alloca`), pool allocation without size validation, and
+  `\Device\PhysicalMemory` references (BYOVD pattern) - see [Heuristic Vulnerability Checks](#heuristic-vulnerability-checks)
 * **Exports audit**: flags driver exports with zero internal cross-references (potential attack surface)
 * **Risk-scoring** decoded IOCTLs (prioritising `METHOD_NEITHER` / `FILE_ANY_ACCESS` and handlers that reach
   dangerous sinks such as `MmMapIoSpace`, `memcpy`, `__writemsr`) and presenting all findings, by severity, in a
@@ -186,7 +192,7 @@ Madiant's [FLOSS](https://github.com/mandiant/flare-floss/) in an attempt to fin
 During the auto-analysis, the tool also dumps the `Pooltags` used by the binary in a format that works
 with `pooltags.txt`. The output can then be copy-pasted at the end of the file and later picked up by WinDbg.
 
-- A `DriverName.sys-2021-12-10-TIME_STAMP-pooltags.txt` file, containing all the dumped Pooltags, will be written under
+- A `DriverName.sys-DATE-TIME_STAMP-pooltags.txt` file, containing all the dumped Pooltags, will be written under
   IDA's DB directory.
 
 ![](/screenshots/pooltag.png)
@@ -203,6 +209,8 @@ It emits findings in the **heuristic** category:
 | IRQL mismatch | Pageable / `Zw*` / `MmMap*` call when an IRQL-raising function is also present | MEDIUM |
 | Unsafe MDL mapping | `MmMapLockedPages`/`MmProbeAndLockPages`/etc. with `UserMode` in disassembly | HIGH, else MEDIUM |
 | Stack allocation | `_alloca`/`_malloca`/`_chkstk` call (large or dynamic stack allocation) | LOW |
+| Pool alloc without size validation | `ExAllocatePool*` call with no safe-arithmetic guard nearby (integer-overflow-before-alloc pattern) | HIGH |
+| `\Device\PhysicalMemory` reference | Cross-reference to the physical memory device object string (BYOVD pattern via `ZwOpenSection`/`ZwMapViewOfSection`) | HIGH (handler), MEDIUM (other) |
 
 These are **lead generators**, not confirmed vulnerabilities. Treat HIGH/CRITICAL findings as starting points for
 manual review.
