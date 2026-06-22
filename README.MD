@@ -1,5 +1,7 @@
 # Driver Buddy Reloaded Quickstart
 
+![Driver Buddy Reloaded](logo.png)
+
 ## Table of Contents
 
 - [Driver Buddy Reloaded Quickstart](#driver-buddy-reloaded-quickstart)
@@ -110,7 +112,7 @@ engineering tasks. It has a number of handy features, such as:
 * Exporting results as a machine-readable **JSON** file, a standalone **HTML report**, and a generated **C/C++
   `DeviceIoControl` PoC harness** to bootstrap testing/fuzzing
 
-![](/screenshots/auto-analysis.png)
+![](screenshots/auto-analysis.png)
 
 ### Finding DispatchDeviceControl
 
@@ -134,7 +136,7 @@ When the analysis is successful some subs will be renamed as follow:
   could be the DispatchDeviceControl. As it is based on heuristic, it could return more than one result, and it is prone
   to false positives.
 
-![](/screenshots/finding-dispatchdevicecontrol.png)
+![](screenshots/finding-dispatchdevicecontrol.png)
 
 ### Labelling WDM and WDF Structures
 
@@ -142,7 +144,7 @@ Several driver structures are shared among all `WDM`/`WDF` drivers. The tool is 
 structures, such as the `IO_STACK_LOCATION`, `IRP`, and `DeviceObject` structures and can help save time during the
 reverse engineering process and provide context to areas of the driver where these functions are in use.
 
-![](/screenshots/WDM-structures.png)
+![](screenshots/WDM-structures.png)
 
 ### Finding and Decoding IOCTL Codes
 
@@ -167,8 +169,8 @@ function. This is a bit hacky but most of the time it can speed things up.
 Auto-analysis additionally runs a flow-chart scan over identified dispatcher functions to discover IOCTLs
 automatically, without requiring manual cursor placement.
 
-![](/screenshots/IOCTL-table.png)
-![](/screenshots/decode-IOCTL.png)
+![](screenshots/IOCTL-table.png)
+![](screenshots/decode-IOCTL.png)
 
 ### Flagging Functions
 
@@ -177,7 +179,7 @@ the [vulnerable_function_lists](DriverBuddyReloaded/vulnerable_functions_lists) 
 or that can facilitate buffer overflow conditions. All found instances are reported back during the auto-analysis and
 can help while looking for possible user-controlled code paths reaching sensitive functions.
 
-![](/screenshots/flagging-functions.png)
+![](screenshots/flagging-functions.png)
 
 ### Finding DeviceName
 
@@ -185,7 +187,7 @@ The tool automatically attempts to find the drivers registered device paths (`De
 looking at Unicode strings inside the binary, then the analyst can manually try to use
 Madiant's [FLOSS](https://github.com/mandiant/flare-floss/) in an attempt to find obfuscated paths.
 
-![](/screenshots/devicename.png)
+![](screenshots/devicename.png)
 
 ### Dumping Pooltags
 
@@ -195,7 +197,7 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
 - A `DriverName.sys-DATE-TIME_STAMP-pooltags.txt` file, containing all the dumped Pooltags, will be written under
   IDA's DB directory.
 
-![](/screenshots/pooltag.png)
+![](screenshots/pooltag.png)
 
 ### Heuristic Vulnerability Checks
 
