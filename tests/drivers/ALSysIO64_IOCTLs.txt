@@ -1,0 +1,17 @@
+0x9C402604 readmsr_wrapper (READ_MSR)
+0x9C402608 writemsr_wrapper (WRITE_MSR)
+0x9C402610 sub_138A0 (READ_PCI_CONFIG likely)
+0x9C402614 sub_13A30 (WRITE_PCI_CONFIG likely)
+0x9C402620 HalGetBusDataByOffset_wrapper
+0x9C402624 version/capability constant (sets Type 0x20100)
+0x9C40262C sub_11D90
+0x9C402648 sub_12050
+0x9C402650 ReadPmTimerValue_wrapper
+0x9C402654 ReadHpetTimerValue_wrapper
+0x9C402658 IntelInitiateAlternateFreqCounter_wrapper
+0x9C40265C IntelSetLimitMaxCpuid_wrapper
+0x9C402660 IntelReadOverclockingMailbox_wrapper
+0x9C402664 sub_15320
+0x9C402668 sub_13BB0 (physical page read candidate, 0x1000-byte)
+0x9C40266C io509_wrapper
+0x9C402674 io533_wrapper

@@ -1,0 +1,528 @@
+{
+  "tool": "DriverBuddyReloaded",
+  "driver": "WinRing0x64.sys",
+  "sha256": "11bd2c9f9e2397c9a16e0990e4ed2cf0679498fe0fd418a3dfdac60b5c160ee5",
+  "generated": "2026-06-24-1782290075",
+  "severity_counts": {
+    "INFO": 2,
+    "MEDIUM": 1,
+    "CRITICAL": 21,
+    "HIGH": 1
+  },
+  "findings": [
+    {
+      "category": "device_name",
+      "title": "\\Device\\WinRing0_1_2_0",
+      "ea": "0x11660",
+      "func": "",
+      "severity": "INFO",
+      "detail": "",
+      "data": {}
+    },
+    {
+      "category": "device_name",
+      "title": "\\DosDevices\\WinRing0_1_2_0",
+      "ea": "0x11690",
+      "func": "",
+      "severity": "INFO",
+      "detail": "",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "rdpmc",
+      "ea": "0x114d2",
+      "func": "readpmc_wrapper",
+      "severity": "MEDIUM",
+      "detail": "rdpmc",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "wrmsr",
+      "ea": "0x114ac",
+      "func": "writemsr_wrapper",
+      "severity": "CRITICAL",
+      "detail": "wrmsr",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "rdmsr",
+      "ea": "0x1146a",
+      "func": "readmsr_wrapper",
+      "severity": "HIGH",
+      "detail": "rdmsr",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "MmMapIoSpace",
+      "ea": "0x1155f",
+      "func": "MmMapIoSpace_wrapper",
+      "severity": "CRITICAL",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C4060D4",
+      "ea": "0x11121",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_READ_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621464788,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2101,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_READ_ACCESS",
+        "access_code": 1,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C4060CC",
+      "ea": "0x11130",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_READ_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621464780,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2099,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_READ_ACCESS",
+        "access_code": 1,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C4060D0",
+      "ea": "0x11136",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_READ_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621464784,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2100,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_READ_ACCESS",
+        "access_code": 1,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402000",
+      "ea": "0x1113e",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621448192,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2048,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402004",
+      "ea": "0x11149",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621448196,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2049,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402084",
+      "ea": "0x11154",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621448324,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2081,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402088",
+      "ea": "0x1115f",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621448328,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2082,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C40208C",
+      "ea": "0x11166",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621448332,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2083,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402090",
+      "ea": "0x1116d",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621448336,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2084,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C4060C4",
+      "ea": "0x11174",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_READ_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621464772,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2097,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_READ_ACCESS",
+        "access_code": 1,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C406104",
+      "ea": "0x11249",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_READ_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621464836,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2113,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_READ_ACCESS",
+        "access_code": 1,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C406144",
+      "ea": "0x11254",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_READ_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621464900,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2129,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_READ_ACCESS",
+        "access_code": 1,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C40A0C8",
+      "ea": "0x1125f",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_WRITE_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621481160,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2098,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_WRITE_ACCESS",
+        "access_code": 2,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "FILE_WRITE_ACCESS (+1)",
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C40A0D8",
+      "ea": "0x11264",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_WRITE_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621481176,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2102,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_WRITE_ACCESS",
+        "access_code": 2,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "FILE_WRITE_ACCESS (+1)",
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C40A0DC",
+      "ea": "0x1126a",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_WRITE_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621481180,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2103,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_WRITE_ACCESS",
+        "access_code": 2,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "FILE_WRITE_ACCESS (+1)",
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C40A0E0",
+      "ea": "0x11270",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_WRITE_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621481184,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2104,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_WRITE_ACCESS",
+        "access_code": 2,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "FILE_WRITE_ACCESS (+1)",
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C40A108",
+      "ea": "0x11293",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_WRITE_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621481224,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2114,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_WRITE_ACCESS",
+        "access_code": 2,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "FILE_WRITE_ACCESS (+1)",
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C40A148",
+      "ea": "0x1129a",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_WRITE_ACCESS [dispatcher scan] | sinks: MmMapIoSpace",
+      "data": {
+        "code": 2621481288,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2130,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_WRITE_ACCESS",
+        "access_code": 2,
+        "sinks": [
+          "MmMapIoSpace"
+        ],
+        "risk_reasons": [
+          "FILE_WRITE_ACCESS (+1)",
+          "-> MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "DispatchDeviceControl reaches MmMapIoSpace",
+      "ea": "0x110d8",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "DispatchDeviceControl -> MmMapIoSpace_wrapper -> MmMapIoSpace",
+      "data": {
+        "sink": "MmMapIoSpace",
+        "path": [
+          "DispatchDeviceControl",
+          "MmMapIoSpace_wrapper",
+          "MmMapIoSpace"
+        ]
+      }
+    }
+  ]
+}
