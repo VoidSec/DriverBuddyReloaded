@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `tests/test_dbr.py`: four new pure-Python unit tests (T1-T4), bringing total
+  to 27 checks.
+  - T1: mocks `idaapi.get_func`, `idc.prev_head`, `idc.print_insn_mnem`,
+    `idc.get_name_ea_simple` to simulate a GsDriverEntry stub ending with
+    `jmp real_entry`; asserts `check_for_fake_driver_entry()` returns the
+    real DriverEntry EA.
+  - T2: five boundary calls to `_is_valid_ctl_code()`: verifies 0x00010000
+    (device_type=1) and 0x00222003/0x0022e004 are valid; 0x00000000
+    (device_type=0) and 0xC0000005 (STATUS_ACCESS_VIOLATION) are rejected.
+  - T3: mocks `idautils.FuncItems`, `idautils.CodeRefsFrom`,
+    `ida_funcs.get_func_name`, and `idc.print_operand` so that a synthetic
+    handler calls `KeRaiseIrql` then `ZwOpenProcess`; asserts
+    `check_irql()` emits an IRQL mismatch finding.
+  - T4: pre-seeds Reporter with IOCTL 0x222003; runs `scan_dispatchers()`
+    against a mocked FlowChart block that would emit the same code; asserts
+    count stays at 1 (dedup by code value, not EA).
+
 - `heuristics.py` `check_use_after_free()`: use-after-free heuristic (N6).
   Forward-walks the basic-block CFG via `idaapi.FlowChart`; tracks the argument
   register (RCX on x64, ECX on x86) after each `ExFreePool`/`ExFreePoolWithTag`/

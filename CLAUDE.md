@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 python tests/test_dbr.py
 DBR_SDK=900 python tests/test_dbr.py    # simulate IDA 9.0 import paths
 ```
-19 checks, all logic that does not touch the live IDA database. Run both variants on every change.
+27 checks, all logic that does not touch the live IDA database. Run both variants on every change.
 
 ### Run cross-version smoke tests (requires all three IDA installs)
 ```

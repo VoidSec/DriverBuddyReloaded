@@ -203,6 +203,95 @@ def main():
     check("DeviceIoControl(h," in c, "poc has DeviceIoControl")
     check(c.index("0x00222003") < c.index("0x00222000"), "poc CRITICAL first")
 
+    # ---- T1: check_for_fake_driver_entry backward walk uses idc.prev_head ----
+    # Set up a fake function: start=0x10000, end=0x10010.
+    # Walking backwards finds "jmp real_entry" at 0x1000c after one step from 0x10010.
+    idc_stub = sys.modules["idc"]
+    idaapi_stub = sys.modules["idaapi"]
+    idafuncs_stub = sys.modules["ida_funcs"]
+
+    class _FakeEntryFunc:
+        start_ea = 0x10000
+        end_ea = 0x10010
+
+    _mnems_t1 = {0x10010: "nop", 0x1000c: "jmp"}
+    _saved_get_func = idaapi_stub.__dict__.get("get_func")
+    idaapi_stub.get_func = lambda ea: _FakeEntryFunc()
+    idc_stub.print_insn_mnem = lambda ea: _mnems_t1.get(ea, "nop")
+    idc_stub.prev_head = lambda ea, start: (0x1000c if ea == 0x10010 else _BADADDR)
+    idc_stub.print_operand = lambda ea, n: ("real_entry" if (ea == 0x1000c and n == 0) else "")
+    idc_stub.get_name_ea_simple = lambda name: (0x20000 if name == "real_entry" else _BADADDR)
+    idc_stub.set_name = lambda ea, name: None
+
+    from DriverBuddyReloaded.wdm import check_for_fake_driver_entry
+    rep_t1 = reporting.Reporter()
+    result_t1 = check_for_fake_driver_entry(0x10000, rep_t1)
+    check(result_t1 == 0x20000, "T1: fake DriverEntry walk returns real DriverEntry via prev_head")
+    if _saved_get_func is not None:
+        idaapi_stub.get_func = _saved_get_func
+
+    # ---- T2: _is_valid_ctl_code boundary tests ----
+    # Access the private function through the module to verify boundary behaviour.
+    from DriverBuddyReloaded.ioctl_decoder import _is_valid_ctl_code
+    check(_is_valid_ctl_code(0x00010000),  "T2: 0x00010000 valid (device_type=1, func=0)")
+    check(not _is_valid_ctl_code(0x00000000), "T2: 0x00000000 invalid (device_type=0)")
+    check(not _is_valid_ctl_code(0xC0000005), "T2: 0xC0000005 invalid (STATUS_ACCESS_VIOLATION)")
+    check(_is_valid_ctl_code(0x00222003),  "T2: 0x00222003 valid (HEVD METHOD_NEITHER)")
+    check(_is_valid_ctl_code(0x0022e004),  "T2: 0x0022e004 valid (vendor device type)")
+
+    # ---- T3: check_irql emits finding when IRQL-raiser and Zw* call coexist ----
+    # FuncItems returns [0x30000, 0x30004].
+    # CodeRefsFrom(0x30000) -> [0x40000] (KeRaiseIrql callee).
+    # CodeRefsFrom(0x30004) -> [0x50000] (ZwOpenProcess callee -- not used by _callees).
+    # print_operand(0x30004, 0) -> "ZwOpenProcess" (triggers IRQL mismatch finding).
+    idautils_stub = sys.modules["idautils"]
+    _func_items_map = {0x30000: [0x30000, 0x30004]}
+    _code_refs_map = {0x30000: [0x40000], 0x30004: []}
+    _func_name_map = {0x40000: "KeRaiseIrql"}
+    _print_operand_map = {(0x30004, 0): "ZwOpenProcess"}
+
+    idautils_stub.FuncItems = lambda ea: iter(_func_items_map.get(ea, []))
+    idautils_stub.CodeRefsFrom = lambda ea, flow: iter(_code_refs_map.get(ea, []))
+    idafuncs_stub.get_func_name = lambda ea: _func_name_map.get(ea, "")
+    idc_stub.print_operand = lambda ea, n: _print_operand_map.get((ea, n), "")
+
+    from DriverBuddyReloaded.heuristics import check_irql
+    rep_t3 = reporting.Reporter()
+    check_irql(rep_t3, {0x30000})
+    irql_findings = rep_t3.by_category("heuristic")
+    check(any("ZwOpenProcess" in f.title for f in irql_findings),
+          "T3: check_irql emits IRQL mismatch finding for ZwOpenProcess in IRQL-raised context")
+
+    # ---- T4: scan_dispatchers dedup by code value keeps count at 1 ----
+    # Pre-seed Reporter with IOCTL 0x222003 at one EA.
+    # Mock FlowChart to yield a single block whose single instruction has
+    # operand value 0x222003, so scan_dispatchers tries to add the same code.
+    # Expect count stays at 1.
+    rep_t4 = reporting.Reporter()
+    d_t4 = ioctl_decoder.decode(0x222003)
+    rep_t4.add_finding("ioctl", "IOCTL 0x00222003", ea=0xdeadbeef,
+                       func="DispatchDeviceControl", **d_t4)
+
+    class _FakeBlock_T4:
+        start_ea = 0x1000
+        end_ea = 0x1001
+        def succs(self): return []
+
+    class _FakeFC_T4:
+        def __iter__(self): return iter([_FakeBlock_T4()])
+
+    idaapi_stub.get_func = lambda ea: object()
+    idaapi_stub.FlowChart = lambda f, flags=0: _FakeFC_T4()
+    idc_stub.print_insn_mnem = lambda ea: "cmp"
+    _O_IMM = 5
+    idc_stub.o_imm = _O_IMM
+    idc_stub.get_operand_type = lambda ea, n: _O_IMM
+    idc_stub.get_operand_value = lambda ea, n: 0x222003
+
+    ioctl_decoder.scan_dispatchers(rep_t4, [0x1000])
+    t4_count = len(rep_t4.by_category("ioctl"))
+    check(t4_count == 1, "T4: scan_dispatchers dedup by code value keeps count at 1")
+
     print("\n{} check(s), {} failure(s)".format(total[0], len(failures)))
     return 1 if failures else 0
 
