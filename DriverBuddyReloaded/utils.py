@@ -56,6 +56,8 @@ class AnalysisContext:
     ddc_addresses: list = field(default_factory=list)
     # Real DriverEntry EA after resolving GsDriverEntry / fake-entry wrappers.
     real_entry_addr: int = 0
+    # Symbolic link paths discovered by find_symbolic_links() (N4).
+    symbolic_links: list = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------

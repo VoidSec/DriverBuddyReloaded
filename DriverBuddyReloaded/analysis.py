@@ -113,6 +113,8 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
 
     if config.Feature.ACL_AUDIT:
         _stage(rep, "acl_audit", utils.find_device_create_calls, rep, ctx)
+    if config.Feature.SYMLINK_TRACK:
+        _stage(rep, "symlink_track", device_name_finder.find_symbolic_links, rep, ctx)
     if config.Feature.CALLCHAIN:
         _stage(rep, "callchain", callchain.trace, rep, ctx)
     if config.Feature.HEURISTICS:

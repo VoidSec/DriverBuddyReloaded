@@ -38,7 +38,7 @@ DriverBuddyReloaded.py          <- IDA plugin_t (init / run / term / UI hooks)
         |
         +-- utils.py              device/WDM/WDF identification, AnalysisContext, ACL audit (find_device_create_calls)
         +-- wdm.py / wdf.py       structure labelling, DDC address discovery
-        +-- device_name_finder.py unicode device paths
+        +-- device_name_finder.py unicode device paths, symbolic link tracking (find_symbolic_links)
         +-- dump_pool_tags.py     pool tag extraction
         +-- irp_mj.py             IRP_MJ_FUNCTION IDA enum (WDM only)
         +-- ioctl_decoder.py      find_ioctls + scan_dispatchers (auto flow-chart scan)

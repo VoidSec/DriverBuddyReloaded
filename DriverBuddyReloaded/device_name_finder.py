@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from DriverBuddyReloaded.reporting import Reporter
 
 import ida_bytes
+import ida_funcs
 import ida_nalt
 import ida_segment
 import ida_strlist
@@ -200,3 +201,76 @@ def search(rep):
     if not find_unicode_device_name(rep):
         rep.info("[!] Unicode DeviceName not found; try using FLOSS in order to recover "
                  "obfuscated and stack based strings.")
+
+
+# ---------------------------------------------------------------------------
+# N4: Symbolic link exposure tracking
+# ---------------------------------------------------------------------------
+
+def _decode_symlink_arg(call_ea: int) -> Optional[str]:
+    """
+    Walk backwards from call_ea looking for a data-xref to a UNICODE_STRING or
+    a direct string literal.  Returns the decoded path string or None.
+    """
+    seg_start = idc.get_segm_start(call_ea)
+    cur = call_ea
+    seen_eas = set()
+    for _ in range(30):
+        prev = idc.prev_head(cur, seg_start)
+        if prev == idc.BADADDR or prev == cur or prev in seen_eas:
+            break
+        seen_eas.add(prev)
+        cur = prev
+        for opnd in range(2):
+            op_type = idc.get_operand_type(cur, opnd)
+            if op_type not in (idc.o_mem, idc.o_imm, idc.o_displ):
+                continue
+            ref_ea = idc.get_operand_value(cur, opnd)
+            if ref_ea == idc.BADADDR or ref_ea < 0x1000:
+                continue
+            try:
+                raw = idc.get_strlit_contents(ref_ea, -1, idc.STRTYPE_C_16)
+                if raw and len(raw) >= 4:
+                    s = raw.decode("utf-16-le", errors="ignore").rstrip("\x00")
+                    if any(s.startswith(p) for p in _DEVICE_PREFIXES) or "\\" in s:
+                        return s
+            except Exception:
+                pass
+    return None
+
+
+def find_symbolic_links(rep, ctx) -> None:
+    """
+    N4: Walk xrefs to IoCreateSymbolicLink and emit an INFO finding per call.
+
+    Attempts to decode the first argument (the symbolic link path) by walking
+    backwards from each call site and reading the UNICODE_STRING buffer.
+    Decoded paths are stored in ctx.symbolic_links for downstream correlation.
+    Gated on Feature.SYMLINK_TRACK.
+    """
+    ea = ctx.imports_map.get("IoCreateSymbolicLink")
+    if not ea:
+        return
+    for xr in idautils.XrefsTo(ea, 0):
+        fn = ida_funcs.get_func(xr.frm)
+        caller_name = ida_funcs.get_func_name(fn.start_ea) if fn else ""
+        path = _decode_symlink_arg(xr.frm)
+        if path:
+            ctx.symbolic_links.append(path)
+            rep.add(Finding(
+                category="symlink",
+                title="IoCreateSymbolicLink: {}".format(path),
+                ea=xr.frm,
+                func=caller_name,
+                severity=config.SEV_INFO,
+                detail="Symbolic link exposes device to Win32 namespace; "
+                       "verify DACL on the target device object."))
+        else:
+            rep.add(Finding(
+                category="symlink",
+                title="IoCreateSymbolicLink: path could not be decoded",
+                ea=xr.frm,
+                func=caller_name,
+                severity=config.SEV_INFO,
+                detail="Symbolic link target could not be statically recovered; "
+                       "manual review required."))

@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `device_name_finder.py` `find_symbolic_links()`: Symbolic link tracking (N4).
+  Walks xrefs to `IoCreateSymbolicLink`; attempts to decode the target path by
+  scanning backwards from each call site for UNICODE_STRING buffer references.
+  Decoded paths are stored in `ctx.symbolic_links`; an INFO finding is emitted
+  per call site regardless of whether the path was recovered. Gated on
+  `Feature.SYMLINK_TRACK = True`.
+- `utils.py` `AnalysisContext`: added `symbolic_links: list` field (N4).
+
 - `utils.py` `find_device_create_calls()`: Device ACL audit (N3).
   Walks xrefs to `IoCreateDevice` (LOW: no security descriptor, world-accessible
   by default) and `IoCreateDeviceSecure` (scans the calling function for a
