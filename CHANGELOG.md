@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `ida_compat.py` `is_64bit()`: added explicit `IS_IDA9` guard before calling the
+  removed `get_inf_structure()` API. Without the guard, reaching the fallback path
+  on IDA 9.0 raises `AttributeError` instead of a clear `RuntimeError`. The normal
+  path (via `ida_ida.inf_is_64bit()`) is unaffected on all supported IDA versions.
+
 - `irp_mj.py` `_create_enum_legacy()`: member-add loop now wrapped in try/except;
   any `add_enum_member` failure deletes the partially-created enum and returns
   `None` instead of leaving an orphaned enum in the IDA database.

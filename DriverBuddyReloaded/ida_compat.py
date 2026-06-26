@@ -51,6 +51,8 @@ def is_64bit():
     falling back to the removed-in-9.0 get_inf_structure() only on ancient builds."""
     if ida_ida is not None and hasattr(ida_ida, "inf_is_64bit"):
         return ida_ida.inf_is_64bit()
+    if IS_IDA9:  # pragma: no cover
+        raise RuntimeError("ida_ida module unavailable on IDA 9.0+; cannot determine bitness")
     return idaapi.get_inf_structure().is_64bit()  # pragma: no cover
 
 
