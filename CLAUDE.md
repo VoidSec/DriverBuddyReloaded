@@ -115,6 +115,13 @@ NTSTATUS filter queries the IDA type DB first (`NTSTATUS` / `_NTSTATUS` enum), f
 ### Pure-Python test harness
 `tests/test_dbr.py` installs in-memory IDA stubs via `sys.modules` before any import of the plugin package. The `DBR_SDK` environment variable sets the simulated `IDA_SDK_VERSION`. Tests cover only logic that has no live-database dependency. IDA-side behaviour (structure labelling, enum creation, cross-reference walks) must be verified inside IDA via `tests/ida_smoke.py`.
 
+### IDA smoke test modes (T5-T7)
+`tests/ida_smoke.py` supports three optional check modes passed via `idc.ARGV`:
+- `--golden <ref.json>`: order-insensitive comparison of findings against a reference JSON (category, title, severity, IOCTL code/method/access).
+- `--ioctl-count <N>`: assert exactly N unique IOCTL codes found (use for ALSysIO64 17, HEVD 28).
+- `--expect-heuristic <pattern>`: assert at least one heuristic finding title contains the pattern (e.g. "TOCTOU" for HEVD).
+Each check result lands in the output JSON under `checks`; exit code is non-zero on any failure.
+
 ### Function-name sets
 All heuristic, callchain, and scoring function-name lists live in `config.py` (not scattered across modules): `DANGEROUS_SINKS`, `VALIDATION_FUNCS`, `PRIVILEGE_GATE_FUNCS`, `PRIVILEGED_SENSITIVE_OPS`, `IRQL_RAISING_FUNCS`, `MDL_USER_FUNCS`, `COPY_SINKS`, `ALLOCA_FUNCS`, `POOL_ALLOC_FUNCS`. Add to the relevant set in `config.py` when expanding coverage; modules import the set by name.
 

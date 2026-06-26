@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `tests/ida_smoke.py`: extended with three optional check modes (T5-T7):
+  - `--golden <ref.json>` (T5): compare findings against a reference JSON
+    order-insensitively on (category, title, severity, code, method, access).
+    Designed for beep.sys and WinRing0x64.sys regression guards.
+  - `--ioctl-count <N>` (T6): assert that exactly N unique IOCTL codes are
+    present after analysis (e.g. 17 for ALSysIO64.sys, 28 for HEVD.sys).
+  - `--expect-heuristic <pattern>` (T7): assert at least one heuristic finding
+    title contains the pattern (e.g. "TOCTOU" for HEVD.sys).
+  Each check result is recorded in the output JSON under `checks`; the overall
+  exit code is 0 only when all checks pass.
+
 - `tests/test_dbr.py`: four new pure-Python unit tests (T1-T4), bringing total
   to 27 checks.
   - T1: mocks `idaapi.get_func`, `idc.prev_head`, `idc.print_insn_mnem`,
