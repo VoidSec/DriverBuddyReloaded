@@ -111,6 +111,8 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
         if not found_by_pattern and not found_by_dispatcher:
             rep.info("[!] Unable to automatically find any IOCTLs")
 
+    if config.Feature.ACL_AUDIT:
+        _stage(rep, "acl_audit", utils.find_device_create_calls, rep, ctx)
     if config.Feature.CALLCHAIN:
         _stage(rep, "callchain", callchain.trace, rep, ctx)
     if config.Feature.HEURISTICS:

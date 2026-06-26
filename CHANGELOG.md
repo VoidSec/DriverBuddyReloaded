@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `utils.py` `find_device_create_calls()`: Device ACL audit (N3).
+  Walks xrefs to `IoCreateDevice` (LOW: no security descriptor, world-accessible
+  by default) and `IoCreateDeviceSecure` (scans the calling function for a
+  UTF-16 SDDL string via IDA data-xrefs; MEDIUM if it contains a world SID --
+  `WD`, `S-1-1-0`, `BU`, or `S-1-5-32-545` -- LOW if the SDDL cannot be
+  statically recovered). Gated on `Feature.ACL_AUDIT = True`; wired into
+  `analysis.py` before the callchain stage.
+
 - `heuristics.py` `check_double_fetch()`: TOCTOU/double-fetch heuristic (N1).
   Walks the instruction stream of each handler; groups `mov reg, [src+offset]`
   loads by `(src_register, offset)`; flags any pair with 2+ occurrences that has

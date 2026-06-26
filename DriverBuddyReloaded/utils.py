@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 import ida_funcs
 import ida_nalt
 import ida_segment
+import ida_strlist
 import idautils
 import idc
 
@@ -246,3 +247,115 @@ def is_driver() -> Optional[int]:
             if name in ("DriverEntry", "DriverEntry_0", "GsDriverEntry"):
                 return func_addr
     return False
+
+
+# ---------------------------------------------------------------------------
+# N3: Device ACL / security descriptor analysis
+# ---------------------------------------------------------------------------
+
+# SIDs that represent broad/unauthenticated access in SDDL strings.
+_WORLD_SIDS = {"WD", "S-1-1-0", "BU", "S-1-5-32-545"}
+# SDDL strings start with one of these component identifiers.
+_SDDL_PREFIXES = ("D:", "O:", "G:", "S:")
+
+
+def _build_sddl_map() -> dict:
+    """
+    Scan the IDA string list for UTF-16 strings that look like SDDL descriptors.
+    Returns {ea: sddl_string}.
+    """
+    result = {}
+    try:
+        sc = ida_strlist.string_info_t()
+        for i in range(ida_strlist.get_strlist_qty()):
+            if not ida_strlist.get_strlist_item(sc, i):
+                continue
+            try:
+                raw = idc.get_strlit_contents(sc.ea, sc.length, sc.type)
+                if not raw:
+                    continue
+                s = raw.decode("utf-16-le", errors="ignore").rstrip("\x00")
+                if len(s) > 4 and any(s.startswith(p) for p in _SDDL_PREFIXES):
+                    result[sc.ea] = s
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return result
+
+
+def _find_sddl_in_func(func_ea: int, sddl_map: dict) -> Optional[str]:
+    """
+    Walk all instructions of func_ea and check whether any data xref points to a
+    known SDDL string EA.  Returns the first matching SDDL string or None.
+    """
+    if not sddl_map:
+        return None
+    sddl_eas = set(sddl_map.keys())
+    try:
+        for head in idautils.FuncItems(func_ea):
+            for ref in idautils.DataRefsFrom(head):
+                if ref in sddl_eas:
+                    return sddl_map[ref]
+    except Exception:
+        pass
+    return None
+
+
+def find_device_create_calls(rep: "Reporter", ctx: "AnalysisContext") -> None:
+    """
+    N3: Walk xrefs to IoCreateDevice and IoCreateDeviceSecure and audit ACL posture.
+
+    IoCreateDevice creates devices that are world-accessible by default (no SD) -> LOW.
+    IoCreateDeviceSecure accepts an SDDL string; if it contains a world SID -> MEDIUM,
+    if the SDDL cannot be statically recovered -> LOW (needs manual review).
+    """
+    sddl_map = _build_sddl_map()
+
+    for func_name in ("IoCreateDevice",):
+        ea = ctx.imports_map.get(func_name)
+        if not ea:
+            continue
+        for xr in idautils.XrefsTo(ea, 0):
+            fn = ida_funcs.get_func(xr.frm)
+            caller_name = ida_funcs.get_func_name(fn.start_ea) if fn else ""
+            rep.add(Finding(
+                category="acl",
+                title="IoCreateDevice: world-accessible by default",
+                ea=xr.frm,
+                func=caller_name,
+                severity=config.SEV_LOW,
+                detail="IoCreateDevice assigns no security descriptor; accessible to all users. "
+                       "Consider IoCreateDeviceSecure with a restrictive SDDL."))
+
+    ea = ctx.imports_map.get("IoCreateDeviceSecure")
+    if not ea:
+        return
+    for xr in idautils.XrefsTo(ea, 0):
+        fn = ida_funcs.get_func(xr.frm)
+        caller_name = ida_funcs.get_func_name(fn.start_ea) if fn else ""
+        func_ea = fn.start_ea if fn else None
+        sddl = _find_sddl_in_func(func_ea, sddl_map) if func_ea is not None else None
+        if sddl:
+            world_accessible = any(sid in sddl for sid in _WORLD_SIDS)
+            if world_accessible:
+                rep.add(Finding(
+                    category="acl",
+                    title="IoCreateDeviceSecure: world-accessible SDDL",
+                    ea=xr.frm,
+                    func=caller_name,
+                    severity=config.SEV_MEDIUM,
+                    data={"sddl": sddl},
+                    detail="SDDL grants access to world/builtin-users SID: {}".format(sddl)))
+            else:
+                rep.info("[+] IoCreateDeviceSecure at 0x{:x}: SDDL appears restrictive: {}".format(
+                    xr.frm, sddl))
+        else:
+            rep.add(Finding(
+                category="acl",
+                title="IoCreateDeviceSecure: SDDL could not be decoded",
+                ea=xr.frm,
+                func=caller_name,
+                severity=config.SEV_LOW,
+                detail="Could not statically recover the SDDL; "
+                       "manual review required to confirm access posture."))

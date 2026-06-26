@@ -36,15 +36,15 @@ DriverBuddyReloaded.py          <- IDA plugin_t (init / run / term / UI hooks)
   |
   +-- analysis.run_analysis(rep)  <- full pipeline; headless-callable without plugin_t
         |
-        +-- utils.py              device/WDM/WDF identification, AnalysisContext
+        +-- utils.py              device/WDM/WDF identification, AnalysisContext, ACL audit (find_device_create_calls)
         +-- wdm.py / wdf.py       structure labelling, DDC address discovery
         +-- device_name_finder.py unicode device paths
         +-- dump_pool_tags.py     pool tag extraction
         +-- irp_mj.py             IRP_MJ_FUNCTION IDA enum (WDM only)
         +-- ioctl_decoder.py      find_ioctls + scan_dispatchers (auto flow-chart scan)
         +-- callchain.py          BFS handler -> dangerous sink tracing
-        +-- heuristics.py         seven checks: copy-validation, priv-gate, IRQL, MDL,
-        |                         alloca, pool-alloc-trust, physical-mem-ref
+        +-- heuristics.py         eight checks: copy-validation, priv-gate, IRQL, MDL,
+        |                         alloca, pool-alloc-trust, physical-mem-ref, double-fetch (TOCTOU)
         +-- exports_audit.py      zero-xref export detection
         +-- find_opcodes.py       opcode scan (off by default: Feature.SEGMENT_OPCODE_SCAN)
         +-- scoring.py            IOCTL risk scoring + severity bump
