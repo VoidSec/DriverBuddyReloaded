@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `wdf.py` `populate_wdf()`: emits a warning when no segment contains the
+  `mdfLibrary` UTF-16 string so analysts know the `WDF` classification is a
+  fallback, not a confirmed WDF version detection.
+
 ### Fixed
 
 - `reporting.py` / `DriverBuddyReloaded.py`: `Reporter.remove_findings_at(ea)` and

@@ -66,6 +66,7 @@ def populate_wdf(rep: "Reporter") -> str:
 
     ptr_size = ida_compat.ptr_size()
     detected_type = "WDF"
+    _mdf_found = False
     # find candidate data sections
     segments = [idaapi.get_segm_by_name('.data'),
                 idaapi.get_segm_by_name('.rdata'),
@@ -79,6 +80,7 @@ def populate_wdf(rep: "Reporter") -> str:
         idx = ida_compat.bin_search('L"mdfLibrary"', segm.start_ea, segm.end_ea)
         if idx == ida_compat.BADADDR:
             continue
+        _mdf_found = True
         prefix_char = chr(ida_bytes.get_byte(idx - 2))
         actual_library = prefix_char + "mdfLibrary"
         # K-prefix = KMDF, U-prefix = UMDF
@@ -104,4 +106,6 @@ def populate_wdf(rep: "Reporter") -> str:
             rep.info("[WDF] Success")
         else:
             rep.info("[WDF] Failed to apply WDFFUNCTIONS type at %s" % hex(wdf_func))
+    if not _mdf_found:
+        rep.info("[!] WDF: mdfLibrary version string not found; driver classified as generic WDF")
     return detected_type
