@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `heuristics.py` `check_use_after_free()`: use-after-free heuristic (N6).
+  Forward-walks the basic-block CFG via `idaapi.FlowChart`; tracks the argument
+  register (RCX on x64, ECX on x86) after each `ExFreePool`/`ExFreePoolWithTag`/
+  `ExFreePool2` call; emits HIGH when that register is read before being
+  overwritten by a write instruction. Set propagates across block successors.
+  Gated on `Feature.UAF_DETECT = True`.
+
 - `device_name_finder.py` `find_symbolic_links()`: Symbolic link tracking (N4).
   Walks xrefs to `IoCreateSymbolicLink`; attempts to decode the target path by
   scanning backwards from each call site for UNICODE_STRING buffer references.

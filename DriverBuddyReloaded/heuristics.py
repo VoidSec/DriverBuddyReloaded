@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from DriverBuddyReloaded.reporting import Reporter
     from DriverBuddyReloaded.utils import AnalysisContext
 
+import idaapi
 import ida_funcs
 import idautils
 import idc
@@ -307,6 +308,109 @@ def check_double_fetch(rep: "Reporter", handler_ea: int) -> None:
                     ea1, ea2)))
 
 
+_FREE_ARG_REG_X64 = {"rcx", "ecx"}
+_FREE_ARG_REG_X86 = {"ecx"}
+_MOV_WRITES = {"mov", "lea", "xor", "sub", "and", "or", "not", "neg",
+               "movzx", "movsx", "movsxd", "add", "imul", "inc", "dec"}
+
+
+def check_use_after_free(rep: "Reporter", ctx: "AnalysisContext", handler_ea: int) -> None:
+    """
+    N6: Use-after-free heuristic.
+
+    Forward-walks each basic block in the function CFG.  When a call to a
+    FREE_POOL_FUNCS function is seen, records the argument register (RCX on x64,
+    ECX on x86).  If any subsequent instruction in the same or a successor block
+    reads that register before it is overwritten by a write instruction, emits a
+    HIGH finding.
+
+    This is a single-pass, intra-function check; it will miss UAF across function
+    boundaries but catches the simple case of pool-free followed by dereference in
+    the same handler.
+    """
+    try:
+        func = ida_funcs.get_func(handler_ea)
+        if not func:
+            return
+        fc = idaapi.FlowChart(func, flags=idaapi.FC_PREDS)
+    except Exception:
+        return
+
+    func_name = ida_funcs.get_func_name(handler_ea) or ""
+    is_64 = False
+    try:
+        from DriverBuddyReloaded.ida_compat import is_64bit
+        is_64 = is_64bit()
+    except Exception:
+        pass
+
+    free_regs = _FREE_ARG_REG_X64 if is_64 else _FREE_ARG_REG_X86
+
+    # BFS over basic blocks; carry freed register sets across block boundaries.
+    from collections import deque
+    freed_at_block = {}
+    queue = deque()
+    # Seed with the entry block carrying an empty freed set.
+    queue.append((next(iter(fc), None), set()))
+    visited = set()
+
+    while queue:
+        bb, freed = queue.popleft()
+        if bb is None:
+            continue
+        key = bb.start_ea
+        if key in visited:
+            continue
+        visited.add(key)
+        freed_at_block[key] = set(freed)
+
+        current_freed = set(freed)
+        ea = bb.start_ea
+        while ea < bb.end_ea:
+            mnem = idc.print_insn_mnem(ea).lower()
+            op0_text = idc.print_operand(ea, 0).lower()
+            op1_text = idc.print_operand(ea, 1).lower()
+
+            if mnem == "call":
+                callee = idc.print_operand(ea, 0)
+                if callee in config.FREE_POOL_FUNCS:
+                    # The first argument register is now freed.
+                    current_freed.update(free_regs)
+            elif current_freed:
+                if mnem in _MOV_WRITES:
+                    # Destination write kills the freed state for that register.
+                    for reg in list(current_freed):
+                        if op0_text.startswith(reg):
+                            current_freed.discard(reg)
+                else:
+                    # Check if a freed register appears as a source operand (use).
+                    for reg in current_freed:
+                        if reg in op1_text or reg in op0_text:
+                            rep.add(Finding(
+                                category="heuristic",
+                                title="Potential use-after-free: {} read after free".format(reg),
+                                ea=ea,
+                                func=func_name,
+                                severity=config.SEV_HIGH,
+                                detail="Register {} used at 0x{:x} after ExFreePool* call; "
+                                       "verify pointer is nulled before reuse".format(
+                                           reg, ea)))
+                            current_freed.discard(reg)
+
+            nxt = idc.next_head(ea, bb.end_ea)
+            if nxt == idc.BADADDR or nxt == ea:
+                break
+            ea = nxt
+
+        # Propagate freed set to successor blocks.
+        try:
+            for succ in bb.succs():
+                if succ.start_ea not in visited:
+                    queue.append((succ, set(current_freed)))
+        except Exception:
+            pass
+
+
 def run(rep: Reporter, ctx: AnalysisContext) -> None:
     """
     Run all heuristic checks.  Seeds handlers from callchain.handler_seed_eas()
@@ -329,5 +433,8 @@ def run(rep: Reporter, ctx: AnalysisContext) -> None:
     if config.Feature.TOCTOU_CHECK:
         for ea in handler_eas:
             check_double_fetch(rep, ea)
+    if config.Feature.UAF_DETECT:
+        for ea in handler_eas:
+            check_use_after_free(rep, ctx, ea)
     n = len(rep.by_category("heuristic"))
     rep.info("[>] Heuristics: {} finding(s) emitted".format(n))

@@ -43,8 +43,9 @@ DriverBuddyReloaded.py          <- IDA plugin_t (init / run / term / UI hooks)
         +-- irp_mj.py             IRP_MJ_FUNCTION IDA enum (WDM only)
         +-- ioctl_decoder.py      find_ioctls + scan_dispatchers (auto flow-chart scan)
         +-- callchain.py          BFS handler -> dangerous sink tracing
-        +-- heuristics.py         eight checks: copy-validation, priv-gate, IRQL, MDL,
-        |                         alloca, pool-alloc-trust, physical-mem-ref, double-fetch (TOCTOU)
+        +-- heuristics.py         nine checks: copy-validation, priv-gate, IRQL, MDL,
+        |                         alloca, pool-alloc-trust, physical-mem-ref, double-fetch (TOCTOU),
+        |                         use-after-free (UAF CFG walk)
         +-- exports_audit.py      zero-xref export detection
         +-- find_opcodes.py       opcode scan (off by default: Feature.SEGMENT_OPCODE_SCAN)
         +-- scoring.py            IOCTL risk scoring + severity bump
