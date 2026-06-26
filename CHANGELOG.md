@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `heuristics.py` `check_double_fetch()`: TOCTOU/double-fetch heuristic (N1).
+  Walks the instruction stream of each handler; groups `mov reg, [src+offset]`
+  loads by `(src_register, offset)`; flags any pair with 2+ occurrences that has
+  no `ProbeForRead`/`ProbeForWrite` or copy-sink call between them (MEDIUM).
+  Gated on `Feature.TOCTOU_CHECK = True`.
+- `config.py`: new feature flags `TOCTOU_CHECK`, `ACL_AUDIT`, `SYMLINK_TRACK`,
+  `UAF_DETECT`; new function-name sets `PROBE_FUNCS`, `DEVICE_CREATE_FUNCS`,
+  `SYMLINK_FUNCS`, `FREE_POOL_FUNCS`.
+
 - `config.py` `Feature.validate()`: startup classmethod that raises `ValueError`
   for incoherent feature-flag combinations. Currently checks that
   `Feature.CALLCHAIN` is not enabled when `Feature.IOCTL_SCAN` is disabled

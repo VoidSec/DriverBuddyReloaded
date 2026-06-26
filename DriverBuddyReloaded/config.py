@@ -35,6 +35,10 @@ class Feature:
     SEGMENT_OPCODE_SCAN = False  # noisy with existing find(x=True); opt-in only
     IRP_MJ_ENUM = True
     IOCTL_SCAN = True
+    TOCTOU_CHECK = True
+    ACL_AUDIT = True
+    SYMLINK_TRACK = True
+    UAF_DETECT = True
 
     @classmethod
     def validate(cls):
@@ -314,6 +318,32 @@ POOL_ALLOC_FUNCS = {
     "ExAllocatePoolPriorityZero",
     "ExAllocatePoolPriorityUninitialized",
     "ExAllocatePoolUninitialized",
+}
+
+# Memory-range probe functions used by TOCTOU check (N1).
+PROBE_FUNCS = {
+    "ProbeForRead",
+    "ProbeForWrite",
+}
+
+# Device-creation APIs audited by the ACL check (N3).
+DEVICE_CREATE_FUNCS = {
+    "IoCreateDevice",
+    "IoCreateDeviceSecure",
+    "WdfDeviceCreate",
+}
+
+# Symbolic-link APIs tracked for exposure analysis (N4).
+SYMLINK_FUNCS = {
+    "IoCreateSymbolicLink",
+    "IoDeleteSymbolicLink",
+}
+
+# Pool-free APIs whose freed-pointer register is tracked by the UAF check (N6).
+FREE_POOL_FUNCS = {
+    "ExFreePool",
+    "ExFreePoolWithTag",
+    "ExFreePool2",
 }
 
 # ---------------------------------------------------------------------------

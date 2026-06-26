@@ -11,6 +11,7 @@ same set of dispatch functions found during call-chain tracing is reused here.
 
 from __future__ import annotations
 
+import re
 from typing import Set, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -249,6 +250,63 @@ def check_physical_mem_ref(rep: Reporter, handler_eas: Set[int]) -> None:
                 detail="Reference to physical memory device object - possible BYOVD pattern"))
 
 
+_MEM_LOAD_RE = re.compile(r'\[(\w+)(?:\+(\w+))?\]')
+
+
+def check_double_fetch(rep: "Reporter", handler_ea: int) -> None:
+    """
+    TOCTOU / double-fetch heuristic (N1).
+
+    Walks the instruction stream of the handler function.  Collects all
+    memory-load `mov` instructions and groups them by (src_register, offset).
+    For any pair with 2+ occurrences, checks whether a ProbeForRead/ProbeForWrite
+    or copy-sink call appears between the two load EAs.  Emits MEDIUM if not.
+    """
+    func_insns = list(idautils.FuncItems(handler_ea))
+    func_name = ida_funcs.get_func_name(handler_ea) or ""
+
+    loads = {}
+    for ea in func_insns:
+        if idc.print_insn_mnem(ea) != "mov":
+            continue
+        op_type = idc.get_operand_type(ea, 1)
+        if op_type not in (idc.o_mem, idc.o_displ, idc.o_phrase):
+            continue
+        src_text = idc.print_operand(ea, 1)
+        m = _MEM_LOAD_RE.search(src_text)
+        if not m:
+            continue
+        src_reg = m.group(1)
+        offset = m.group(2) or "0"
+        loads.setdefault((src_reg, offset), []).append(ea)
+
+    for (src_reg, offset), eas in loads.items():
+        if len(eas) < 2:
+            continue
+        ea1, ea2 = sorted(eas[:2])
+        has_probe = False
+        for ea in func_insns:
+            if ea <= ea1 or ea >= ea2:
+                continue
+            mnem = idc.print_insn_mnem(ea)
+            if mnem not in ("call",):
+                continue
+            callee = idc.print_operand(ea, 0)
+            if callee in config.PROBE_FUNCS or callee in config.COPY_SINKS:
+                has_probe = True
+                break
+        if not has_probe:
+            rep.add(Finding(
+                category="heuristic",
+                title="Double fetch: [{}+{}] read at 0x{:x} and 0x{:x} without intervening ProbeForRead".format(
+                    src_reg, offset, ea1, ea2),
+                ea=ea1,
+                func=func_name,
+                severity=config.SEV_MEDIUM,
+                detail="0x{:x} -> 0x{:x}; no ProbeForRead/ProbeForWrite between reads".format(
+                    ea1, ea2)))
+
+
 def run(rep: Reporter, ctx: AnalysisContext) -> None:
     """
     Run all heuristic checks.  Seeds handlers from callchain.handler_seed_eas()
@@ -268,5 +326,8 @@ def run(rep: Reporter, ctx: AnalysisContext) -> None:
     check_alloca(rep, handler_eas)
     check_pool_alloc_trust(rep, handler_eas)
     check_physical_mem_ref(rep, handler_eas)
+    if config.Feature.TOCTOU_CHECK:
+        for ea in handler_eas:
+            check_double_fetch(rep, ea)
     n = len(rep.by_category("heuristic"))
     rep.info("[>] Heuristics: {} finding(s) emitted".format(n))
