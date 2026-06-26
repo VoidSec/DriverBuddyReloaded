@@ -348,7 +348,11 @@ def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
     if not ddc_addresses:
         return False
 
-    already_seen = {f.ea for f in rep.by_category("ioctl")}
+    already_seen = {
+        f.data["code"]
+        for f in rep.by_category("ioctl")
+        if f.data and "code" in f.data
+    }
     result = False
 
     for func_ea in ddc_addresses:
@@ -364,11 +368,11 @@ def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
                 if idc.get_operand_type(instr, 1) != idc.o_imm:
                     continue
                 value = idc.get_operand_value(instr, 1) & 0xffffffff
-                if instr in already_seen:
+                if value in already_seen:
                     continue
                 if not _is_valid_ctl_code(value):
                     continue
-                already_seen.add(instr)
+                already_seen.add(value)
                 d = decode(value)
                 rep.add(Finding(
                     category="ioctl",

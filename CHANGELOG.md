@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `ioctl_decoder.py` `scan_dispatchers()`: deduplication now keyed on IOCTL code
+  value instead of instruction EA. The old `already_seen = {f.ea for f in ...}`
+  set compared instruction addresses against instruction addresses, so the same
+  code value at two different EAs produced two findings; a code seen by
+  `find_ioctls()` at one EA was not suppressed by `scan_dispatchers()` finding
+  the same code at a different EA.
+
 - `ida_compat.py` `is_64bit()`: added explicit `IS_IDA9` guard before calling the
   removed `get_inf_structure()` API. Without the guard, reaching the fallback path
   on IDA 9.0 raises `AttributeError` instead of a clear `RuntimeError`. The normal
