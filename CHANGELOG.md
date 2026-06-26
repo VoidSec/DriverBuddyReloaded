@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `irp_mj.py` `_create_enum_legacy()`: member-add loop now wrapped in try/except;
+  any `add_enum_member` failure deletes the partially-created enum and returns
+  `None` instead of leaving an orphaned enum in the IDA database.
+
 - `ioctl_decoder.py` `find_ioctls()`: operand parsed with `int(raw, 16)` when IDA
   returns a hex string (e.g. `0x222003`); bare `int(raw)` raised `ValueError` and
   silently dropped the IOCTL. Occurs when `op_dec()` does not take effect before

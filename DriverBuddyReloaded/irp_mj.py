@@ -78,8 +78,14 @@ def _create_enum_legacy() -> Optional[int]:
     eid = idc.add_enum(-1, _ENUM_NAME, 0)
     if eid == idc.BADADDR:
         return None
-    for value, name in IRP_MJ_NAMES.items():
-        idc.add_enum_member(eid, name, value, -1)
+    try:
+        for value, name in IRP_MJ_NAMES.items():
+            ret = idc.add_enum_member(eid, name, value, -1)
+            if ret != 0:
+                raise RuntimeError("add_enum_member failed for %s (ret=%d)" % (name, ret))
+    except Exception:
+        idc.del_enum(eid)
+        return None
     return eid
 
 
