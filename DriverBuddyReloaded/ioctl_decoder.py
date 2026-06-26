@@ -401,7 +401,8 @@ def find_ioctls(rep: Reporter) -> bool:
                 continue
             idc.op_dec(ea, opnd)
             try:
-                ioctl_code = int(idc.print_operand(ea, opnd))
+                raw = idc.print_operand(ea, opnd)
+                ioctl_code = int(raw, 16) if raw.startswith(("0x", "0X")) else int(raw)
             except (TypeError, ValueError):
                 continue
             if not _is_valid_ctl_code(ioctl_code):

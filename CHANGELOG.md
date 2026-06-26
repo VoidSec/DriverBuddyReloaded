@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `ioctl_decoder.py` `find_ioctls()`: operand parsed with `int(raw, 16)` when IDA
+  returns a hex string (e.g. `0x222003`); bare `int(raw)` raised `ValueError` and
+  silently dropped the IOCTL. Occurs when `op_dec()` does not take effect before
+  `print_operand()` is called.
+
 - `wdm.py` `check_for_fake_driver_entry()`: replaced byte-decrement backward walk
   (`end_address -= 0x1`) with `idc.prev_head()` calls. The old loop landed in the
   middle of multi-byte instructions and read garbage mnemonics, silently breaking
