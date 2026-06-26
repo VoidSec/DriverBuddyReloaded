@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `analysis.py` `_stage()` helper: wraps each analysis stage in try/except so a
+  single stage crash does not abort the rest of the pipeline; the exception is
+  logged via `rep.info()` and execution continues. `populate_data_structures()` and
+  the IOCTL-discovery path are not wrapped (their failures are handled explicitly).
+- `analysis.py`: early-return guard after `populate_data_structures()` returns
+  `False`; all downstream stages (callchain, heuristics, scoring, etc.) are now
+  skipped rather than running against an empty function map.
+
 - `wdf.py` `populate_wdf()`: emits a warning when no segment contains the
   `mdfLibrary` UTF-16 string so analysts know the `WDF` classification is a
   fallback, not a confirmed WDF version detection.

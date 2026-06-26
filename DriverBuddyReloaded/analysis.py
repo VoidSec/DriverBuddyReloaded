@@ -34,6 +34,14 @@ from DriverBuddyReloaded import (
 from DriverBuddyReloaded.utils import AnalysisContext
 
 
+def _stage(rep: "Reporter", name: str, fn, *args, **kwargs) -> None:
+    """Run an analysis stage, catching and logging any exception so the pipeline continues."""
+    try:
+        fn(*args, **kwargs)
+    except Exception as exc:
+        rep.info("[!] Stage '{}' failed: {}".format(name, exc))
+
+
 def _write_pool_file(rep: Reporter, pool: str) -> None:
     """Write the pool-tag text report next to the IDB."""
     path = config.out_path("pooltags.txt")
@@ -85,31 +93,32 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
         _write_pool_file(rep, pool)
 
     driver_type = "unknown"
-    if utils.populate_data_structures(rep, ctx):
-        driver_type = utils.get_driver_id(driver_entry_addr, rep, ctx)
-        if driver_type != "WDM":
-            rep.info("[+] Driver type detected: {}".format(driver_type))
-        if config.Feature.IRP_MJ_ENUM and driver_type == "WDM":
-            irp_mj.run(ctx.real_entry_addr or driver_entry_addr, rep)
-        found_by_pattern = ioctl_decoder.find_ioctls(rep)
-        found_by_dispatcher = False
-        if ctx.ddc_addresses:
-            found_by_dispatcher = ioctl_decoder.scan_dispatchers(rep, ctx.ddc_addresses)
-        if not found_by_pattern and not found_by_dispatcher:
-            rep.info("[!] Unable to automatically find any IOCTLs")
-    else:
-        rep.info("[!] ERR: Unable to enumerate functions")
+    if not utils.populate_data_structures(rep, ctx):
+        rep.info("[!] ERR: Unable to enumerate functions; skipping analysis stages")
+        return _finalize(rep, driver_type)
+
+    driver_type = utils.get_driver_id(driver_entry_addr, rep, ctx)
+    if driver_type != "WDM":
+        rep.info("[+] Driver type detected: {}".format(driver_type))
+    if config.Feature.IRP_MJ_ENUM and driver_type == "WDM":
+        _stage(rep, "irp_mj", irp_mj.run, ctx.real_entry_addr or driver_entry_addr, rep)
+    found_by_pattern = ioctl_decoder.find_ioctls(rep)
+    found_by_dispatcher = False
+    if ctx.ddc_addresses:
+        found_by_dispatcher = ioctl_decoder.scan_dispatchers(rep, ctx.ddc_addresses)
+    if not found_by_pattern and not found_by_dispatcher:
+        rep.info("[!] Unable to automatically find any IOCTLs")
 
     if config.Feature.CALLCHAIN:
-        callchain.trace(rep, ctx)
+        _stage(rep, "callchain", callchain.trace, rep, ctx)
     if config.Feature.HEURISTICS:
-        heuristics.run(rep, ctx)
+        _stage(rep, "heuristics", heuristics.run, rep, ctx)
     if config.Feature.EXPORTS_AUDIT:
-        exports_audit.audit(rep)
+        _stage(rep, "exports_audit", exports_audit.audit, rep)
     if config.Feature.SEGMENT_OPCODE_SCAN:
-        find_opcodes.linear_scan(rep)
+        _stage(rep, "opcode_scan", find_opcodes.linear_scan, rep)
     if config.Feature.RISK_SCORING:
-        scoring.score(rep)
+        _stage(rep, "scoring", scoring.score, rep)
     if config.Feature.JSON_EXPORT:
         rep.to_json(config.out_path("findings.json"))
     if config.Feature.HTML_REPORT:
@@ -120,6 +129,11 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
     rep.info("[+] Analysis Completed!")
     rep.info("-----------------------------------------------")
 
+    return _finalize(rep, driver_type)
+
+
+def _finalize(rep: "Reporter", driver_type: str) -> Dict[str, Any]:
+    """Build and return the summary dict for the smoke harness."""
     per_cat = {}
     for f in rep.findings:
         per_cat[f.category] = per_cat.get(f.category, 0) + 1
