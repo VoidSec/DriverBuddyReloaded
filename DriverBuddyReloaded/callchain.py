@@ -79,9 +79,12 @@ def trace(rep: Reporter, ctx: AnalysisContext) -> None:
     if not seeds:
         return
 
+    seeds = list(seeds)
     rep.info("[>] Tracing call chains from {} handler(s) to dangerous sinks...".format(len(seeds)))
     reported = set()
-    for start in seeds:
+    for i, start in enumerate(seeds):
+        if i > 0 and i % 10 == 0:
+            rep.info("  [callchain] {}/{} handlers traced".format(i, len(seeds)))
         seed_name = _name(start)
         frontier = [(start, [seed_name])]
         visited = {start}

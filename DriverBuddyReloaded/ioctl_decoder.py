@@ -354,8 +354,10 @@ def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
         if f.data and "code" in f.data
     }
     result = False
+    ddc_list = list(ddc_addresses)
 
-    for func_ea in ddc_addresses:
+    for i, func_ea in enumerate(ddc_list):
+        rep.info("  [scan] dispatcher 0x{:x} ({}/{})".format(func_ea, i + 1, len(ddc_list)))
         f = idaapi.get_func(func_ea)
         if not f:
             continue

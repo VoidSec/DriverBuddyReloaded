@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `callchain.py` `trace()`: progress line every 10 seeds so long runs are visible
+  in the output log (`[callchain] N/M handlers traced`).
+- `ioctl_decoder.py` `scan_dispatchers()`: per-dispatcher progress line
+  (`[scan] dispatcher 0xXXXX (N/M)`) before processing each entry point.
+
 - `dump_pool_tags.py`: extracted `_collect_tags_for_imports(import_names, decode_fn)`
   helper that owns the outer import-enumeration loop and per-call-site backward walk.
   `find_pool_tags()` and `collect_fallback()` now each supply only a small
