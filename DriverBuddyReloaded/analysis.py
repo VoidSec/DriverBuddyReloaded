@@ -102,12 +102,14 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
         rep.info("[+] Driver type detected: {}".format(driver_type))
     if config.Feature.IRP_MJ_ENUM and driver_type == "WDM":
         _stage(rep, "irp_mj", irp_mj.run, ctx.real_entry_addr or driver_entry_addr, rep)
-    found_by_pattern = ioctl_decoder.find_ioctls(rep)
+    found_by_pattern = False
     found_by_dispatcher = False
-    if ctx.ddc_addresses:
-        found_by_dispatcher = ioctl_decoder.scan_dispatchers(rep, ctx.ddc_addresses)
-    if not found_by_pattern and not found_by_dispatcher:
-        rep.info("[!] Unable to automatically find any IOCTLs")
+    if config.Feature.IOCTL_SCAN:
+        found_by_pattern = ioctl_decoder.find_ioctls(rep)
+        if ctx.ddc_addresses:
+            found_by_dispatcher = ioctl_decoder.scan_dispatchers(rep, ctx.ddc_addresses)
+        if not found_by_pattern and not found_by_dispatcher:
+            rep.info("[!] Unable to automatically find any IOCTLs")
 
     if config.Feature.CALLCHAIN:
         _stage(rep, "callchain", callchain.trace, rep, ctx)

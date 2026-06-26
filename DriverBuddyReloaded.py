@@ -378,6 +378,11 @@ class DriverBuddyPlugin(idaapi.plugin_t):
         """Define hooks and shortcut actions."""
 
         global ioctl_tracker, hooks
+        try:
+            config.Feature.validate()
+        except ValueError as exc:
+            print("[Driver Buddy Reloaded] Configuration error: {}".format(exc))
+            return idaapi.PLUGIN_SKIP
         ioctl_tracker = IOCTLTracker()
         hooks = WinDriverHooks()
         hooks.hook()

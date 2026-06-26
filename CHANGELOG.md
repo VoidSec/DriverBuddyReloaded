@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `config.py` `Feature.validate()`: startup classmethod that raises `ValueError`
+  for incoherent feature-flag combinations. Currently checks that
+  `Feature.CALLCHAIN` is not enabled when `Feature.IOCTL_SCAN` is disabled
+  (callchain needs IOCTL findings as seeds). Called in `DriverBuddyPlugin.init()`.
+- `config.py` `Feature.IOCTL_SCAN = True`: new flag that gates both
+  `find_ioctls()` and `scan_dispatchers()` in `analysis.py`.
+
 - `callchain.py` `trace()`: progress line every 10 seeds so long runs are visible
   in the output log (`[callchain] N/M handlers traced`).
 - `ioctl_decoder.py` `scan_dispatchers()`: per-dispatcher progress line

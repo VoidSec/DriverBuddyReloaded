@@ -34,6 +34,13 @@ class Feature:
     POOLTAG_FALLBACK = True
     SEGMENT_OPCODE_SCAN = False  # noisy with existing find(x=True); opt-in only
     IRP_MJ_ENUM = True
+    IOCTL_SCAN = True
+
+    @classmethod
+    def validate(cls):
+        """Raise ValueError if the current feature-flag combination is incoherent."""
+        if cls.CALLCHAIN and not cls.IOCTL_SCAN:
+            raise ValueError("Feature.CALLCHAIN requires Feature.IOCTL_SCAN")
 
 
 # Depth (in call edges) the name-based call-chain tracer walks out from a handler.
