@@ -364,28 +364,29 @@ def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
         func_name = ida_funcs.get_func_name(func_ea) or ""
         fc = idaapi.FlowChart(f, flags=idaapi.FC_PREDS)
         for block in fc:
-            for instr in range(block.start_ea, block.end_ea):
+            instr = block.start_ea
+            while instr != idc.BADADDR and instr < block.end_ea:
                 if idc.print_insn_mnem(instr) not in ('cmp', 'sub', 'mov'):
+                    instr = idc.next_head(instr, block.end_ea)
                     continue
                 if idc.get_operand_type(instr, 1) != idc.o_imm:
+                    instr = idc.next_head(instr, block.end_ea)
                     continue
                 value = idc.get_operand_value(instr, 1) & 0xffffffff
-                if value in already_seen:
-                    continue
-                if not _is_valid_ctl_code(value):
-                    continue
-                already_seen.add(value)
-                d = decode(value)
-                rep.add(Finding(
-                    category="ioctl",
-                    title="IOCTL 0x%08X" % value,
-                    ea=instr,
-                    func=func_name,
-                    severity=config.SEV_INFO,
-                    detail="%s / %s / %s [dispatcher scan]" % (
-                        d["device_name"], d["method_name"], d["access_name"]),
-                    data=d))
-                result = True
+                if value not in already_seen and _is_valid_ctl_code(value):
+                    already_seen.add(value)
+                    d = decode(value)
+                    rep.add(Finding(
+                        category="ioctl",
+                        title="IOCTL 0x%08X" % value,
+                        ea=instr,
+                        func=func_name,
+                        severity=config.SEV_INFO,
+                        detail="%s / %s / %s [dispatcher scan]" % (
+                            d["device_name"], d["method_name"], d["access_name"]),
+                        data=d))
+                    result = True
+                instr = idc.next_head(instr, block.end_ea)
     return result
 
 

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `ioctl_decoder.py` `scan_dispatchers()`: replaced `range(block.start_ea, block.end_ea)`
+  with a `while instr < block.end_ea: ... instr = idc.next_head(instr, block.end_ea)` loop.
+  The old byte-level iteration asked IDA to decode every interior byte of a multi-byte x64
+  instruction as if it were an instruction start; depending on IDA version, this could
+  produce spurious mnemonics, incorrect finding EAs (pointing inside an instruction rather
+  than at its start), or false-positive IOCTL findings from garbage operand values.
+  Instruction-level iteration via `idc.next_head()` is the correct pattern (used by
+  `iter_text_matches()` and all other walkers in the codebase).
+
+- `wdm.py` `locate_ddc()` experimental path: the xref filter previously required that the
+  DDC candidate be called **directly** from DriverEntry's own instructions
+  (`reffunc.start_ea == driver_entry_address`). Many real drivers initialise
+  `MajorFunction[]` in a helper function called from DriverEntry; those DDC addresses were
+  never added to `ctx.ddc_addresses`, so `scan_dispatchers()` silently skipped the entire
+  dispatcher scan. The filter now builds the set of functions reachable in one call step
+  from DriverEntry (`entry_callees`) and accepts any DDC whose xref comes from that set.
+  Also deduplicates `ddc_list` with `set()` before walking xrefs to avoid processing the
+  same candidate multiple times when the pattern matched more than once in the same function.
+
 ### Added
 
 - `tests/ida_smoke.py`: extended with three optional check modes (T5-T7):

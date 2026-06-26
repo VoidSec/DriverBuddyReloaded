@@ -87,15 +87,27 @@ def locate_ddc(driver_entry_address, rep):
                 iocode = "[" + iostack_register + "+18h]"
             if iocode in ida_compat.disasm_text(i):
                 ddc_list.append(f)
+    # Build the set of functions reachable in one call step from DriverEntry.
+    # Many drivers move MajorFunction assignments into a helper, so the DDC is
+    # never referenced directly from DriverEntry's own instructions.
+    entry_callees = {driver_entry_address}
+    for head in idautils.FuncItems(driver_entry_address):
+        for ref in idautils.CodeRefsFrom(head, 0):
+            fn = idaapi.get_func(ref)
+            if fn is not None:
+                entry_callees.add(fn.start_ea)
+
     real_ddc = {}
-    # Keep only candidates that are called from `DriverEntry`.
-    for ddc in ddc_list:
-        for count, refs in enumerate(idautils.XrefsTo(ddc, 0)):
+    count = 0
+    for ddc in set(ddc_list):  # deduplicate candidates before xref walk
+        for refs in idautils.XrefsTo(ddc, 0):
             reffunc = idaapi.get_func(refs.frm)
-            if reffunc is not None and reffunc.start_ea == driver_entry_address:
+            if reffunc is not None and reffunc.start_ea in entry_callees:
                 real_ddc[count] = ddc
+                count += 1
                 rep.info("[+] Possible `DispatchDeviceControl` at 0x{addr:08x}".format(addr=ddc))
                 idc.set_name(ddc, "Possible_DispatchDeviceControl_{}".format(count))
+                break  # one hit per candidate is enough
     return real_ddc or None
 
 
