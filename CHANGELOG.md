@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `wdm.py` `check_for_fake_driver_entry()`: replaced byte-decrement backward walk
+  (`end_address -= 0x1`) with `idc.prev_head()` calls. The old loop landed in the
+  middle of multi-byte instructions and read garbage mnemonics, silently breaking
+  fake-DriverEntry detection on most real binaries. Walk now returns the real
+  `DriverEntry` address on hitting a `jmp`/`call`, or the original address if the
+  walk limit (64 steps) or a `BADADDR` boundary is reached.
+
 ## [2.0] - 2026-06-22
 
 ### Added
