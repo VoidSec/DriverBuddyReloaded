@@ -24,6 +24,8 @@ hooks = None
 # Stored after each auto-analysis run so the IOCTL/findings windows can be
 # re-opened at any time via the menu actions.
 _last_rep = None
+# Tracks the last shown chooser instances for live refresh after row deletion.
+_last_ioctl_chooser = None
 
 
 def make_comment(pos, string):
@@ -98,15 +100,17 @@ class IOCTLChooser(ida_kernwin.Choose):
     Double-clicking a row jumps to the address where the IOCTL code appears.
     """
 
-    def __init__(self, findings, title="Driver Buddy Reloaded - IOCTLs"):
+    def __init__(self, findings, rep=None, title="Driver Buddy Reloaded - IOCTLs"):
         ida_kernwin.Choose.__init__(
             self,
             title,
             [["Severity", 9], ["Address", 12], ["Code", 12],
              ["Device", 28], ["Method", 18], ["Access", 28], ["Fn#", 7], ["Sinks", 30]],
-            flags=getattr(ida_kernwin.Choose, "CH_CAN_REFRESH", 0))
+            flags=(getattr(ida_kernwin.Choose, "CH_CAN_REFRESH", 0) |
+                   getattr(ida_kernwin.Choose, "CH_CAN_DEL", 0)))
         # Highest severity first.
         self._items = sorted(findings, key=lambda f: -f.severity)
+        self._rep = rep
 
     @classmethod
     def from_pairs(cls, pairs):
@@ -149,6 +153,19 @@ class IOCTLChooser(ida_kernwin.Choose):
         if f.ea not in (None, reporting.BADADDR):
             ida_kernwin.jumpto(f.ea)
 
+    def OnDeleteLine(self, n):
+        removed = self._items.pop(n)
+        if self._rep is not None:
+            self._rep.remove_findings_at(removed.ea)
+            self._rep.re_save()
+        if removed.ea not in (None, reporting.BADADDR):
+            idc.del_extra_cmt(removed.ea, idc.E_PREV + 0)
+            idc.set_cmt(removed.ea, "", 0)
+            code = removed.data.get("code") if removed.data else None
+            if code is not None:
+                ioctl_tracker.remove_ioctl(removed.ea, code)
+        return [ida_kernwin.Choose.ALL_CHANGED, 0]
+
     def OnGetLineAttr(self, n):
         color = reporting._SEVERITY_COLORS.get(self._items[n].severity)
         if color is not None:
@@ -162,13 +179,16 @@ def show_all_ioctls():
     Prefers IOCTLs from the most recent auto-analysis; falls back to the
     interactive decode session (ioctl_tracker).
     """
+    global _last_ioctl_chooser
     if _last_rep is not None:
         ioctls = _last_rep.by_category("ioctl")
         if ioctls:
-            IOCTLChooser(ioctls).Show()
+            _last_ioctl_chooser = IOCTLChooser(ioctls, rep=_last_rep)
+            _last_ioctl_chooser.Show()
             return
     if ioctl_tracker and ioctl_tracker.ioctls:
-        IOCTLChooser.from_pairs(ioctl_tracker.ioctls).Show()
+        _last_ioctl_chooser = IOCTLChooser.from_pairs(ioctl_tracker.ioctls)
+        _last_ioctl_chooser.Show()
     else:
         print("[Driver Buddy Reloaded] No IOCTLs found yet. "
               "Run auto-analysis (Ctrl+Alt+A) or use 'Decode IOCTL' first.")
@@ -308,7 +328,15 @@ class InvalidHandler(ActionHandler):
         define = ioctl_decoder.get_define(code)
         comment = comment.replace(define, "")
         idc.set_cmt(pos, comment, 0)
+        idc.del_extra_cmt(pos, idc.E_PREV + 0)
         ioctl_tracker.remove_ioctl(pos, code)
+        if _last_rep is not None:
+            _last_rep.remove_findings_at(pos)
+        if _last_ioctl_chooser is not None:
+            _last_ioctl_chooser._items = [
+                f for f in _last_ioctl_chooser._items if f.ea != pos
+            ]
+            _last_ioctl_chooser.Refresh()
 
 
 def register_dynamic_action(form, popup, description, handler):
@@ -416,7 +444,9 @@ class DriverBuddyPlugin(idaapi.plugin_t):
                 # IOCTL recap window: decoded fields + severity for quick triage.
                 ioctls = rep.by_category("ioctl")
                 if ioctls:
-                    IOCTLChooser(ioctls).Show()
+                    global _last_ioctl_chooser
+                    _last_ioctl_chooser = IOCTLChooser(ioctls, rep=rep)
+                    _last_ioctl_chooser.Show()
 
     def term(self):
         pass

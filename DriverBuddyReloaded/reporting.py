@@ -20,6 +20,9 @@ from DriverBuddyReloaded import config
 
 BADADDR = idaapi.BADADDR
 
+# Tracks the last shown ResultsChooser so it can be refreshed after row deletion.
+_last_results_chooser = None
+
 
 @dataclass
 class Finding:
@@ -50,6 +53,8 @@ class Reporter:
         self.findings = []
         self.log_path = log_path
         self._log = None
+        self._json_path = None
+        self._html_path = None
         if log_path:
             try:
                 self._log = open(log_path, "w", encoding="utf-8")
@@ -71,6 +76,17 @@ class Reporter:
                     severity=config.SEV_INFO, detail="", **data):
         return self.add(Finding(category=category, title=title, ea=ea, func=func,
                                 severity=severity, detail=detail, data=data))
+
+    def remove_findings_at(self, ea):
+        """Remove all findings whose ea matches (used after marking IOCTL invalid)."""
+        self.findings = [f for f in self.findings if f.ea != ea]
+
+    def re_save(self):
+        """Re-write JSON and HTML output files using the paths from the original run."""
+        if self._json_path:
+            self.to_json(self._json_path)
+        if self._html_path:
+            self.to_html(self._html_path)
 
     # ---- queries -----------------------------------------------------------
     def by_category(self, category):
@@ -116,6 +132,7 @@ class Reporter:
         return d
 
     def to_json(self, path):
+        self._json_path = path
         payload = {
             "tool": "DriverBuddyReloaded",
             "driver": config.driver_name(),
@@ -133,6 +150,7 @@ class Reporter:
             self.info("[!] Could not write JSON to \"{}\": {}".format(path, e))
 
     def to_html(self, path):
+        self._html_path = path
         try:
             with open(path, "w", encoding="utf-8") as fh:
                 fh.write(self._render_html())
@@ -168,9 +186,11 @@ class Reporter:
             rows="\n".join(rows) or "<tr><td colspan='6'>No findings.</td></tr>")
 
     def show_window(self):
+        global _last_results_chooser
         if not self.findings:
             return
-        ResultsChooser(self.findings).Show()
+        _last_results_chooser = ResultsChooser(self.findings, rep=self)
+        _last_results_chooser.Show()
 
 
 _HTML_TEMPLATE = """<!DOCTYPE html>
@@ -197,15 +217,17 @@ th{{background:#f4f4f4}} code{{font-family:Consolas,monospace}}
 class ResultsChooser(ida_kernwin.Choose):
     """Clickable results window listing all findings; double-click jumps to the EA."""
 
-    def __init__(self, findings, title="Driver Buddy Reloaded - Findings"):
+    def __init__(self, findings, rep=None, title="Driver Buddy Reloaded - Findings"):
         ida_kernwin.Choose.__init__(
             self,
             title,
             [["Severity", 8], ["Category", 10], ["Address", 12],
              ["Function", 24], ["Title", 40], ["Detail", 40]],
-            flags=getattr(ida_kernwin.Choose, "CH_CAN_REFRESH", 0))
+            flags=(getattr(ida_kernwin.Choose, "CH_CAN_REFRESH", 0) |
+                   getattr(ida_kernwin.Choose, "CH_CAN_DEL", 0)))
         # Highest severity first.
         self.items = sorted(findings, key=lambda f: -f.severity)
+        self._rep = rep
 
     def OnGetSize(self):
         return len(self.items)
@@ -219,6 +241,13 @@ class ResultsChooser(ida_kernwin.Choose):
         f = self.items[n]
         if f.ea not in (None, BADADDR):
             ida_kernwin.jumpto(f.ea)
+
+    def OnDeleteLine(self, n):
+        removed = self.items.pop(n)
+        if self._rep is not None:
+            self._rep.findings = [f for f in self._rep.findings if f is not removed]
+            self._rep.re_save()
+        return [ida_kernwin.Choose.ALL_CHANGED, 0]
 
     def OnGetLineAttr(self, n):
         color = _SEVERITY_COLORS.get(self.items[n].severity)

@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `reporting.py` / `DriverBuddyReloaded.py`: `Reporter.remove_findings_at(ea)` and
+  `Reporter.re_save()` added. Both `ResultsChooser` and `IOCTLChooser` now carry
+  `CH_CAN_DEL` and override `OnDeleteLine()` so rows can be removed interactively;
+  deletion propagates to the Reporter's findings list and re-writes JSON/HTML.
+  `InvalidHandler.activate()` now also removes the anterior comment, calls
+  `_last_rep.remove_findings_at()`, and live-refreshes the IOCTL chooser window.
+
 - `DriverBuddyReloaded.py` `make_comment()`: IOCTL decode comments are now also
   written as anterior comments (`idc.add_extra_cmt(pos, True, string)`), making
   them visible in the HexRays decompiler pseudocode view. Non-repeatable
