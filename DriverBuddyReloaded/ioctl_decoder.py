@@ -126,13 +126,22 @@ def get_ioctl_code(ioctl_code):
         "FILE_DEVICE_UCM",  # 0x00000057
         "FILE_DEVICE_UCMTCPCI",  # 0x00000058
         "FILE_DEVICE_PERSISTENT_MEMORY",  # 0x00000059
+        "FILE_DEVICE_NVDIMM",  # 0x0000005a
+        "FILE_DEVICE_HOLOGRAPHIC",  # 0x0000005b
+        "FILE_DEVICE_SDFXHCI",  # 0x0000005c
+        "FILE_DEVICE_UCMUCSI",  # 0x0000005d
+        "FILE_DEVICE_PRM",  # 0x0000005e
+        "FILE_DEVICE_EVENT_COLLECTOR",  # 0x0000005f
+        "FILE_DEVICE_USB4",  # 0x00000060
+        "FILE_DEVICE_SOUNDWIRE",  # 0x00000061
+        "FILE_DEVICE_FABRIC_NVME",  # 0x00000062
+        "FILE_DEVICE_SVM",  # 0x00000063
+        "FILE_DEVICE_HARDWARE_ACCELERATOR",  # 0x00000064
+        "FILE_DEVICE_I3C",  # 0x00000065
     ]
 
-    # Custom devices
+    # Non-standard device types not defined in wdm.h (sparse high codes).
     custom_devices = [
-        {"name": "FILE_DEVICE_NVDIMM", "code": 0x0000005a},
-        {"name": "FILE_DEVICE_HOLOGRAPHIC", "code": 0x0000005b},
-        {"name": "FILE_DEVICE_SDFXHCI", "code": 0x0000005c},
         {"name": "MOUNTMGRCONTROLTYPE", "code": 0x0000006d},
         {"name": "FILE_DEVICE_IRCLASS", "code": 0x00000f60},
     ]
