@@ -53,27 +53,30 @@ def _decode_tag(tag_raw: int) -> str:
     return "".join(chr((tag_raw >> (8 * i)) & 0xFF) for i in range(3, -1, -1))
 
 
-def find_pool_tags() -> Dict[str, Set[str]]:
+def _collect_tags_for_imports(import_names, decode_fn) -> Dict[str, Set[str]]:
     """
-    Find references to pool functions then the 'Tag' immediate marked at the call
-    site, mapping each tag to the functions that use it.
+    Shared import-walk + per-call-site decoding core.
+
+    Enumerates all imports whose name is in `import_names`, walks xrefs to each,
+    and calls `decode_fn(prev_ea, tags, caller_name)` for up to POOLTAG_LOOKBACK
+    instructions before each call site.  `decode_fn` should add to `tags` and
+    return True when it has found a tag (stopping the inner walk).
+
     :return dict: tag -> set of caller function names
     """
-
-    tags = {}
+    tags: Dict[str, Set[str]] = {}
 
     def imp_cb(ea, name, ord):
-        if name in POOL_TAG_FUNCS:
-            for xref in idautils.XrefsTo(ea):
-                call_addr = xref.frm
-                caller_name = idc.get_func_name(call_addr)
-                prev = idc.prev_head(call_addr)
-                for _ in range(config.POOLTAG_LOOKBACK):
-                    if idc.get_cmt(prev, 0) == 'Tag' and idc.get_operand_type(prev, 1) == 5:
-                        tag_raw = idc.get_operand_value(prev, 1)
-                        tags.setdefault(_decode_tag(tag_raw), set()).add(caller_name)
-                        break
-                    prev = idc.prev_head(prev)
+        if name not in import_names:
+            return True
+        for xref in idautils.XrefsTo(ea):
+            call_addr = xref.frm
+            caller_name = idc.get_func_name(call_addr)
+            prev = idc.prev_head(call_addr)
+            for _ in range(config.POOLTAG_LOOKBACK):
+                if decode_fn(prev, tags, caller_name):
+                    break
+                prev = idc.prev_head(prev)
         return True
 
     for i in range(ida_nalt.get_import_module_qty()):
@@ -81,6 +84,23 @@ def find_pool_tags() -> Dict[str, Set[str]]:
             continue
         ida_nalt.enum_import_names(i, imp_cb)
     return tags
+
+
+def find_pool_tags() -> Dict[str, Set[str]]:
+    """
+    Find references to pool functions then the 'Tag' immediate marked at the call
+    site, mapping each tag to the functions that use it.
+    :return dict: tag -> set of caller function names
+    """
+
+    def _decode(prev, tags, caller_name):
+        if idc.get_cmt(prev, 0) == 'Tag' and idc.get_operand_type(prev, 1) == 5:
+            tag_raw = idc.get_operand_value(prev, 1)
+            tags.setdefault(_decode_tag(tag_raw), set()).add(caller_name)
+            return True
+        return False
+
+    return _collect_tags_for_imports(set(POOL_TAG_FUNCS), _decode)
 
 
 def collect_fallback() -> Dict[str, Set[str]]:
@@ -97,29 +117,16 @@ def collect_fallback() -> Dict[str, Set[str]]:
 
     :return dict: tag -> set of caller function names
     """
-    tags: Dict[str, Set[str]] = {}
 
-    def imp_cb(ea, name, ord):
-        if name not in POOL_TAG_FUNCS:
-            return True
-        for xref in idautils.XrefsTo(ea):
-            call_addr = xref.frm
-            caller_name = idc.get_func_name(call_addr)
-            prev = idc.prev_head(call_addr)
-            for _ in range(config.POOLTAG_LOOKBACK):
-                if idc.get_operand_type(prev, 1) == 5:
-                    tag_raw = idc.get_operand_value(prev, 1)
-                    if _is_valid_pool_tag(tag_raw):
-                        tags.setdefault(_decode_tag(tag_raw), set()).add(caller_name)
-                        break
-                prev = idc.prev_head(prev)
-        return True
+    def _decode(prev, tags, caller_name):
+        if idc.get_operand_type(prev, 1) == 5:
+            tag_raw = idc.get_operand_value(prev, 1)
+            if _is_valid_pool_tag(tag_raw):
+                tags.setdefault(_decode_tag(tag_raw), set()).add(caller_name)
+                return True
+        return False
 
-    for i in range(ida_nalt.get_import_module_qty()):
-        if not ida_nalt.get_import_module_name(i):
-            continue
-        ida_nalt.enum_import_names(i, imp_cb)
-    return tags
+    return _collect_tags_for_imports(set(POOL_TAG_FUNCS), _decode)
 
 
 def collect(rep: "Reporter") -> str:

@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `dump_pool_tags.py`: extracted `_collect_tags_for_imports(import_names, decode_fn)`
+  helper that owns the outer import-enumeration loop and per-call-site backward walk.
+  `find_pool_tags()` and `collect_fallback()` now each supply only a small
+  `decode_fn` closure that handles the tag-extraction logic specific to them.
+
 - `analysis.py` `_stage()` helper: wraps each analysis stage in try/except so a
   single stage crash does not abort the rest of the pipeline; the exception is
   logged via `rep.info()` and execution continues. `populate_data_structures()` and
