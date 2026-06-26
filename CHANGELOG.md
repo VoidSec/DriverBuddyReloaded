@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `DriverBuddyReloaded.py` `make_comment()`: IOCTL decode comments are now also
+  written as anterior comments (`idc.add_extra_cmt(pos, True, string)`), making
+  them visible in the HexRays decompiler pseudocode view. Non-repeatable
+  disassembly-only comments (`idc.set_cmt`) were silently dropped by HexRays.
+  A duplicate-guard prevents re-running decode from appending the same comment twice.
+
 - `ioctl_decoder.py` `scan_dispatchers()`: deduplication now keyed on IOCTL code
   value instead of instruction EA. The old `already_seen = {f.ea for f in ...}`
   set compared instruction addresses against instruction addresses, so the same

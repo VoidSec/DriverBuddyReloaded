@@ -39,6 +39,10 @@ def make_comment(pos, string):
         idc.set_cmt(pos, string, 0)
     elif string not in current_comment:
         idc.set_cmt(pos, current_comment + " " + string, 0)
+    # Anterior comment -- visible in the HexRays decompiler pseudocode view.
+    existing_anterior = idc.get_extra_cmt(pos, idc.E_PREV + 0) or ""
+    if string not in existing_anterior:
+        idc.add_extra_cmt(pos, True, string)
 
 
 def get_operand_value(addr):
