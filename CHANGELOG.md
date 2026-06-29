@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- ACL (`utils.find_device_create_calls`) and symbolic-link (`device_name_finder.find_symbolic_links`)
+  findings were emitted in exact duplicate on every driver. `idautils.XrefsTo(ea, 0)` can return
+  more than one xref kind for a single call site, so a lone `IoCreateDevice` /
+  `IoCreateSymbolicLink` call produced two identical findings (inflating the `acl`/`symlink`
+  category counts and the LOW/INFO severity totals). Both loops now dedup on the call-site
+  address (`xr.frm`), and `reporting.Reporter.add()` gained a content-identity guard that drops
+  any finding identical to one already recorded (same category, title, ea, severity, detail) so
+  this class of duplicate cannot recur from any module.
+
 ### Added
 
 - `ioctl_decoder.py` `scan_dispatchers()`: now recovers IOCTL codes that never appear as

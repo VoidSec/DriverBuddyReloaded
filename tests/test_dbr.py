@@ -189,6 +189,18 @@ def main():
         check(crit.data.get("sinks") == ["memcpy"], "sink name stored in finding data")
         check("memcpy" in crit.detail, "sink name visible in detail")
 
+    # ---- T8: Reporter drops byte-identical duplicate findings ----
+    rep_dedup = reporting.Reporter()
+    for _ in range(2):
+        rep_dedup.add_finding("acl", "IoCreateDevice: world-accessible by default",
+                              ea=0x1234, severity=config.SEV_LOW, detail="d")
+    check(len(rep_dedup.by_category("acl")) == 1,
+          "T8: Reporter drops byte-identical duplicate finding")
+    rep_dedup.add_finding("acl", "IoCreateDevice: world-accessible by default",
+                          ea=0x5678, severity=config.SEV_LOW, detail="d")
+    check(len(rep_dedup.by_category("acl")) == 2,
+          "T8: finding at a distinct ea is still recorded")
+
     # ---- JSON / HTML / PoC ----
     out = tempfile.mkdtemp()
     json_path, html_path, poc_path = (os.path.join(out, n) for n in ("f.json", "r.html", "poc.c"))

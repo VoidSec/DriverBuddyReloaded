@@ -318,7 +318,11 @@ def find_device_create_calls(rep: "Reporter", ctx: "AnalysisContext") -> None:
         ea = ctx.imports_map.get(func_name)
         if not ea:
             continue
+        seen_sites = set()
         for xr in idautils.XrefsTo(ea, 0):
+            if xr.frm in seen_sites:
+                continue  # one import can resolve via several xref kinds per call site
+            seen_sites.add(xr.frm)
             fn = ida_funcs.get_func(xr.frm)
             caller_name = ida_funcs.get_func_name(fn.start_ea) if fn else ""
             rep.add(Finding(
@@ -333,7 +337,11 @@ def find_device_create_calls(rep: "Reporter", ctx: "AnalysisContext") -> None:
     ea = ctx.imports_map.get("IoCreateDeviceSecure")
     if not ea:
         return
+    seen_secure_sites = set()
     for xr in idautils.XrefsTo(ea, 0):
+        if xr.frm in seen_secure_sites:
+            continue
+        seen_secure_sites.add(xr.frm)
         fn = ida_funcs.get_func(xr.frm)
         caller_name = ida_funcs.get_func_name(fn.start_ea) if fn else ""
         func_ea = fn.start_ea if fn else None

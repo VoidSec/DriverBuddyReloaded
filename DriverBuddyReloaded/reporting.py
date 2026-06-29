@@ -51,6 +51,10 @@ class Reporter:
 
     def __init__(self, log_path=None):
         self.findings = []
+        # Identity keys of findings already recorded, so a byte-identical finding
+        # emitted twice (e.g. an import xref that resolves to the same call site
+        # via more than one xref kind) is not duplicated in the report.
+        self._seen_keys = set()
         self.log_path = log_path
         self._log = None
         self._json_path = None
@@ -66,8 +70,22 @@ class Reporter:
         """A plain progress/status line, echoed to console and log verbatim."""
         self._write(msg)
 
+    @staticmethod
+    def _finding_key(f):
+        return (f.category, f.title, f.ea, f.severity, f.detail)
+
     def add(self, finding):
-        """Record a Finding and echo a one-line summary."""
+        """Record a Finding and echo a one-line summary.
+
+        A finding identical to one already recorded (same category, title, ea,
+        severity and detail) is dropped: such exact repeats are always noise
+        (e.g. an import referenced by two xref kinds at one call site), never two
+        distinct results, since genuinely separate findings differ at least in ea.
+        """
+        key = self._finding_key(finding)
+        if key in self._seen_keys:
+            return finding
+        self._seen_keys.add(key)
         self.findings.append(finding)
         self._write(self._format_line(finding))
         return finding
@@ -80,6 +98,8 @@ class Reporter:
     def remove_findings_at(self, ea):
         """Remove all findings whose ea matches (used after marking IOCTL invalid)."""
         self.findings = [f for f in self.findings if f.ea != ea]
+        # Rebuild the dedup index so a later re-add of a removed finding is allowed.
+        self._seen_keys = {self._finding_key(f) for f in self.findings}
 
     def re_save(self):
         """Re-write JSON and HTML output files using the paths from the original run."""

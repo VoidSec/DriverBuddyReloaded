@@ -251,7 +251,11 @@ def find_symbolic_links(rep, ctx) -> None:
     ea = ctx.imports_map.get("IoCreateSymbolicLink")
     if not ea:
         return
+    seen_sites = set()
     for xr in idautils.XrefsTo(ea, 0):
+        if xr.frm in seen_sites:
+            continue  # one import can resolve via several xref kinds per call site
+        seen_sites.add(xr.frm)
         fn = ida_funcs.get_func(xr.frm)
         caller_name = ida_funcs.get_func_name(fn.start_ea) if fn else ""
         path = _decode_symlink_arg(xr.frm)
