@@ -24,7 +24,7 @@ import idautils
 import idc
 
 from DriverBuddyReloaded import config, ida_compat
-from DriverBuddyReloaded.callchain import handler_seed_eas
+from DriverBuddyReloaded.callchain import handler_seed_eas, transitive_callees
 from DriverBuddyReloaded.reporting import Finding
 
 # Instruction window for the copy-sink validation search (instructions before/after).
@@ -254,14 +254,79 @@ def check_physical_mem_ref(rep: Reporter, handler_eas: Set[int]) -> None:
 _MEM_LOAD_RE = re.compile(r'\[(\w+)(?:\+(\w+))?\]')
 
 
+def _user_pointer_tainted(rep: "Reporter") -> Set[int]:
+    """Function EAs that may dereference a user-mode pointer.
+
+    A double-fetch/TOCTOU is only exploitable when the racing re-read comes from
+    user memory.  For METHOD_BUFFERED/IN/OUT_DIRECT the input is a kernel copy
+    (Irp->AssociatedIrp.SystemBuffer) and re-reading it cannot be raced; only
+    METHOD_NEITHER hands the driver a raw user pointer (Type3InputBuffer /
+    UserBuffer).  So the set is every dispatcher that decodes at least one
+    METHOD_NEITHER IOCTL, plus everything those dispatchers transitively call
+    (the per-IOCTL handlers where the actual dereference usually lives).
+    """
+    neither = set()
+    for f in rep.by_category("ioctl"):
+        if f.data and f.data.get("method_code") == 3:  # METHOD_NEITHER
+            fn = ida_funcs.get_func(f.ea)
+            if fn:
+                neither.add(fn.start_ea)
+    if not neither:
+        return set()
+    return transitive_callees(neither)
+
+
+def _cfg_reachable(handler_ea: int, ea_from: int, ea_to: int) -> bool:
+    """True if ea_to lies on a control-flow path from ea_from (same block or a
+    successor).  Used to reject two reads that sit in mutually-exclusive sibling
+    switch cases -- those are the same field read in different branches, not a
+    re-fetch on one execution path.  Permissive (returns True) if the CFG cannot
+    be built so a genuine double-fetch is never silently dropped."""
+    try:
+        func = ida_funcs.get_func(handler_ea)
+        if not func:
+            return True
+        fc = idaapi.FlowChart(func, flags=idaapi.FC_PREDS)
+    except Exception:
+        return True
+    b_from = b_to = None
+    for b in fc:
+        if b.start_ea <= ea_from < b.end_ea:
+            b_from = b
+        if b.start_ea <= ea_to < b.end_ea:
+            b_to = b
+    if b_from is None or b_to is None or b_from.start_ea == b_to.start_ea:
+        return True
+    from collections import deque
+    seen, queue = set(), deque([b_from])
+    while queue:
+        b = queue.popleft()
+        if b.start_ea in seen:
+            continue
+        seen.add(b.start_ea)
+        try:
+            for s in b.succs():
+                if s.start_ea == b_to.start_ea:
+                    return True
+                if s.start_ea not in seen:
+                    queue.append(s)
+        except Exception:
+            return True
+    return False
+
+
 def check_double_fetch(rep: "Reporter", handler_ea: int) -> None:
     """
     TOCTOU / double-fetch heuristic (N1).
 
     Walks the instruction stream of the handler function.  Collects all
     memory-load `mov` instructions and groups them by (src_register, offset).
-    For any pair with 2+ occurrences, checks whether a ProbeForRead/ProbeForWrite
-    or copy-sink call appears between the two load EAs.  Emits MEDIUM if not.
+    For any pair with 2+ occurrences, emits MEDIUM when (a) no
+    ProbeForRead/ProbeForWrite or copy-sink call appears between the two reads
+    and (b) the second read is reachable from the first on a single control-flow
+    path.  The caller restricts this to user-pointer-tainted handlers (see
+    _user_pointer_tainted) so METHOD_BUFFERED kernel-buffer re-reads are not
+    flagged.
     """
     func_insns = list(idautils.FuncItems(handler_ea))
     func_name = ida_funcs.get_func_name(handler_ea) or ""
@@ -285,6 +350,9 @@ def check_double_fetch(rep: "Reporter", handler_ea: int) -> None:
         if len(eas) < 2:
             continue
         ea1, ea2 = sorted(eas[:2])
+        # Two reads in mutually-exclusive sibling branches are not a re-fetch.
+        if not _cfg_reachable(handler_ea, ea1, ea2):
+            continue
         has_probe = False
         for ea in func_insns:
             if ea <= ea1 or ea >= ea2:
@@ -299,12 +367,12 @@ def check_double_fetch(rep: "Reporter", handler_ea: int) -> None:
         if not has_probe:
             rep.add(Finding(
                 category="heuristic",
-                title="Double fetch: [{}+{}] read at 0x{:x} and 0x{:x} without intervening ProbeForRead".format(
+                title="TOCTOU double-fetch: [{}+{}] read at 0x{:x} and 0x{:x} without intervening ProbeForRead".format(
                     src_reg, offset, ea1, ea2),
                 ea=ea1,
                 func=func_name,
                 severity=config.SEV_MEDIUM,
-                detail="0x{:x} -> 0x{:x}; no ProbeForRead/ProbeForWrite between reads".format(
+                detail="0x{:x} -> 0x{:x}; user-pointer field re-read with no ProbeForRead/ProbeForWrite between".format(
                     ea1, ea2)))
 
 
@@ -431,8 +499,12 @@ def run(rep: Reporter, ctx: AnalysisContext) -> None:
     check_pool_alloc_trust(rep, handler_eas)
     check_physical_mem_ref(rep, handler_eas)
     if config.Feature.TOCTOU_CHECK:
+        # Only scan handlers that can see a user-mode pointer (METHOD_NEITHER);
+        # re-reading a METHOD_BUFFERED kernel copy is not a race.
+        tainted = _user_pointer_tainted(rep)
         for ea in handler_eas:
-            check_double_fetch(rep, ea)
+            if ea in tainted:
+                check_double_fetch(rep, ea)
     if config.Feature.UAF_DETECT:
         for ea in handler_eas:
             check_use_after_free(rep, ctx, ea)

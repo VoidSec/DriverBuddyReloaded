@@ -7,7 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `callchain.transitive_callees(start_eas, max_depth)`: shared bounded-BFS helper returning every
+  function reachable from a set of start EAs over call/jump edges (inclusive). Gives heuristics one
+  consistent notion of "the code a dispatcher actually reaches".
+
 ### Fixed
+
+- `heuristics.check_double_fetch()`: eliminated the METHOD_BUFFERED false positives and stopped
+  pairing mutually-exclusive sibling switch cases. The check previously flagged any `mov reg,
+  [base+off]` re-read with no intervening Probe call, with no notion of whether the source was a
+  user pointer -- so it fired on `Irp->AssociatedIrp.SystemBuffer` / `IrpSp->Parameters` kernel
+  copies (5 findings on ALSysIO64, 6 on WinRing0x64, all bogus) while the one genuine double-fetch
+  went unlabelled. Now: (1) the run loop only scans handlers reachable from a METHOD_NEITHER IOCTL
+  (`_user_pointer_tainted()`), since only METHOD_NEITHER hands the driver a raw user pointer; (2) a
+  CFG reachability check (`_cfg_reachable()`) requires the second read to lie on a path from the
+  first, dropping sibling-case pairs; (3) the finding title is now "TOCTOU double-fetch". Verified:
+  ALSysIO64 5->0 and WinRing0x64 6->0 false positives, beep stays silent.
 
 - `device_name_finder._decode_symlink_arg()`: symbolic-link target paths now decode instead of
   reporting "path could not be decoded" on essentially every driver. Two root causes: (1) the

@@ -38,6 +38,31 @@ def _out_refs(func_ea):
     return out
 
 
+def transitive_callees(start_eas, max_depth: int = config.CALLCHAIN_MAX_DEPTH) -> Set[int]:
+    """Function start EAs reachable from *start_eas* over call/jump edges, inclusive.
+
+    Bounded BFS over CodeRefsFrom (the same edge set the sink tracer walks).
+    Shared by heuristics (handler-seed expansion, user-pointer taint) so the
+    notion of "the code a dispatcher actually reaches" is computed one way.
+    """
+    result = set()
+    frontier = [ea for ea in start_eas]
+    depth = 0
+    while frontier and depth <= max_depth:
+        nxt = []
+        for fea in frontier:
+            if fea in result:
+                continue
+            result.add(fea)
+            for ref in _out_refs(fea):
+                callee = ida_funcs.get_func(ref)
+                if callee and callee.start_ea not in result:
+                    nxt.append(callee.start_ea)
+        frontier = nxt
+        depth += 1
+    return result
+
+
 def _seed_eas(rep: Reporter, ctx: AnalysisContext) -> Set[int]:
     """Function start EAs to trace from: every IOCTL handler plus any recovered
     dispatch routine (DispatchDeviceControl / Possible_DispatchDeviceControl*)."""
