@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-06-29
+
 ### Added
 
 - Golden-output regression for the four reference drivers (`beep`, `HEVD`, `ALSysIO64`,
@@ -17,14 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   IDB and auto-discovers an adjacent `<idb>.golden.json`, so the runner needs no `-S` arguments
   (which PowerShell's `Start-Process` mangles when they contain a space).
 
-### Removed
+### Changed
 
-- Stale precedent artifacts under `tests/drivers/` superseded by the committed goldens: the
-  2026-06-24 `*-findings.json` and `*-autoanalysis.txt` for beep / WinRing0x64, and the manual
-  IOCTL reference lists (`ALSysIO64_IOCTLs.txt`, `HVED_IOCTLs.txt`) -- the decoded IOCTLs are now
-  embedded in each golden.
-
-## [2.2.0] - 2026-06-29
+- Heuristic tuning constants consolidated into `config.py`: `COPY_VALIDATION_LOOKBACK` /
+  `COPY_VALIDATION_LOOKAHEAD` (was `heuristics._VALID_LOOKBACK`/`_VALID_LOOKAHEAD`),
+  `UAF_GLOBAL_BACKWALK` (was a literal `16`), and `SYMLINK_DECODE_LOOKBACK` (was
+  `device_name_finder._SYMLINK_LOOKBACK`). Values unchanged; behaviour-preserving.
 
 ### Removed
 
@@ -35,13 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rows are printed to the Output window, shown in the severity-coloured IOCTL window, and recorded in
   `findings.json` / `report.html`. (`pooltags.txt` -- the WinDbg-format pool-tag dump -- and
   `autoanalysis.txt` -- the run diagnostic log -- are retained.)
-
-### Changed
-
-- Heuristic tuning constants consolidated into `config.py`: `COPY_VALIDATION_LOOKBACK` /
-  `COPY_VALIDATION_LOOKAHEAD` (was `heuristics._VALID_LOOKBACK`/`_VALID_LOOKAHEAD`),
-  `UAF_GLOBAL_BACKWALK` (was a literal `16`), and `SYMLINK_DECODE_LOOKBACK` (was
-  `device_name_finder._SYMLINK_LOOKBACK`). Values unchanged; behaviour-preserving.
+- Stale precedent artifacts under `tests/drivers/` superseded by the committed goldens: the
+  2026-06-24 `*-findings.json` and `*-autoanalysis.txt` for beep / WinRing0x64, and the manual
+  IOCTL reference lists (`ALSysIO64_IOCTLs.txt`, `HVED_IOCTLs.txt`) -- the decoded IOCTLs are now
+  embedded in each golden.
 
 ## [2.1.0] - 2026-06-29
 
