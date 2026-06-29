@@ -207,24 +207,16 @@ def search(rep):
 # N4: Symbolic link exposure tracking
 # ---------------------------------------------------------------------------
 
-# How many instructions to walk back from an IoCreateSymbolicLink call looking
-# for the RtlInitUnicodeString string load.  Must be generous: in HEVD the
-# symbolic-link name is initialised ~38 instructions before the call because the
-# whole IoCreateDevice + MajorFunction[] setup sits in between.  Walking back, the
-# nearest backslash-prefixed string is always the symbolic-link name, so a wider
-# window only ever helps.
-_SYMLINK_LOOKBACK = 64
-
-
 def _decode_symlink_arg(call_ea: int) -> Optional[str]:
     """
     Walk backwards from call_ea looking for a data-xref to a UNICODE_STRING or
     a direct string literal.  Returns the decoded path string or None.
+    The look-back depth is config.SYMLINK_DECODE_LOOKBACK.
     """
     seg_start = idc.get_segm_start(call_ea)
     cur = call_ea
     seen_eas = set()
-    for _ in range(_SYMLINK_LOOKBACK):
+    for _ in range(config.SYMLINK_DECODE_LOOKBACK):
         prev = idc.prev_head(cur, seg_start)
         if prev == idc.BADADDR or prev == cur or prev in seen_eas:
             break

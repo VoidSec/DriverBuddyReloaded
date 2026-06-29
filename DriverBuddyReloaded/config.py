@@ -383,6 +383,25 @@ FREE_POOL_FUNCS = {
 # when searching for the 'Tag' immediate operand.
 POOLTAG_LOOKBACK = 10
 
+# Instruction window (instructions before, instructions after) around a copy-sink
+# or pool-allocation call that the heuristic engine scans for a nearby validation
+# call (ProbeFor* / ntintsafe safe-arithmetic).
+COPY_VALIDATION_LOOKBACK = 20
+COPY_VALIDATION_LOOKAHEAD = 6
+
+# How many instructions to walk back from an ExFreePool* call when checking
+# whether its freed-pointer argument was loaded straight from a global (the
+# cross-function use-after-free check, N6b).
+UAF_GLOBAL_BACKWALK = 16
+
+# How many instructions to walk back from an IoCreateSymbolicLink call looking for
+# the RtlInitUnicodeString string load.  Must be generous: HEVD initialises the
+# link name ~38 instructions before the call (the whole IoCreateDevice +
+# MajorFunction[] setup sits in between).  Walking back, the nearest
+# backslash-prefixed string is always the symbolic-link name, so a wider window
+# only ever helps.
+SYMLINK_DECODE_LOOKBACK = 64
+
 
 # --------------------------------------------------------------------------- #
 # Output paths (lazy, against the IDB directory)

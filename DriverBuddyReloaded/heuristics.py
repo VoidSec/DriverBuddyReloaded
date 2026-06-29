@@ -32,10 +32,6 @@ from DriverBuddyReloaded import config, ida_compat
 from DriverBuddyReloaded.callchain import handler_seed_eas, transitive_callees
 from DriverBuddyReloaded.reporting import Finding
 
-# Instruction window for the copy-sink validation search (instructions before/after).
-_VALID_LOOKBACK = 20
-_VALID_LOOKAHEAD = 6
-
 def _is_lib_or_thunk(ea: int) -> bool:
     """True for FLIRT library functions and thunks (memmove, memset, CRT helpers):
     they are not driver logic and only add noise to the handler scan set.
@@ -115,7 +111,8 @@ def check_user_copy_validation(rep: Reporter, handler_eas: Set[int]) -> None:
                 continue
             # Search the surrounding window for any validation call.
             validated = False
-            for win_ea in _instructions_window(head, _VALID_LOOKBACK, _VALID_LOOKAHEAD):
+            for win_ea in _instructions_window(head, config.COPY_VALIDATION_LOOKBACK,
+                                               config.COPY_VALIDATION_LOOKAHEAD):
                 if _callee_name(win_ea) in config.VALIDATION_FUNCS:
                     validated = True
                     break
@@ -129,7 +126,7 @@ def check_user_copy_validation(rep: Reporter, handler_eas: Set[int]) -> None:
                 func=func_name,
                 severity=sev,
                 detail="No validation call found in {}-back/{}-forward window".format(
-                    _VALID_LOOKBACK, _VALID_LOOKAHEAD)))
+                    config.COPY_VALIDATION_LOOKBACK, config.COPY_VALIDATION_LOOKAHEAD)))
 
 
 def check_privilege_gate(rep: Reporter, seed_eas: Set[int]) -> None:
@@ -286,7 +283,8 @@ def check_pool_alloc_trust(rep: Reporter, handler_eas: Set[int]) -> None:
             if callee not in config.POOL_ALLOC_FUNCS:
                 continue
             validated = False
-            for win_ea in _instructions_window(head, _VALID_LOOKBACK, _VALID_LOOKAHEAD):
+            for win_ea in _instructions_window(head, config.COPY_VALIDATION_LOOKBACK,
+                                               config.COPY_VALIDATION_LOOKAHEAD):
                 if _callee_name(win_ea) in config.VALIDATION_FUNCS:
                     validated = True
                     break
@@ -689,7 +687,7 @@ def _backwalk_global_into_reg(call_ea: int, reg: str, func_start: int):
     that global's data EA; otherwise None.  Stops at the first writer of `reg`, so a
     register-only / locally-computed argument is correctly rejected."""
     cur = call_ea
-    for _ in range(16):
+    for _ in range(config.UAF_GLOBAL_BACKWALK):
         prev = idc.prev_head(cur, func_start)
         if prev == idc.BADADDR or prev == cur:
             break
