@@ -54,6 +54,13 @@ class Feature:
 # Depth (in call edges) the name-based call-chain tracer walks out from a handler.
 CALLCHAIN_MAX_DEPTH = 6
 
+# Depth the heuristic engine expands from each dispatcher to reach the per-IOCTL
+# handler bodies it calls (e.g. HEVD's Trigger* functions live one-to-two calls
+# below DispatchDeviceControl).  Without this expansion the deep checks
+# (double-fetch, UAF, pool-trust, privilege-gate, IRQL, MDL, alloca) only ever
+# saw the dispatcher prologue and missed every callee-resident bug.
+HANDLER_SEED_DEPTH = 4
+
 
 # --------------------------------------------------------------------------- #
 # Severity model

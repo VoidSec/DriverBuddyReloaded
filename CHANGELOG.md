@@ -7,8 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `heuristics`: the deep checks (double-fetch, pool-alloc-trust, privilege-gate, IRQL, MDL, alloca)
+  now run on the dispatcher **and the functions it transitively calls**, not just the dispatcher
+  itself. `handler_seed_eas()` only ever returned the dispatch routine, so for drivers that route
+  each IOCTL to its own handler (e.g. HEVD's `Trigger*` / `*IoctlHandler` functions) these checks
+  scanned only the dispatcher prologue and emitted nothing. `heuristics.run()` now expands the seed
+  set via `callchain.transitive_callees(..., config.HANDLER_SEED_DEPTH)` (library/thunk leaves like
+  `memmove`/`memset` excluded). Measured effect: HEVD now reports 11 pool-allocation-without-validation
+  and 6 TOCTOU double-fetch findings (including the genuine `TriggerDoubleFetch`) where it previously
+  reported none; ALSysIO64 and WinRing0x64 now report the ungated `MmMapIoSpace` privileged op.
+- `heuristics`: callee matching is now import-aware. Imported functions disassemble as
+  `call cs:__imp_<Name>`, for which `print_operand` returns "cs:__imp_<Name>" and
+  `CodeRefsFrom`+`get_func_name` return None -- so every name-based check (copy-sink, validation,
+  pool-alloc, privileged-op, IRQL, MDL, alloca, double-fetch probe) silently skipped imported
+  functions. A new `_callee_name()` resolver strips the segment and `__imp_` decoration so e.g.
+  `ExAllocatePoolWithTag`, `ProbeForRead` and `MmMapIoSpace` match regardless of being local or
+  imported. This both enables the pool/privilege checks and makes copy-validation correctly treat a
+  nearby imported `ProbeForRead` as validation (HEVD unvalidated-copy 10 -> 8).
+- `heuristics.check_double_fetch()`: reads through a frame/stack register (rsp/rbp) are excluded
+  (they are locals, never user pointers), removing a class of false positive exposed once callee
+  scanning was enabled.
+
 ### Added
 
+- `config.HANDLER_SEED_DEPTH` (default 4): call-edge depth the heuristic engine expands from each
+  dispatcher to reach per-IOCTL handler bodies.
 - `callchain.transitive_callees(start_eas, max_depth)`: shared bounded-BFS helper returning every
   function reachable from a set of start EAs over call/jump edges (inclusive). Gives heuristics one
   consistent notion of "the code a dispatcher actually reaches".

@@ -262,15 +262,17 @@ def main():
     # CodeRefsFrom(0x30000) -> [0x40000] (KeRaiseIrql callee).
     # CodeRefsFrom(0x30004) -> [0x50000] (ZwOpenProcess callee -- not used by _callees).
     # print_operand(0x30004, 0) -> "ZwOpenProcess" (triggers IRQL mismatch finding).
+    # heuristics._callees() resolves callees by name from each call instruction
+    # (import-aware), so the mock models two call sites: 0x30000 -> KeRaiseIrql
+    # (raises the IRQL context) and 0x30004 -> ZwOpenProcess (the ungated op).
     idautils_stub = sys.modules["idautils"]
     _func_items_map = {0x30000: [0x30000, 0x30004]}
-    _code_refs_map = {0x30000: [0x40000], 0x30004: []}
-    _func_name_map = {0x40000: "KeRaiseIrql"}
-    _print_operand_map = {(0x30004, 0): "ZwOpenProcess"}
+    _print_operand_map = {(0x30000, 0): "KeRaiseIrql", (0x30004, 0): "ZwOpenProcess"}
+    _mnems_t3 = {0x30000: "call", 0x30004: "call"}
 
     idautils_stub.FuncItems = lambda ea: iter(_func_items_map.get(ea, []))
-    idautils_stub.CodeRefsFrom = lambda ea, flow: iter(_code_refs_map.get(ea, []))
-    idafuncs_stub.get_func_name = lambda ea: _func_name_map.get(ea, "")
+    idautils_stub.CodeRefsFrom = lambda ea, flow: iter([])
+    idc_stub.print_insn_mnem = lambda ea: _mnems_t3.get(ea, "nop")
     idc_stub.print_operand = lambda ea, n: _print_operand_map.get((ea, n), "")
 
     from DriverBuddyReloaded.heuristics import check_irql

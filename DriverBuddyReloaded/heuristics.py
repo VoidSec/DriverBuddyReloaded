@@ -32,12 +32,36 @@ _VALID_LOOKBACK = 20
 _VALID_LOOKAHEAD = 6
 
 
+def _callee_name(ea: int) -> str:
+    """Resolved name of the function called/jumped-to at `ea`.
+
+    Imported functions are referenced as `call cs:__imp_<Name>`, for which both
+    `print_operand` (returns "cs:__imp_<Name>") and `CodeRefsFrom`+`get_func_name`
+    (returns None / "__imp_<Name>") fail to yield the clean API name.  Strip the
+    segment prefix and the __imp_ decoration so a single name (e.g.
+    "ExAllocatePoolWithTag", "ProbeForRead", "MmMapIoSpace") is matched against
+    the config sets regardless of whether the callee is local or imported.
+    """
+    op = idc.print_operand(ea, 0) or ""
+    name = op.split(":")[-1].strip()
+    if name.startswith("__imp_"):
+        name = name[len("__imp_"):]
+    if name and not name.startswith(("0x", "[")):
+        return name
+    for ref in idautils.CodeRefsFrom(ea, 0):
+        n = ida_funcs.get_func_name(ref)
+        if n:
+            return n[len("__imp_"):] if n.startswith("__imp_") else n
+    return name
+
+
 def _callees(func_ea: int) -> Set[str]:
-    """Set of callee names reachable in one call step from func_ea."""
+    """Set of callee names reachable in one call/jmp step from func_ea
+    (import-aware; see _callee_name)."""
     names = set()
     for head in idautils.FuncItems(func_ea):
-        for ref in idautils.CodeRefsFrom(head, 0):
-            n = ida_funcs.get_func_name(ref)
+        if idc.print_insn_mnem(head) in ("call", "jmp"):
+            n = _callee_name(head)
             if n:
                 names.add(n)
     return names
@@ -75,13 +99,13 @@ def check_user_copy_validation(rep: Reporter, handler_eas: Set[int]) -> None:
         func_name = ida_funcs.get_func_name(func_ea) or ""
         is_handler = func_ea in handler_eas
         for head in idautils.FuncItems(func_ea):
-            callee = idc.print_operand(head, 0)
+            callee = _callee_name(head)
             if callee not in config.COPY_SINKS:
                 continue
             # Search the surrounding window for any validation call.
             validated = False
             for win_ea in _instructions_window(head, _VALID_LOOKBACK, _VALID_LOOKAHEAD):
-                if idc.print_operand(win_ea, 0) in config.VALIDATION_FUNCS:
+                if _callee_name(win_ea) in config.VALIDATION_FUNCS:
                     validated = True
                     break
             if validated:
@@ -114,7 +138,7 @@ def check_privilege_gate(rep: Reporter, handler_eas: Set[int]) -> None:
         if gated:
             continue
         for head in idautils.FuncItems(func_ea):
-            target = idc.print_operand(head, 0)
+            target = _callee_name(head)
             if target in sensitive:
                 rep.add(Finding(
                     category="heuristic",
@@ -139,7 +163,9 @@ def check_irql(rep: Reporter, handler_eas: Set[int]) -> None:
         if not (callees & config.IRQL_RAISING_FUNCS):
             continue
         for head in idautils.FuncItems(func_ea):
-            target = idc.print_operand(head, 0)
+            if idc.print_insn_mnem(head) not in ("call", "jmp"):
+                continue
+            target = _callee_name(head)
             if target.startswith("Zw") or target.startswith("MmMap"):
                 disasm = ida_compat.disasm_text(head)
                 rep.add(Finding(
@@ -159,7 +185,7 @@ def check_mdl(rep: Reporter, handler_eas: Set[int]) -> None:
     for func_ea in handler_eas:
         func_name = ida_funcs.get_func_name(func_ea) or ""
         for head in idautils.FuncItems(func_ea):
-            target = idc.print_operand(head, 0)
+            target = _callee_name(head)
             if target not in config.MDL_USER_FUNCS:
                 continue
             disasm = ida_compat.disasm_text(head)
@@ -179,7 +205,7 @@ def check_alloca(rep: Reporter, handler_eas: Set[int]) -> None:
     for func_ea in handler_eas:
         func_name = ida_funcs.get_func_name(func_ea) or ""
         for head in idautils.FuncItems(func_ea):
-            target = idc.print_operand(head, 0)
+            target = _callee_name(head)
             if target in config.ALLOCA_FUNCS:
                 rep.add(Finding(
                     category="heuristic",
@@ -199,12 +225,12 @@ def check_pool_alloc_trust(rep: Reporter, handler_eas: Set[int]) -> None:
     for func_ea in handler_eas:
         func_name = ida_funcs.get_func_name(func_ea) or ""
         for head in idautils.FuncItems(func_ea):
-            callee = idc.print_operand(head, 0)
+            callee = _callee_name(head)
             if callee not in config.POOL_ALLOC_FUNCS:
                 continue
             validated = False
             for win_ea in _instructions_window(head, _VALID_LOOKBACK, _VALID_LOOKAHEAD):
-                if idc.print_operand(win_ea, 0) in config.VALIDATION_FUNCS:
+                if _callee_name(win_ea) in config.VALIDATION_FUNCS:
                     validated = True
                     break
             if validated:
@@ -252,6 +278,9 @@ def check_physical_mem_ref(rep: Reporter, handler_eas: Set[int]) -> None:
 
 
 _MEM_LOAD_RE = re.compile(r'\[(\w+)(?:\+(\w+))?\]')
+# Frame/stack registers: a re-read through these is a local variable, never a
+# user-mode pointer, so it cannot be a double-fetch source.
+_STACK_REGS = frozenset({"rsp", "rbp", "esp", "ebp"})
 
 
 def _user_pointer_tainted(rep: "Reporter") -> Set[int]:
@@ -343,6 +372,8 @@ def check_double_fetch(rep: "Reporter", handler_ea: int) -> None:
         if not m:
             continue
         src_reg = m.group(1)
+        if src_reg.lower() in _STACK_REGS:
+            continue
         offset = m.group(2) or "0"
         loads.setdefault((src_reg, offset), []).append(ea)
 
@@ -360,7 +391,7 @@ def check_double_fetch(rep: "Reporter", handler_ea: int) -> None:
             mnem = idc.print_insn_mnem(ea)
             if mnem not in ("call",):
                 continue
-            callee = idc.print_operand(ea, 0)
+            callee = _callee_name(ea)
             if callee in config.PROBE_FUNCS or callee in config.COPY_SINKS:
                 has_probe = True
                 break
@@ -486,11 +517,21 @@ def run(rep: Reporter, ctx: AnalysisContext) -> None:
     :param rep: Reporter instance
     :param ctx: AnalysisContext (provides functions_map for seed discovery)
     """
-    handler_eas = handler_seed_eas(rep, ctx)
-    if not handler_eas:
+    seed_eas = handler_seed_eas(rep, ctx)
+    if not seed_eas:
         rep.info("[!] Heuristics: no handler EAs found; skipping checks")
         return
-    rep.info("[>] Running heuristic checks on {} handler(s)...".format(len(handler_eas)))
+    # Expand from the dispatcher(s) to the functions they transitively call, so the
+    # deep checks see the per-IOCTL handler bodies (HEVD's Trigger*/IoctlHandler
+    # callees), not just the dispatcher prologue.  This is what lets double-fetch,
+    # pool-trust, privilege-gate, IRQL, MDL and alloca fire on the real handler code.
+    _LIBTHUNK = ida_funcs.FUNC_LIB | ida_funcs.FUNC_THUNK
+    handler_eas = {
+        ea for ea in transitive_callees(seed_eas, config.HANDLER_SEED_DEPTH)
+        if not (idc.get_func_flags(ea) & _LIBTHUNK)  # skip memmove/memset/CRT leaves
+    }
+    rep.info("[>] Running heuristic checks on {} handler(s) ({} dispatcher seed(s))...".format(
+        len(handler_eas), len(seed_eas)))
     check_user_copy_validation(rep, handler_eas)
     check_privilege_gate(rep, handler_eas)
     check_irql(rep, handler_eas)
