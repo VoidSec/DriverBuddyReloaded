@@ -232,6 +232,42 @@ def check_alloca(rep: Reporter, handler_eas: Set[int]) -> None:
                     detail="Manual triage: verify size is bounded"))
 
 
+_CR_DR_RE = re.compile(r'\b[cd]r[0-9]+\b')
+
+
+def check_privileged_instructions(rep: Reporter, handler_eas: Set[int]) -> None:
+    """
+    Flag privileged CPU instructions reachable from a dispatch handler: port I/O
+    (in/out/ins/outs), control/debug-register moves, descriptor-table loads, and
+    cache/halt instructions.  These are inline instructions, not function calls,
+    so the sink/callchain layer cannot see them -- yet `out`/`in` to an
+    attacker-controlled port and `mov cr*`/`mov dr*` are the canonical BYOVD
+    hardware-access primitives (WinRing0x64 __outbyte, ALSysIO64 __indword).
+    """
+    for func_ea in handler_eas:
+        func_name = ida_funcs.get_func_name(func_ea) or ""
+        for head in idautils.FuncItems(func_ea):
+            mnem = idc.print_insn_mnem(head).lower()
+            sev = config.PRIV_INSN_SEVERITY.get(mnem)
+            title = None
+            if sev is not None:
+                title = "Privileged instruction: {}".format(mnem)
+            elif mnem == "mov":
+                op0 = idc.print_operand(head, 0).lower()
+                op1 = idc.print_operand(head, 1).lower()
+                if _CR_DR_RE.search(op0) or _CR_DR_RE.search(op1):
+                    sev = config.SEV_HIGH
+                    title = "Control/debug register access"
+            if title is not None:
+                rep.add(Finding(
+                    category="opcode",
+                    title=title,
+                    ea=head,
+                    func=func_name,
+                    severity=sev,
+                    detail=ida_compat.disasm_text(head)))
+
+
 def check_pool_alloc_trust(rep: Reporter, handler_eas: Set[int]) -> None:
     """
     Flag ExAllocatePool* calls in IOCTL handlers that lack nearby safe-arithmetic
@@ -552,6 +588,7 @@ def run(rep: Reporter, ctx: AnalysisContext) -> None:
     check_irql(rep, handler_eas)
     check_mdl(rep, handler_eas)
     check_alloca(rep, handler_eas)
+    check_privileged_instructions(rep, handler_eas)
     check_pool_alloc_trust(rep, handler_eas)
     check_physical_mem_ref(rep, handler_eas)
     if config.Feature.TOCTOU_CHECK:

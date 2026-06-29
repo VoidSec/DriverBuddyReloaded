@@ -40,6 +40,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `heuristics.check_privileged_instructions()`: flags privileged CPU instructions reachable from a
+  dispatch handler -- port I/O (`in`/`out`/`ins`/`outs`), control/debug-register moves
+  (`mov cr*`/`mov dr*`), descriptor-table loads (`lgdt`/`lidt`/`lldt`/`ltr`/`lmsw`) and
+  cache/halt (`invd`/`wbinvd`/`cli`/`sti`/`hlt`). These are inline instructions, not calls, so the
+  sink/callchain layer could never see them, yet `out` to an attacker-controlled port and `mov cr*`
+  are canonical BYOVD hardware-access primitives. Severities in new `config.PRIV_INSN_SEVERITY`
+  (`out` CRITICAL, `in` HIGH, ...). Verified: WinRing0x64 now flags 3 `in` + 3 `out` + `hlt`,
+  ALSysIO64 7 `in` + 1 `out`; HEVD/beep have none.
+- PCI configuration-space access (`HalGetBusDataByOffset` HIGH / `HalSetBusDataByOffset` CRITICAL)
+  added to `config.DANGEROUS_SINKS`, `config.PRIVILEGED_SENSITIVE_OPS` and the winapi flagged list,
+  so the callchain tracer and privilege-gate check now surface arbitrary PCI config read/write.
+  Verified: WinRing0x64 callchain now reports reaching HalSet/HalGetBusDataByOffset; ALSysIO64
+  reports HalGetBusDataByOffset.
 - `config.HANDLER_SEED_DEPTH` (default 4): call-edge depth the heuristic engine expands from each
   dispatcher to reach per-IOCTL handler bodies.
 - `callchain.transitive_callees(start_eas, max_depth)`: shared bounded-BFS helper returning every

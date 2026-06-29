@@ -120,6 +120,9 @@ DANGEROUS_SINKS = {
     # model-specific register access -> CPU control primitives
     "__writemsr": SEV_CRITICAL,
     "__readmsr": SEV_HIGH,
+    # PCI configuration-space access -> arbitrary device config read/write
+    "HalGetBusDataByOffset": SEV_HIGH,
+    "HalSetBusDataByOffset": SEV_CRITICAL,
     # process manipulation
     "ZwTerminateProcess": SEV_HIGH,
     "PsLookupProcessByProcessId": SEV_MEDIUM,
@@ -131,6 +134,19 @@ OPCODE_SEVERITY = {
     "wrmsr": SEV_CRITICAL,
     "rdmsr": SEV_HIGH,
     "rdpmc": SEV_MEDIUM,
+}
+
+# Privileged CPU instructions flagged when reachable from a dispatch handler.
+# Port I/O (in/out) and descriptor-table loads are the inline primitives (not
+# function calls) behind most BYOVD hardware-access drivers; an `out` to an
+# arbitrary port is a direct write primitive, so it is rated highest.
+PRIV_INSN_SEVERITY = {
+    "out": SEV_CRITICAL, "outs": SEV_CRITICAL, "outsb": SEV_CRITICAL,
+    "outsw": SEV_CRITICAL, "outsd": SEV_CRITICAL,
+    "in": SEV_HIGH, "ins": SEV_HIGH, "insb": SEV_HIGH, "insw": SEV_HIGH, "insd": SEV_HIGH,
+    "invd": SEV_HIGH, "wbinvd": SEV_MEDIUM,
+    "lgdt": SEV_HIGH, "lidt": SEV_HIGH, "lldt": SEV_HIGH, "ltr": SEV_HIGH, "lmsw": SEV_HIGH,
+    "cli": SEV_MEDIUM, "sti": SEV_MEDIUM, "hlt": SEV_MEDIUM,
 }
 
 # ---------------------------------------------------------------------------
@@ -233,6 +249,9 @@ PRIVILEGED_SENSITIVE_OPS = {
     "MmMapIoSpace",
     "MmMapIoSpaceEx",
     "MmGetPhysicalAddress",
+    # PCI configuration-space access (BYOVD primitives)
+    "HalGetBusDataByOffset",
+    "HalSetBusDataByOffset",
     # Driver loading / system modification
     "ZwLoadDriver",
     "NtLoadDriver",

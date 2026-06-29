@@ -35,6 +35,8 @@ winapi_functions = [
     "EnterCriticalSection",
     "IofCallDriver",              # calls next driver in IRP stack; misuse leads to UAF/double-complete
     "IoRegisterDeviceInterface",  # registers device interface; improper use exposes attack surface
+    "HalGetBusDataByOffset",      # arbitrary PCI config-space read (BYOVD hardware-access primitive)
+    "HalSetBusDataByOffset",      # arbitrary PCI config-space write (BYOVD hardware-access primitive)
     "PsCreateSystemThread",
     "SeQueryAuthenticationIdToken",
     ######################################################
