@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `DriverBuddyReloaded.py` `make_comment()`: fixed an `AttributeError: module 'idc'
+  has no attribute 'add_extra_cmt'` crash that aborted `plugin_t.run()` whenever
+  auto-analysis tried to write an IOCTL anterior comment. `add_extra_cmt` does not
+  exist in `idc` on any supported build (it lives only in `ida_lines`/`idaapi`,
+  unlike its siblings `get_extra_cmt` / `del_extra_cmt` / `E_PREV`, which `idc` does
+  expose). Anterior-comment handling now routes through two new `ida_compat` helpers,
+  `get_anterior_cmt()` and `add_anterior_cmt()`. The duplicate-guard now scans all
+  anterior lines instead of only the first (`E_PREV + 0`), so a pre-existing
+  IDA-placed anterior line can no longer push DBR's comment past the check and cause
+  it to be re-appended on every re-run.
+
 - `ioctl_decoder.py` `scan_dispatchers()`: replaced `range(block.start_ea, block.end_ea)`
   with a `while instr < block.end_ea: ... instr = idc.next_head(instr, block.end_ea)` loop.
   The old byte-level iteration asked IDA to decode every interior byte of a multi-byte x64
@@ -129,7 +140,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `_last_rep.remove_findings_at()`, and live-refreshes the IOCTL chooser window.
 
 - `DriverBuddyReloaded.py` `make_comment()`: IOCTL decode comments are now also
-  written as anterior comments (`idc.add_extra_cmt(pos, True, string)`), making
+  written as anterior comments (`ida_compat.add_anterior_cmt(pos, string)`), making
   them visible in the HexRays decompiler pseudocode view. Non-repeatable
   disassembly-only comments (`idc.set_cmt`) were silently dropped by HexRays.
   A duplicate-guard prevents re-running decode from appending the same comment twice.

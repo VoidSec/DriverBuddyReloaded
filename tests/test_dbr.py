@@ -116,7 +116,11 @@ def _install_ida_stubs():
         inf_get_min_ea=lambda: 0x1000, inf_get_max_ea=lambda: 0x2000)
     mod("ida_idaapi", BADADDR=_BADADDR)
     mod("ida_kernwin", Choose=_Choose, jumpto=lambda ea: True)
-    mod("ida_lines", generate_disasm_line=lambda ea, f=0: "", tag_remove=lambda s: s or "")
+    mod("ida_lines", generate_disasm_line=lambda ea, f=0: "", tag_remove=lambda s: s or "",
+        E_PREV=1000, E_NEXT=2000,
+        get_extra_cmt=lambda ea, what: None,
+        add_extra_cmt=lambda ea, isprev, line: True,
+        del_extra_cmt=lambda ea, what: True)
     mod("ida_loader", PATH_TYPE_IDB=0, get_path=lambda t: "")
     mod("ida_typeinf", PT_SIL=1, HTI_DCL=1, NTF_TYPE=1, TINFO_DEFINITE=1,
         get_idati=lambda: object())

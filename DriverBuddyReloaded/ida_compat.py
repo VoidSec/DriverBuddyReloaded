@@ -246,3 +246,34 @@ def op_struct_offset(ea, n, tid, delta=0):
         return bool(idc.op_stroff(ea, n, tid, delta))
     except Exception:  # pragma: no cover - defensive
         return False
+
+
+# --------------------------------------------------------------------------- #
+# Anterior (extra) comments
+# --------------------------------------------------------------------------- #
+# idc exposes get_extra_cmt / update_extra_cmt / del_extra_cmt / E_PREV across
+# all supported builds, but NOT add_extra_cmt -- the line-appending call lives
+# only in ida_lines (and idaapi). Centralise anterior-comment handling here so
+# the UI layer never reaches for a non-existent idc attribute.
+def get_anterior_cmt(ea):
+    """Return all anterior (E_PREV) comment lines at `ea` joined by newlines, or ''.
+
+    Anterior lines are stored at consecutive indices E_PREV, E_PREV+1, ...;
+    get_extra_cmt returns None once the index runs past the last line (a blank
+    line is the empty string, not None, so termination keys on `is None`)."""
+    out = []
+    n = 0
+    while True:
+        line = ida_lines.get_extra_cmt(ea, ida_lines.E_PREV + n)
+        if line is None:
+            break
+        out.append(line)
+        n += 1
+    return "\n".join(out)
+
+
+def add_anterior_cmt(ea, line):
+    """Append an anterior comment line at `ea`, shown above the item in the
+    disassembly listing and (unlike a plain set_cmt) in the HexRays pseudocode.
+    Replacement for the non-existent idc.add_extra_cmt."""
+    return bool(ida_lines.add_extra_cmt(ea, True, line))

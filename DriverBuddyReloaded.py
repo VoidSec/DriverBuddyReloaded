@@ -14,6 +14,7 @@ import idc
 from DriverBuddyReloaded import __version__
 from DriverBuddyReloaded import analysis
 from DriverBuddyReloaded import config
+from DriverBuddyReloaded import ida_compat
 from DriverBuddyReloaded import ioctl_decoder
 from DriverBuddyReloaded import reporting
 from DriverBuddyReloaded import scoring
@@ -42,9 +43,9 @@ def make_comment(pos, string):
     elif string not in current_comment:
         idc.set_cmt(pos, current_comment + " " + string, 0)
     # Anterior comment -- visible in the HexRays decompiler pseudocode view.
-    existing_anterior = idc.get_extra_cmt(pos, idc.E_PREV + 0) or ""
-    if string not in existing_anterior:
-        idc.add_extra_cmt(pos, True, string)
+    # idc has no add_extra_cmt; route through ida_compat (ida_lines.add_extra_cmt).
+    if string not in ida_compat.get_anterior_cmt(pos):
+        ida_compat.add_anterior_cmt(pos, string)
 
 
 def get_operand_value(addr):
