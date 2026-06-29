@@ -1,4 +1,4 @@
-# Driver Buddy Reloaded Quickstart
+# Driver Buddy Reloaded
 
 ![Driver Buddy Reloaded](img/logo.png)
 
