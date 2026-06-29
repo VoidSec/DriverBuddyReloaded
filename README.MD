@@ -54,18 +54,10 @@ To decode an IOCTL:
 1. Place the mouse cursor on the line containing a suspected IOCTL code.
 2. Right-click and select `Driver Buddy Reloaded -> Decode IOCTL`; alternatively, press the `CTRL+ALT+D` shortcut.
 
-To decode ALL IOCTLs within a function:
-
-1. Place the mouse cursor on the first instruction of the function you believe to be the IOCTL dispatcher (
-   `DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`)
-2. Right-click and select `Driver Buddy Reloaded -> Decode ALL IOCTLs in Function`; alternatively, press the `CTRL+ALT+F`
-   shortcut.
-3. The decoded IOCTLs are printed to the Output window and listed in the severity-coloured IOCTLs window.
-
 To reopen the IOCTLs window or findings window at any time (without re-running analysis):
 
 - Press `CTRL+ALT+I` to open the IOCTLs window.
-- Press `CTRL+ALT+W` to open the findings window.
+- Press `CTRL+ALT+F` to open the findings window.
 
 ### Advanced Usage
 
@@ -161,12 +153,6 @@ By right-clicking on a potential IOCTL code, a context menu option is presented 
 `Ctrl+Alt+D` shortcut when the cursor is on the line containing a suspected IOCTL code) and can be used to decode the
 value. This will print out a table with all decoded IOCTL codes. By right-clicking on a decoded IOCTL code, in the
 disassembly view, it's possible to mark it as invalid; this will leave any non-IOCTL comment intact.
-
-If you right-click, alternatively using the
-`Ctrl+Alt+F` shortcut, on the first instruction of the function you believe to be the IOCTL dispatcher (
-`DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`) under the Driver Buddy
-Reloaded menu, a "**Decode All**" option appears, this attempt to decode all the IOCTL codes it can find in the
-function. This is a bit hacky but most of the time it can speed things up.
 
 - The decoded IOCTLs are printed to the Output window and listed in the severity-coloured IOCTLs window; after
   auto-analysis they are also recorded in `findings.json` / `report.html`.

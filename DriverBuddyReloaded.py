@@ -18,6 +18,7 @@ from DriverBuddyReloaded import ida_compat
 from DriverBuddyReloaded import ioctl_decoder
 from DriverBuddyReloaded import reporting
 from DriverBuddyReloaded import scoring
+from DriverBuddyReloaded import settings_ui
 
 # Shared state, initialised in DriverBuddyPlugin.init()
 ioctl_tracker = None
@@ -198,42 +199,6 @@ def show_findings():
               "Run auto-analysis first (Ctrl+Alt+A).")
 
 
-def find_all_ioctls():
-    """
-    From the currently selected address, traverse all blocks of the current function to find immediate
-    values used in a comparison/sub/mov, returning a list of (address, value) pairs that look like IOCTLs.
-    """
-
-    ioctls = []
-    addr = idc.get_screen_ea()
-    f = idaapi.get_func(addr)
-    if f is None:
-        return []
-    fc = idaapi.FlowChart(f, flags=idaapi.FC_PREDS)
-    for block in fc:
-        for instr in range(block.start_ea, block.end_ea):
-            if idc.print_insn_mnem(instr) in ['cmp', 'sub', 'mov'] and idc.get_operand_type(instr, 1) == idc.o_imm:
-                value = get_operand_value(instr)
-                if ioctl_decoder._is_valid_ctl_code(value):
-                    ioctls.append((instr, value))
-    return ioctls
-
-
-def track_ioctls(ioctls):
-    """Decode and add IOCTL codes to the global table, generating C-define comments."""
-
-    for addr, ioctl_code in ioctls:
-        ioctl_tracker.add_ioctl(addr, ioctl_code)
-        make_comment(addr, ioctl_decoder.get_define(ioctl_code))
-    ioctl_tracker.print_table(ioctls)
-
-
-def decode_all_ioctls():
-    """Locate all IOCTLs in the current function and decode them."""
-
-    track_ioctls(find_all_ioctls())
-
-
 def decode_ioctl_at_cursor():
     """
     Decode the immediate second operand of the currently selected instruction (if any), add the C-define
@@ -267,12 +232,13 @@ class UiAction(idaapi.action_handler_t):
         action_desc = idaapi.action_desc_t(self.action_id, self.name, self, self.shortcut, self.tooltip, 0)
         if not idaapi.register_action(action_desc):
             return False
-        if not idaapi.attach_action_to_menu(self.menu_path, self.action_id, 0):
-            return False
+        if self.menu_path:
+            idaapi.attach_action_to_menu(self.menu_path, self.action_id, 0)
         return True
 
     def unregister_action(self):
-        idaapi.detach_action_from_menu(self.menu_path, self.action_id)
+        if self.menu_path:
+            idaapi.detach_action_from_menu(self.menu_path, self.action_id)
         idaapi.unregister_action(self.action_id)
 
     def activate(self, ctx):
@@ -293,11 +259,6 @@ class ActionHandler(idaapi.action_handler_t):
 class DecodeHandler(ActionHandler):
     def activate(self, ctx):
         decode_ioctl_at_cursor()
-
-
-class DecodeAllHandler(ActionHandler):
-    def activate(self, ctx):
-        decode_all_ioctls()
 
 
 class ShowAllIOCTLsHandler(ActionHandler):
@@ -348,7 +309,6 @@ class WinDriverHooks(idaapi.UI_Hooks):
         if idaapi.get_widget_type(form) != idaapi.BWN_DISASM:
             return
         pos = idc.get_screen_ea()
-        register_dynamic_action(form, popup, 'Decode All IOCTLs in Function', DecodeAllHandler())
         register_dynamic_action(form, popup, 'Show all IOCTLs', ShowAllIOCTLsHandler())
         register_dynamic_action(form, popup, 'Show Findings', ShowFindingsHandler())
         if idc.get_operand_type(pos, 1) == idc.o_imm:
@@ -390,14 +350,6 @@ class DriverBuddyPlugin(idaapi.plugin_t):
             callback=decode_ioctl_at_cursor,
         ).register_action()
         UiAction(
-            action_id="ioctl:decode_all",
-            name="Decode ALL IOCTLs in a Function",
-            tooltip="Decodes ALL IOCTLs in a Function into their IOCTL details.",
-            menu_path="",
-            shortcut="Ctrl+Alt+F",
-            callback=decode_all_ioctls,
-        ).register_action()
-        UiAction(
             action_id="ioctl:show_all",
             name="Show all IOCTLs",
             tooltip="Open the IOCTLs table window (from last analysis or interactive session).",
@@ -410,7 +362,7 @@ class DriverBuddyPlugin(idaapi.plugin_t):
             name="Show Findings",
             tooltip="Re-open the Driver Buddy Reloaded findings window.",
             menu_path="",
-            shortcut="Ctrl+Alt+W",
+            shortcut="Ctrl+Alt+F",
             callback=show_findings,
         ).register_action()
         print("[Driver Buddy Reloaded] v{} loaded (IDA SDK {}).".format(
@@ -421,6 +373,8 @@ class DriverBuddyPlugin(idaapi.plugin_t):
         """Driver Buddy Reloaded auto-analysis entry point."""
 
         global _last_rep
+        if not settings_ui.show_settings():
+            return
         idc.auto_wait()  # wait for IDA's own analysis to complete
         # Fresh timestamp so all output artefacts for this run share one stamp.
         config._run_stamp = None

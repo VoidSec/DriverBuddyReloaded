@@ -1,6 +1,6 @@
 """
 callchain.py: name-based call-chain tracing from dispatch / IOCTL handlers to
-dangerous sinks (config.DANGEROUS_SINKS).
+dangerous sinks (sig.DANGEROUS_SINKS).
 
 This is a heuristic lead generator built on IDA's cross-reference database, not a
 real dataflow analysis, so findings are starting points rather than ground truth.
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 import ida_funcs
 import idautils
 
-from DriverBuddyReloaded import config
+from DriverBuddyReloaded import config, signatures as sig
 from DriverBuddyReloaded.reporting import Finding
 
 BADADDR = 0xFFFFFFFFFFFFFFFF
@@ -37,13 +37,17 @@ def _out_refs(func_ea):
     return out
 
 
-def transitive_callees(start_eas, max_depth: int = config.CALLCHAIN_MAX_DEPTH) -> Set[int]:
+def transitive_callees(start_eas, max_depth: int = None) -> Set[int]:
     """Function start EAs reachable from *start_eas* over call/jump edges, inclusive.
 
     Bounded BFS over CodeRefsFrom (the same edge set the sink tracer walks).
     Shared by heuristics (handler-seed expansion, user-pointer taint) so the
     notion of "the code a dispatcher actually reaches" is computed one way.
+    max_depth defaults to config.CALLCHAIN_MAX_DEPTH (read at call time so that
+    runtime config changes via the settings UI are respected).
     """
+    if max_depth is None:
+        max_depth = config.CALLCHAIN_MAX_DEPTH
     result = set()
     frontier = [ea for ea in start_eas]
     depth = 0
@@ -100,7 +104,7 @@ def trace(rep: Reporter, ctx: AnalysisContext) -> None:
     """
 
     sinks_by_ea = {}
-    for name, sev in config.DANGEROUS_SINKS.items():
+    for name, sev in sig.DANGEROUS_SINKS.items():
         ea = ctx.functions_map.get(name)
         if ea is not None:
             sinks_by_ea[ea] = (name, sev)

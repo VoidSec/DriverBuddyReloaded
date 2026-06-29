@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `DriverBuddyReloaded/signatures.py`: single source of truth for all function-name sets,
+  opcode lists, and severity maps previously scattered between `config.py` and
+  `vulnerable_functions_lists/`. Every heuristic, callchain, scoring, and utility module
+  now imports from `signatures` by name; `config.py` holds only genuine configuration
+  concerns (feature flags, tuning constants, severity model, IOCTL risk weights, output
+  paths).
+- `DriverBuddyReloaded/settings_ui.py`: PyQt5 scan-settings dialog (uses the Qt bundled
+  with IDA 7.6+, no extra dependency). Opens automatically before every auto-analysis run
+  (`Ctrl+Alt+A`) so per-run flags and tuning constants can be reviewed and adjusted without
+  editing `config.py`. Shows all `config.Feature` flags as checkboxes (two-column grid) and
+  all tuning constants as spinboxes. Incoherent combinations (e.g. `CALLCHAIN` without
+  `IOCTL_SCAN`) are rejected with an inline warning that keeps the dialog open. A "Reset to
+  Defaults" button restores the values shipped in `config.py` (captured at import time,
+  before any runtime mutations). Changes are session-scoped -- `config.py` on disk is never
+  touched.
+- `DriverBuddyReloaded/custom.py` promoted to package root (was
+  `vulnerable_functions_lists/custom.py`); the now-empty directory is deleted.
+
+### Changed
+
+- `callchain.transitive_callees()`: `max_depth` parameter now defaults to `None` and the
+  real default (`config.CALLCHAIN_MAX_DEPTH`) is read at call time. The previous
+  `max_depth=config.CALLCHAIN_MAX_DEPTH` was evaluated at import time, so runtime changes
+  from the settings UI were silently ignored by all callers that omitted the argument
+  (`scoring.py`, the TOCTOU taint pass).
+- `config.py` section order rationalised: feature flags -- analysis tuning constants --
+  severity model -- IOCTL risk weights -- output paths. All function-name sets removed (now
+  in `signatures.py`).
+- `Ctrl+Alt+F` reassigned from the removed "Decode ALL IOCTLs in Function" to "Show
+  Findings" (previously `Ctrl+Alt+W`).
+- `UiAction.register_action()` / `unregister_action()`: menu-path calls are now skipped
+  when `menu_path` is empty, fixing a silent `False` return that affected all hotkey-only
+  actions.
+
+### Removed
+
+- `vulnerable_functions_lists/` directory (`c.py`, `winapi.py`, `opcode.py`, `__init__.py`):
+  content consolidated into `signatures.py`; `custom.py` promoted to package root.
+- "Decode ALL IOCTLs in Function": `find_all_ioctls()`, `track_ioctls()`,
+  `decode_all_ioctls()`, `DecodeAllHandler`, the `Ctrl+Alt+F` UiAction, and the right-click
+  popup entry. Auto-analysis covers the same ground with higher precision (decompiler ctree
+  + switch-table recovery + NTSTATUS/sentinel filtering) and without the false-positive noise
+  of a raw immediate scan.
+
 ## [2.2.0] - 2026-06-29
 
 ### Added

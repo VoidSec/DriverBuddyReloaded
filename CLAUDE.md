@@ -67,8 +67,8 @@ Every module emits `Finding` objects (defined in `reporting.py`) via `rep.add_fi
 ### Plugin UI layer (DriverBuddyReloaded.py)
 `DriverBuddyReloaded.py` owns all IDA UI concerns and delegates analysis to `analysis.run_analysis()`.
 
-- **Hotkeys**: `Ctrl+Alt+A` auto-analysis, `Ctrl+Alt+D` decode IOCTL at cursor, `Ctrl+Alt+F` decode all in function, `Ctrl+Alt+I` open IOCTLs window, `Ctrl+Alt+W` open findings window.
-- **Right-click menu** (disassembly view): Decode All IOCTLs in Function, Show all IOCTLs, Show Findings, Decode IOCTL (when cursor is on an immediate), Invalid IOCTL (when already decoded).
+- **Hotkeys**: `Ctrl+Alt+A` auto-analysis (shows settings dialog first), `Ctrl+Alt+D` decode IOCTL at cursor, `Ctrl+Alt+I` open IOCTLs window, `Ctrl+Alt+F` open findings window.
+- **Right-click menu** (disassembly view): Show all IOCTLs, Show Findings, Decode IOCTL (when cursor is on an immediate), Invalid IOCTL (when already decoded).
 - **`IOCTLChooser`**: severity-colored chooser showing Severity / Address / Code / Device / Method / Access / Fn# columns. Populated from `rep.by_category("ioctl")` after auto-analysis, or from `IOCTLChooser.from_pairs(ioctl_tracker.ioctls)` for the interactive decode session.
 - **`_last_rep`**: module-level variable storing the Reporter from the most recent auto-analysis run. `show_all_ioctls()` and `show_findings()` use it so both windows can be reopened at any time without re-running analysis.
 - **`IOCTLTracker`**: tracks interactively-decoded IOCTL codes (address, value) across the session; separate from the Reporter findings.

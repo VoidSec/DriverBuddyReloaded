@@ -23,15 +23,8 @@ import ida_strlist
 import idautils
 import idc
 
-from DriverBuddyReloaded import config
+from DriverBuddyReloaded import config, signatures as sig
 from DriverBuddyReloaded.reporting import Finding
-from DriverBuddyReloaded.vulnerable_functions_lists.c import c_functions
-from DriverBuddyReloaded.vulnerable_functions_lists.custom import driver_functions
-from DriverBuddyReloaded.vulnerable_functions_lists.opcode import opcodes
-from DriverBuddyReloaded.vulnerable_functions_lists.winapi import (
-    winapi_function_prefixes,
-    winapi_functions,
-)
 from .find_opcodes import find
 from .wdf import populate_wdf
 from .wdm import check_for_fake_driver_entry, define_ddc, find_dispatch_function, locate_ddc
@@ -105,7 +98,7 @@ def populate_c_map(ctx: AnalysisContext) -> bool:
     """
     result = False
     for name, address in ctx.functions_map.items():
-        if name in c_functions:
+        if name in sig.C_FUNCTIONS:
             ctx.c_map[name] = address
             result = True
     return result
@@ -119,11 +112,11 @@ def populate_winapi_map(ctx: AnalysisContext) -> bool:
     """
     result = False
     for name, address in ctx.functions_map.items():
-        if name in winapi_functions:
+        if name in sig.WINAPI_FUNCTIONS:
             ctx.winapi_map[name] = address
             result = True
         else:
-            for prefix in winapi_function_prefixes:
+            for prefix in sig.WINAPI_FUNCTION_PREFIXES:
                 if name.lower().startswith(prefix.lower()):
                     ctx.winapi_map[name] = address
                     result = True
@@ -138,7 +131,7 @@ def populate_driver_map(ctx: AnalysisContext) -> bool:
     """
     result = False
     for name, address in ctx.functions_map.items():
-        if name in driver_functions:
+        if name in sig.DRIVER_FUNCTIONS:
             ctx.driver_map[name] = address
             result = True
     return result
@@ -155,7 +148,7 @@ def populate_data_structures(rep: Reporter, ctx: AnalysisContext) -> bool:
         return False
 
     rep.info("[>] Searching for interesting opcodes...")
-    for opcode in opcodes:
+    for opcode in sig.OPCODES:
         find(rep, opcode, exec_only=True)
 
     rep.info("[>] Searching for interesting C/C++ functions...")
@@ -166,7 +159,7 @@ def populate_data_structures(rep: Reporter, ctx: AnalysisContext) -> bool:
     if populate_winapi_map(ctx):
         get_xrefs(ctx.winapi_map, rep, "WinAPI")
 
-    if driver_functions:
+    if sig.DRIVER_FUNCTIONS:
         rep.info("[>] Searching for interesting driver functions...")
         if populate_driver_map(ctx):
             get_xrefs(ctx.driver_map, rep, "driver")
@@ -177,11 +170,11 @@ def populate_data_structures(rep: Reporter, ctx: AnalysisContext) -> bool:
 def get_xrefs(func_map: Dict[str, int], rep: Reporter, kind: str = "function") -> None:
     """
     Emit a Finding(category='flagged_function') for every cross-reference to
-    a function in *func_map*.  Severity is taken from config.DANGEROUS_SINKS
+    a function in *func_map*.  Severity is taken from sig.DANGEROUS_SINKS
     when the function is a known high-signal sink, else SEV_LOW.
     """
     for name, address in func_map.items():
-        severity = config.DANGEROUS_SINKS.get(name, config.SEV_LOW)
+        severity = sig.DANGEROUS_SINKS.get(name, config.SEV_LOW)
         for ref in idautils.CodeRefsTo(int(address), 0):
             func_name = (ida_funcs.get_func_name(ref)
                          or ida_segment.get_segm_name(ida_segment.getseg(ref)))

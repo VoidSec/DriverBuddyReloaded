@@ -28,7 +28,7 @@ try:
 except ImportError:  # pragma: no cover
     ida_xref = None
 
-from DriverBuddyReloaded import config, ida_compat
+from DriverBuddyReloaded import config, ida_compat, signatures as sig
 from DriverBuddyReloaded.callchain import handler_seed_eas, transitive_callees
 from DriverBuddyReloaded.reporting import Finding
 
@@ -107,13 +107,13 @@ def check_user_copy_validation(rep: Reporter, handler_eas: Set[int]) -> None:
         is_handler = func_ea in handler_eas
         for head in idautils.FuncItems(func_ea):
             callee = _callee_name(head)
-            if callee not in config.COPY_SINKS:
+            if callee not in sig.COPY_SINKS:
                 continue
             # Search the surrounding window for any validation call.
             validated = False
             for win_ea in _instructions_window(head, config.COPY_VALIDATION_LOOKBACK,
                                                config.COPY_VALIDATION_LOOKAHEAD):
-                if _callee_name(win_ea) in config.VALIDATION_FUNCS:
+                if _callee_name(win_ea) in sig.VALIDATION_FUNCS:
                     validated = True
                     break
             if validated:
@@ -149,14 +149,14 @@ def check_privilege_gate(rep: Reporter, seed_eas: Set[int]) -> None:
         reachable = [ea for ea in transitive_callees({seed}, config.HANDLER_SEED_DEPTH)
                      if not _is_lib_or_thunk(ea)]
         # A gate anywhere on the dispatcher's call tree protects everything below it.
-        if any(_callees(f) & config.PRIVILEGE_GATE_FUNCS for f in reachable):
+        if any(_callees(f) & sig.PRIVILEGE_GATE_FUNCS for f in reachable):
             continue
         seed_name = ida_funcs.get_func_name(seed) or "0x{:x}".format(seed)
         for func_ea in reachable:
             func_name = ida_funcs.get_func_name(func_ea) or ""
             for head in idautils.FuncItems(func_ea):
                 target = _callee_name(head)
-                if target in config.PRIVILEGED_SENSITIVE_OPS and head not in reported:
+                if target in sig.PRIVILEGED_SENSITIVE_OPS and head not in reported:
                     reported.add(head)
                     rep.add(Finding(
                         category="heuristic",
@@ -178,7 +178,7 @@ def check_irql(rep: Reporter, handler_eas: Set[int]) -> None:
     for func_ea in handler_eas:
         func_name = ida_funcs.get_func_name(func_ea) or ""
         callees = _callees(func_ea)
-        if not (callees & config.IRQL_RAISING_FUNCS):
+        if not (callees & sig.IRQL_RAISING_FUNCS):
             continue
         for head in idautils.FuncItems(func_ea):
             if idc.print_insn_mnem(head) not in ("call", "jmp"):
@@ -204,7 +204,7 @@ def check_mdl(rep: Reporter, handler_eas: Set[int]) -> None:
         func_name = ida_funcs.get_func_name(func_ea) or ""
         for head in idautils.FuncItems(func_ea):
             target = _callee_name(head)
-            if target not in config.MDL_USER_FUNCS:
+            if target not in sig.MDL_USER_FUNCS:
                 continue
             disasm = ida_compat.disasm_text(head)
             usermode = "UserMode" in disasm
@@ -224,7 +224,7 @@ def check_alloca(rep: Reporter, handler_eas: Set[int]) -> None:
         func_name = ida_funcs.get_func_name(func_ea) or ""
         for head in idautils.FuncItems(func_ea):
             target = _callee_name(head)
-            if target in config.ALLOCA_FUNCS:
+            if target in sig.ALLOCA_FUNCS:
                 rep.add(Finding(
                     category="heuristic",
                     title="Stack alloc in handler: {}".format(target),
@@ -250,7 +250,7 @@ def check_privileged_instructions(rep: Reporter, handler_eas: Set[int]) -> None:
         func_name = ida_funcs.get_func_name(func_ea) or ""
         for head in idautils.FuncItems(func_ea):
             mnem = idc.print_insn_mnem(head).lower()
-            sev = config.PRIV_INSN_SEVERITY.get(mnem)
+            sev = sig.PRIV_INSN_SEVERITY.get(mnem)
             title = None
             if sev is not None:
                 title = "Privileged instruction: {}".format(mnem)
@@ -280,12 +280,12 @@ def check_pool_alloc_trust(rep: Reporter, handler_eas: Set[int]) -> None:
         func_name = ida_funcs.get_func_name(func_ea) or ""
         for head in idautils.FuncItems(func_ea):
             callee = _callee_name(head)
-            if callee not in config.POOL_ALLOC_FUNCS:
+            if callee not in sig.POOL_ALLOC_FUNCS:
                 continue
             validated = False
             for win_ea in _instructions_window(head, config.COPY_VALIDATION_LOOKBACK,
                                                config.COPY_VALIDATION_LOOKAHEAD):
-                if _callee_name(win_ea) in config.VALIDATION_FUNCS:
+                if _callee_name(win_ea) in sig.VALIDATION_FUNCS:
                     validated = True
                     break
             if validated:
@@ -447,7 +447,7 @@ def check_double_fetch(rep: "Reporter", handler_ea: int) -> None:
             if mnem not in ("call",):
                 continue
             callee = _callee_name(ea)
-            if callee in config.PROBE_FUNCS or callee in config.COPY_SINKS:
+            if callee in sig.PROBE_FUNCS or callee in sig.COPY_SINKS:
                 has_probe = True
                 break
         if not has_probe:
@@ -527,7 +527,7 @@ def check_use_after_free(rep: "Reporter", ctx: "AnalysisContext", handler_ea: in
 
             if mnem == "call":
                 callee = idc.print_operand(ea, 0)
-                if callee in config.FREE_POOL_FUNCS:
+                if callee in sig.FREE_POOL_FUNCS:
                     # The first argument register is now freed.
                     current_freed.update(free_regs)
             elif current_freed:
@@ -634,7 +634,7 @@ def check_write_primitives(rep: "Reporter", handler_eas: Set[int]) -> None:
         fname = ida_funcs.get_func_name(func_ea) or ""
         # A bare element copy (`*p = *q`) is the body of every memcpy/memmove-style
         # routine; skip those so the check does not flag the copy primitive itself.
-        if fname in config.COPY_SINKS or fname.lower() in _COPY_FUNC_NAMES:
+        if fname in sig.COPY_SINKS or fname.lower() in _COPY_FUNC_NAMES:
             continue
         hits = {}
 
@@ -755,7 +755,7 @@ def check_use_after_free_global(rep: "Reporter", handler_eas: Set[int]) -> None:
         for head in idautils.FuncItems(func_ea):
             if idc.print_insn_mnem(head) != "call":
                 continue
-            if _callee_name(head) not in config.FREE_POOL_FUNCS:
+            if _callee_name(head) not in sig.FREE_POOL_FUNCS:
                 continue
             g_ea = _backwalk_global_into_reg(head, reg, start)
             if g_ea is not None:

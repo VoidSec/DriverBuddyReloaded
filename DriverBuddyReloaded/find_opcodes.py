@@ -26,9 +26,8 @@ import ida_segment
 import idautils
 import idc
 
-from DriverBuddyReloaded import config, ida_compat
+from DriverBuddyReloaded import config, ida_compat, signatures as sig
 from DriverBuddyReloaded.reporting import Finding
-from DriverBuddyReloaded.vulnerable_functions_lists.opcode import opcodes
 
 # Prevent Driver Buddy Reloaded from reporting opcode matches in data sections
 # (https://github.com/VoidSec/DriverBuddyReloaded/issues/11). Switch to True to
@@ -100,7 +99,7 @@ def linear_scan(rep: "Reporter") -> None:
         ea = seg.start_ea
         while ea < seg.end_ea:
             disasm = ida_compat.disasm_text(ea)
-            for opcode in config.OPCODE_SEVERITY:
+            for opcode in sig.OPCODE_SEVERITY:
                 if opcode in disasm:
                     func_or_seg = ida_funcs.get_func_name(ea) \
                         or (ida_segment.get_segm_name(seg) if seg else "")
@@ -109,7 +108,7 @@ def linear_scan(rep: "Reporter") -> None:
                         title=opcode,
                         ea=ea,
                         func=func_or_seg,
-                        severity=config.OPCODE_SEVERITY[opcode],
+                        severity=sig.OPCODE_SEVERITY[opcode],
                         detail=disasm))
                     break
             nxt = idc.next_head(ea, seg.end_ea)
@@ -137,7 +136,7 @@ def find(rep: "Reporter", instruction: str | None = None, exec_only: bool = Fals
         text = ida_compat.disasm_text(ea)
         # Filter false positives: require the disassembly to contain a known opcode,
         # unless data-section matching has been explicitly enabled.
-        if not find_opcode_data and not any(op in text for op in opcodes):
+        if not find_opcode_data and not any(op in text for op in sig.OPCODES):
             continue
         func_or_seg = ida_funcs.get_func_name(ea) \
             or (ida_segment.get_segm_name(seg) if seg else "")
@@ -146,5 +145,5 @@ def find(rep: "Reporter", instruction: str | None = None, exec_only: bool = Fals
             title=instruction,
             ea=ea,
             func=func_or_seg,
-            severity=config.OPCODE_SEVERITY.get(instruction, config.SEV_MEDIUM),
+            severity=sig.OPCODE_SEVERITY.get(instruction, config.SEV_MEDIUM),
             detail=text))
