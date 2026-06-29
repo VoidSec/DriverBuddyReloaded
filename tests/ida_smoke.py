@@ -27,10 +27,15 @@ import time
 import traceback
 
 # Add the repo root to sys.path so the package is importable regardless of
-# IDA's working directory.
+# IDA's working directory.  IDA auto-loads any *installed* DriverBuddyReloaded
+# plugin at startup, caching its modules in sys.modules; drop those and put the
+# repo first so the smoke test exercises this working tree, not a stale install.
 _TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 _REPO_ROOT = os.path.dirname(_TESTS_DIR)
-if _REPO_ROOT not in sys.path:
+for _m in [m for m in list(sys.modules)
+           if m == "DriverBuddyReloaded" or m.startswith("DriverBuddyReloaded.")]:
+    del sys.modules[_m]
+if sys.path[:1] != [_REPO_ROOT]:
     sys.path.insert(0, _REPO_ROOT)
 
 import idc          # noqa: E402 (must follow sys.path setup)

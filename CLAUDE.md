@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 python tests/test_dbr.py
 DBR_SDK=900 python tests/test_dbr.py    # simulate IDA 9.0 import paths
 ```
-27 checks, all logic that does not touch the live IDA database. Run both variants on every change.
+31 checks, all logic that does not touch the live IDA database. Run both variants on every change.
 
 ### Run cross-version smoke tests (requires all three IDA installs)
 ```
@@ -42,10 +42,11 @@ DriverBuddyReloaded.py          <- IDA plugin_t (init / run / term / UI hooks)
         +-- dump_pool_tags.py     pool tag extraction
         +-- irp_mj.py             IRP_MJ_FUNCTION IDA enum (WDM only)
         +-- ioctl_decoder.py      find_ioctls + scan_dispatchers (auto flow-chart scan)
-        +-- callchain.py          BFS handler -> dangerous sink tracing
-        +-- heuristics.py         nine checks: copy-validation, priv-gate, IRQL, MDL,
+        +-- callchain.py          BFS handler -> dangerous sink tracing; transitive_callees() helper
+        +-- heuristics.py         checks: copy-validation, priv-gate (path-level), IRQL, MDL,
         |                         alloca, pool-alloc-trust, physical-mem-ref, double-fetch (TOCTOU),
-        |                         use-after-free (UAF CFG walk)
+        |                         privileged-instructions (port-IO / mov cr*), write-primitives
+        |                         (write-what-where), use-after-free (register CFG walk + global)
         +-- exports_audit.py      zero-xref export detection
         +-- find_opcodes.py       opcode scan (off by default: Feature.SEGMENT_OPCODE_SCAN)
         +-- scoring.py            IOCTL risk scoring + severity bump
@@ -131,7 +132,14 @@ NTSTATUS filter queries the IDA type DB first (`NTSTATUS` / `_NTSTATUS` enum), f
 Each check result lands in the output JSON under `checks`; exit code is non-zero on any failure.
 
 ### Function-name sets
-All heuristic, callchain, and scoring function-name lists live in `config.py` (not scattered across modules): `DANGEROUS_SINKS`, `VALIDATION_FUNCS`, `PRIVILEGE_GATE_FUNCS`, `PRIVILEGED_SENSITIVE_OPS`, `IRQL_RAISING_FUNCS`, `MDL_USER_FUNCS`, `COPY_SINKS`, `ALLOCA_FUNCS`, `POOL_ALLOC_FUNCS`. Add to the relevant set in `config.py` when expanding coverage; modules import the set by name.
+All heuristic, callchain, and scoring function-name lists live in `config.py` (not scattered across modules): `DANGEROUS_SINKS`, `VALIDATION_FUNCS`, `PRIVILEGE_GATE_FUNCS`, `PRIVILEGED_SENSITIVE_OPS`, `IRQL_RAISING_FUNCS`, `MDL_USER_FUNCS`, `COPY_SINKS`, `ALLOCA_FUNCS`, `POOL_ALLOC_FUNCS`, `FREE_POOL_FUNCS`. Opcode/instruction severities live in `OPCODE_SEVERITY` (named-opcode scan) and `PRIV_INSN_SEVERITY` (in/out/`mov cr*`/etc. flagged by `heuristics.check_privileged_instructions`). Add to the relevant set in `config.py` when expanding coverage; modules import the set by name.
+
+Heuristic callee matching is import-aware: `heuristics._callee_name()` strips the `cs:__imp_` decoration so a config-set name matches whether the callee is a local function or an import (imports otherwise disassemble as `call cs:__imp_<Name>` and silently fail a `print_operand`/`get_func_name` comparison).
+
+### Handler scope and per-IOCTL attribution
+The deep heuristics (double-fetch, UAF, pool-alloc-trust, privilege-gate, IRQL, MDL, alloca, privileged-instructions, write-primitives) scan the dispatcher **and its transitive callees**: `heuristics.run()` expands `callchain.handler_seed_eas()` via `callchain.transitive_callees(..., config.HANDLER_SEED_DEPTH)` (library/thunk leaves excluded). Double-fetch is additionally gated on `_user_pointer_tainted()` (only handlers reachable from a METHOD_NEITHER IOCTL) and a single-path CFG check, so METHOD_BUFFERED kernel-buffer re-reads are not flagged. `check_privilege_gate` is path-level: a privilege gate anywhere on a dispatcher subtree suppresses the whole subtree.
+
+`ioctl_decoder` resolves each switch case's handler function (first in-binary call in the case body) into `finding.data['handler_ea']` / `handler_name`. `callchain.trace` seeds from those handlers, and `scoring.score` attributes sinks to the IOCTL's own handler (falling back to the dispatcher tagged `data['sink_attribution'] = "dispatcher-wide"`), additionally bumping an IOCTL whose handler reaches a privileged inline opcode (wrmsr/port-IO/`mov cr*`). This replaced the old behaviour where every IOCTL in a monolithic dispatcher inherited the union of all sinks reachable from the dispatcher.
 
 ### Vulnerable function lists
 `DriverBuddyReloaded/vulnerable_functions_lists/` contains four lists (`c.py`, `winapi.py`, `opcode.py`, `custom.py`) consumed by `utils.get_xrefs()` for the "flagged functions" findings. `custom.py` is the user-editable list. `winapi_function_prefixes` entries do prefix matching; `winapi_functions` entries do exact matching.

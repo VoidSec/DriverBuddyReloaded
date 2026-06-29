@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-06-29
+
 ### Changed
 
 - Per-IOCTL sink attribution (`ioctl_decoder` + `callchain` + `scoring`). Previously every IOCTL in
@@ -532,7 +534,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[Unreleased]: https://github.com/VoidSec/DriverBuddyReloaded/compare/2.0...HEAD
+[Unreleased]: https://github.com/VoidSec/DriverBuddyReloaded/compare/2.1.0...HEAD
+[2.1.0]: https://github.com/VoidSec/DriverBuddyReloaded/compare/2.0...2.1.0
 [2.0]: https://github.com/VoidSec/DriverBuddyReloaded/compare/1.6...2.0
 [1.6]: https://github.com/VoidSec/DriverBuddyReloaded/compare/1.5...1.6
 [1.5]: https://github.com/VoidSec/DriverBuddyReloaded/compare/1.4...1.5
