@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-06-29
+
+### Removed
+
+- The `DeviceIoControl` PoC harness generator (`poc.py`, `ioctl_pocs.c`, `Feature.POC_HARNESS`).
+  All IOCTL data is already in `findings.json` / `report.html` and the IOCTL window; the C skeleton
+  added little value.
+- The per-decode `IOCTLs.txt` file written by the interactive "Decode IOCTL(s)" actions. The same
+  rows are printed to the Output window, shown in the severity-coloured IOCTL window, and recorded in
+  `findings.json` / `report.html`. (`pooltags.txt` -- the WinDbg-format pool-tag dump -- and
+  `autoanalysis.txt` -- the run diagnostic log -- are retained.)
+
+### Changed
+
+- Heuristic tuning constants consolidated into `config.py`: `COPY_VALIDATION_LOOKBACK` /
+  `COPY_VALIDATION_LOOKAHEAD` (was `heuristics._VALID_LOOKBACK`/`_VALID_LOOKAHEAD`),
+  `UAF_GLOBAL_BACKWALK` (was a literal `16`), and `SYMLINK_DECODE_LOOKBACK` (was
+  `device_name_finder._SYMLINK_LOOKBACK`). Values unchanged; behaviour-preserving.
+
 ## [2.1.0] - 2026-06-29
 
 ### Changed
@@ -534,7 +553,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[Unreleased]: https://github.com/VoidSec/DriverBuddyReloaded/compare/2.1.0...HEAD
+[Unreleased]: https://github.com/VoidSec/DriverBuddyReloaded/compare/2.2.0...HEAD
+[2.2.0]: https://github.com/VoidSec/DriverBuddyReloaded/compare/2.1.0...2.2.0
 [2.1.0]: https://github.com/VoidSec/DriverBuddyReloaded/compare/2.0...2.1.0
 [2.0]: https://github.com/VoidSec/DriverBuddyReloaded/compare/1.6...2.0
 [1.6]: https://github.com/VoidSec/DriverBuddyReloaded/compare/1.5...1.6
