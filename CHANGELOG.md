@@ -18,12 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DriverBuddyReloaded/settings_ui.py`: PyQt5 scan-settings dialog (uses the Qt bundled
   with IDA 7.6+, no extra dependency). Opens automatically before every auto-analysis run
   (`Ctrl+Alt+A`) so per-run flags and tuning constants can be reviewed and adjusted without
-  editing `config.py`. Shows all `config.Feature` flags as checkboxes (two-column grid) and
-  all tuning constants as spinboxes. Incoherent combinations (e.g. `CALLCHAIN` without
-  `IOCTL_SCAN`) are rejected with an inline warning that keeps the dialog open. A "Reset to
-  Defaults" button restores the values shipped in `config.py` (captured at import time,
-  before any runtime mutations). Changes are session-scoped -- `config.py` on disk is never
-  touched.
+  editing `config.py`. Feature flags are presented as checkboxes grouped by function (IOCTL,
+  Deep Analysis, Audit & Discovery, Annotation, Output) rather than a flat two-column grid;
+  each checkbox and tuning spinbox shows a tooltip on hover explaining what the option does.
+  Incoherent combinations (e.g. `CALLCHAIN` without `IOCTL_SCAN`) are rejected with an inline
+  warning that keeps the dialog open. A "Reset to Defaults" button restores the values shipped
+  in `config.py` (captured at import time, before any runtime mutations). Changes are
+  session-scoped -- `config.py` on disk is never touched.
 - `DriverBuddyReloaded/custom.py` promoted to package root (was
   `vulnerable_functions_lists/custom.py`); the now-empty directory is deleted.
 

@@ -17,41 +17,111 @@ from DriverBuddyReloaded import config
 # Metadata tables -- keep in sync with config.py
 # ---------------------------------------------------------------------------
 
-# (Feature class attribute, display label)
-_FEATURES = [
-    ("IOCTL_SCAN",          "IOCTL scan"),
-    ("IOCTL_DECOMPILER",    "IOCTL decompiler (HexRays ctree)"),
-    ("CALLCHAIN",           "Callchain tracing"),
-    ("HEURISTICS",          "Heuristics"),
-    ("TOCTOU_CHECK",        "TOCTOU / double-fetch"),
-    ("UAF_DETECT",          "Use-after-free"),
-    ("RISK_SCORING",        "Risk scoring"),
-    ("EXPORTS_AUDIT",       "Exports audit"),
-    ("ACL_AUDIT",           "ACL audit"),
-    ("SYMLINK_TRACK",       "Symbolic link tracking"),
-    ("IRP_MJ_ENUM",         "IRP_MJ enum annotation"),
-    ("SEGMENT_OPCODE_SCAN", "Segment opcode scan (slow)"),
-    ("JSON_EXPORT",         "JSON export"),
-    ("HTML_REPORT",         "HTML report"),
-    ("RESULTS_WINDOW",      "Results window"),
-    ("POOLTAG_FALLBACK",    "Pool-tag fallback"),
+# Groups of (Feature class attribute, display label, tooltip).
+# Tooltip is shown on hover; use "" to suppress it for self-explanatory items.
+_FEATURE_GROUPS = [
+    ("IOCTL", [
+        ("IOCTL_SCAN",
+         "IOCTL scan",
+         "Primary IOCTL discovery: dispatcher scan plus immediate-operand search"),
+        ("IOCTL_DECOMPILER",
+         "IOCTL decompiler (HexRays)",
+         "Use HexRays ctree to recover codes from switch-case labels and comparison "
+         "constants; required to handle jump-table and binary-search dispatch patterns"),
+    ]),
+    ("Deep Analysis", [
+        ("CALLCHAIN",
+         "Callchain tracing",
+         "Trace call paths from each IOCTL handler to dangerous sinks; requires IOCTL scan"),
+        ("HEURISTICS",
+         "Heuristics",
+         "Structural checks: copy-validation, IRQL, MDL, alloca, pool-alloc-trust, "
+         "write-primitives, and privileged instructions"),
+        ("TOCTOU_CHECK",
+         "TOCTOU / double-fetch",
+         "Flag double-fetch of a user-mode pointer within a single dispatch path "
+         "(time-of-check / time-of-use race condition); gated on METHOD_NEITHER IOCTLs"),
+        ("UAF_DETECT",
+         "Use-after-free",
+         "Detect use-after-free patterns via per-register CFG walk and a backward "
+         "global instruction scan"),
+        ("RISK_SCORING",
+         "Risk scoring",
+         "Assign a severity level to each IOCTL based on reachable dangerous sinks "
+         "and heuristic hits"),
+    ]),
+    ("Audit & Discovery", [
+        ("EXPORTS_AUDIT",
+         "Exports audit",
+         "Report exported functions with zero cross-references "
+         "(dead or unexplained entry points)"),
+        ("ACL_AUDIT",
+         "ACL audit",
+         "Flag DeviceCreate calls that pass an open (world-accessible) security descriptor"),
+        ("SYMLINK_TRACK",
+         "Symbolic link tracking",
+         "Trace symbolic link registrations to map device aliases reachable from user mode"),
+        ("SEGMENT_OPCODE_SCAN",
+         "Segment opcode scan (slow)",
+         "Scan every code segment for opcode patterns of interest; "
+         "can be slow on large binaries -- disabled by default"),
+    ]),
+    ("Annotation", [
+        ("IRP_MJ_ENUM",
+         "IRP_MJ enum annotation",
+         "Annotate the decompiler output so MajorFunction[IRP_MJ_CREATE] appears "
+         "instead of MajorFunction[0]"),
+        ("POOLTAG_FALLBACK",
+         "Pool-tag fallback",
+         "When no import-annotated tags are found, scan backward from each pool-alloc "
+         "call site for immediate operands staged in registers that IDA does not annotate automatically"),
+    ]),
+    ("Output", [
+        ("JSON_EXPORT",
+         "JSON export",
+         "Write findings to a .json file next to the IDB"),
+        ("HTML_REPORT",
+         "HTML report",
+         "Write findings to a browsable .html report next to the IDB"),
+        ("RESULTS_WINDOW",
+         "Results window",
+         "Open the findings chooser window inside IDA after analysis completes"),
+    ]),
 ]
 
-# (config module attribute, display label)
+# Flat list derived from groups -- used for defaults capture and _checks order.
+_FEATURES = [(attr, label) for _, items in _FEATURE_GROUPS for attr, label, _ in items]
+
+# (config module attribute, display label, tooltip)
 _TUNING = [
-    ("CALLCHAIN_MAX_DEPTH",       "Callchain max depth"),
-    ("HANDLER_SEED_DEPTH",        "Handler seed depth"),
-    ("POOLTAG_LOOKBACK",          "Pool-tag lookback (instrs)"),
-    ("COPY_VALIDATION_LOOKBACK",  "Copy validation lookback (instrs)"),
-    ("COPY_VALIDATION_LOOKAHEAD", "Copy validation lookahead (instrs)"),
-    ("UAF_GLOBAL_BACKWALK",       "UAF global back-walk (instrs)"),
-    ("SYMLINK_DECODE_LOOKBACK",   "Symlink decode lookback (instrs)"),
+    ("CALLCHAIN_MAX_DEPTH",
+     "Callchain max depth",
+     "Maximum recursion depth when following call chains from IOCTL handlers to sinks"),
+    ("HANDLER_SEED_DEPTH",
+     "Handler seed depth",
+     "Call levels expanded from the IOCTL handler when seeding deep heuristics "
+     "(double-fetch, UAF, pool-alloc-trust, etc.)"),
+    ("POOLTAG_LOOKBACK",
+     "Pool-tag lookback (instrs)",
+     "Instructions scanned backward from a pool allocation to find the tag constant"),
+    ("COPY_VALIDATION_LOOKBACK",
+     "Copy validation lookback (instrs)",
+     "Instructions scanned backward from a copy sink to find a size validation check"),
+    ("COPY_VALIDATION_LOOKAHEAD",
+     "Copy validation lookahead (instrs)",
+     "Instructions scanned forward from a copy sink to find a size validation check"),
+    ("UAF_GLOBAL_BACKWALK",
+     "UAF global back-walk (instrs)",
+     "Instructions scanned backward in the function when searching for a free before a use"),
+    ("SYMLINK_DECODE_LOOKBACK",
+     "Symlink decode lookback (instrs)",
+     "Instructions scanned backward from a symlink registration to decode the device path"),
 ]
 
 # Captured once at import time (before any runtime mutations) so "Reset to
 # Defaults" always means the values shipped in config.py.
 _FEATURE_DEFAULTS = {attr: bool(getattr(config.Feature, attr)) for attr, _ in _FEATURES}
-_TUNING_DEFAULTS  = {attr: int(getattr(config, attr))          for attr, _ in _TUNING}
+_TUNING_DEFAULTS  = {attr: int(getattr(config, attr))          for attr, label, _ in _TUNING}
 
 
 class _SettingsDialog:
@@ -68,25 +138,26 @@ class _SettingsDialog:
         dlg.setWindowFlags(
             dlg.windowFlags() & ~QtCore.Qt.WindowContextHelpButtonHint
         )
-        dlg.setMinimumWidth(520)
+        dlg.setMinimumWidth(560)
         self._dlg = dlg
 
         root = QtWidgets.QVBoxLayout(dlg)
 
-        # --- Analysis stages (checkboxes in a 2-column grid) -----------------
-        feat_group = QtWidgets.QGroupBox("Analysis Stages")
-        feat_grid = QtWidgets.QGridLayout(feat_group)
-        feat_grid.setColumnStretch(0, 1)
-        feat_grid.setColumnStretch(1, 1)
-
+        # --- Analysis stages (one QGroupBox per logical group, 2-column grid) --
         self._checks = {}
-        for i, (attr, label) in enumerate(_FEATURES):
-            cb = QtWidgets.QCheckBox(label)
-            cb.setChecked(bool(getattr(config.Feature, attr)))
-            self._checks[attr] = cb
-            feat_grid.addWidget(cb, i // 2, i % 2)
-
-        root.addWidget(feat_group)
+        for group_name, items in _FEATURE_GROUPS:
+            grp = QtWidgets.QGroupBox(group_name)
+            grid = QtWidgets.QGridLayout(grp)
+            grid.setColumnStretch(0, 1)
+            grid.setColumnStretch(1, 1)
+            for i, (attr, label, tip) in enumerate(items):
+                cb = QtWidgets.QCheckBox(label)
+                cb.setChecked(bool(getattr(config.Feature, attr)))
+                if tip:
+                    cb.setToolTip(tip)
+                self._checks[attr] = cb
+                grid.addWidget(cb, i // 2, i % 2)
+            root.addWidget(grp)
 
         # --- Tuning constants (labelled spinboxes) ---------------------------
         tuning_group = QtWidgets.QGroupBox("Tuning")
@@ -94,13 +165,18 @@ class _SettingsDialog:
         tuning_form.setLabelAlignment(QtCore.Qt.AlignLeft)
 
         self._spins = {}
-        for attr, label in _TUNING:
+        for attr, label, tip in _TUNING:
             spin = QtWidgets.QSpinBox()
             spin.setRange(1, 9999)
             spin.setValue(int(getattr(config, attr)))
             spin.setFixedWidth(80)
+            if tip:
+                spin.setToolTip(tip)
             self._spins[attr] = spin
-            tuning_form.addRow(label + ":", spin)
+            lbl = QtWidgets.QLabel(label + ":")
+            if tip:
+                lbl.setToolTip(tip)
+            tuning_form.addRow(lbl, spin)
 
         root.addWidget(tuning_group)
 
