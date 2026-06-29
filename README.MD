@@ -18,7 +18,7 @@
     - [Dumping Pooltags](#dumping-pooltags)
     - [Heuristic Vulnerability Checks](#heuristic-vulnerability-checks)
   - [Feature Flags](#feature-flags)
-  - [Fixed Issues](#fixed-issues)
+  - [Testing](#testing)
   - [Known Caveats and Limitations](#known-caveats-and-limitations)
   - [Credits and Acknowledgements](#credits-and-acknowledgements)
 
@@ -44,9 +44,10 @@ To use the auto-analysis feature:
 3. Check the "Output" window for the analysis results, and the **Driver Buddy Reloaded - Findings** window that opens
    at the end of the run (double-click a row to jump to its address).
 4. The following files are written under IDA's DB directory (all prefixed with `<DRIVER_NAME>-YYYY-MM-DD-TIMESTAMP-`):
-   - `findings.json` - machine-readable findings (IOCTLs, flagged functions, device names, pooltags, call chains)
+   - `findings.json` - machine-readable findings (IOCTLs, flagged functions, device names, pooltags, call chains, heuristics)
    - `report.html` - a standalone, severity-grouped HTML report
    - `pooltags.txt` - dumped Pooltags in `pooltags.txt` format for WinDbg
+   - `autoanalysis.txt` - the full text analysis log (mirrors the Output window)
 
 To decode an IOCTL:
 
@@ -100,13 +101,18 @@ engineering tasks. It has a number of handy features, such as:
 * Flagging functions prone to misuse
 * Finding potential `DeviceName` (mmap scan + IDA Strings DB fallback, with source address)
 * Dumping `Pooltags` (import-based primary + register-propagated fallback for tags staged in a register)
-* **Heuristic vulnerability checks**: unvalidated user-copy, missing privilege gate, IRQL mismatch, unsafe
-  MDL mapping, stack-allocated buffers (`_alloca`), pool allocation without size validation, and
-  `\Device\PhysicalMemory` references (BYOVD pattern) - see [Heuristic Vulnerability Checks](#heuristic-vulnerability-checks)
+* **Heuristic vulnerability checks** over each dispatcher and the functions it transitively calls: unvalidated
+  user-copy, TOCTOU/double-fetch, use-after-free (intra-function and cross-function via a freed global), missing
+  privilege gate, IRQL mismatch, unsafe MDL mapping, stack-allocated buffers (`_alloca`), pool allocation without
+  size validation, privileged CPU instructions (port I/O `in`/`out`, `mov cr*`), arbitrary-write
+  (write-what-where), and `\Device\PhysicalMemory` references (BYOVD pattern) - see
+  [Heuristic Vulnerability Checks](#heuristic-vulnerability-checks)
+* **Device ACL audit and symbolic-link tracking**: flags `IoCreateDevice` devices created with no security
+  descriptor (world-accessible) / weak `IoCreateDeviceSecure` SDDLs, and decodes `IoCreateSymbolicLink` target paths
 * **Exports audit**: flags driver exports with zero internal cross-references (potential attack surface)
-* **Risk-scoring** decoded IOCTLs (prioritising `METHOD_NEITHER` / `FILE_ANY_ACCESS` and handlers that reach
-  dangerous sinks such as `MmMapIoSpace`, `memcpy`, `__writemsr`) and presenting all findings, by severity, in a
-  clickable results window (double-click to jump to the address)
+* **Risk-scoring** decoded IOCTLs (prioritising `METHOD_NEITHER` / `FILE_ANY_ACCESS`, and bumping the IOCTLs whose
+  own handler reaches a dangerous sink such as `MmMapIoSpace`, `memcpy`, `__writemsr`, port I/O or PCI-config
+  access) and presenting all findings, by severity, in a clickable results window (double-click to jump to the address)
 * **Tracing call chains** from dispatch / IOCTL handlers to dangerous sinks (heuristic, name-based)
 * Exporting results as a machine-readable **JSON** file and a standalone **HTML report**
 
@@ -205,17 +211,23 @@ with `pooltags.txt`. The output can then be copy-pasted at the end of the file a
 
 ### Heuristic Vulnerability Checks
 
-The `heuristics.py` module runs after call-chain tracing and examines each identified dispatch handler function.
-It emits findings in the **heuristic** category:
+The `heuristics.py` module runs after call-chain tracing and examines each dispatcher **and the functions it
+transitively calls** - so the per-IOCTL handlers, not just the dispatcher prologue, are analysed. Callee matching
+is import-aware (an imported `call cs:__imp_<Name>` matches the same name as a local call). It emits findings in
+the **heuristic** category (privileged-instruction findings use the **opcode** category):
 
 | Check | What is flagged | Severity |
 |---|---|---|
 | Unvalidated user copy | `memcpy`/`RtlCopyMemory`/etc. with no nearby `ProbeForRead`/`ProbeForWrite`/safe-string guard | HIGH (handler), MEDIUM (other) |
-| Missing privilege gate | `ZwOpenProcess`/`ZwAllocateVirtualMemory`/etc. with no `SeSinglePrivilegeCheck`/`SeAccessCheck` in the function | HIGH |
+| TOCTOU / double fetch | a user-mode pointer field re-read on one control-flow path with no intervening `ProbeForRead` (only on METHOD_NEITHER handlers, so kernel-buffer re-reads are not flagged) | MEDIUM |
+| Use-after-free | a freed pointer reused intra-function (register CFG walk), or a global freed without being nulled and then dereferenced from another function | HIGH |
+| Missing privilege gate | a sensitive op (`ZwOpenProcess`/`MmMapIoSpace`/PCI-config/etc.) reachable from a dispatcher with no `SeAccessCheck`/`SeSinglePrivilegeCheck`/token check anywhere on the path | HIGH |
 | IRQL mismatch | Pageable / `Zw*` / `MmMap*` call when an IRQL-raising function is also present | MEDIUM |
 | Unsafe MDL mapping | `MmMapLockedPages`/`MmProbeAndLockPages`/etc. with `UserMode` in disassembly | HIGH, else MEDIUM |
 | Stack allocation | `_alloca`/`_malloca`/`_chkstk` call (large or dynamic stack allocation) | LOW |
 | Pool alloc without size validation | `ExAllocatePool*` call with no safe-arithmetic guard nearby (integer-overflow-before-alloc pattern) | HIGH |
+| Privileged instruction | port I/O (`in`/`out`), control/debug-register move (`mov cr*`/`mov dr*`), descriptor-table load, `cli`/`sti`/`hlt` reachable from a handler (BYOVD hardware-access primitive) | CRITICAL (`out`) / HIGH (`in`) / MEDIUM |
+| Arbitrary write (write-what-where) | a store through a double-dereferenced user pointer `*(*p) = c`; a `*p = *q` controlled copy is reported as a weaker lead | HIGH / MEDIUM |
 | `\Device\PhysicalMemory` reference | Cross-reference to the physical memory device object string (BYOVD pattern via `ZwOpenSection`/`ZwMapViewOfSection`) | HIGH (handler), MEDIUM (other) |
 
 These are **lead generators**, not confirmed vulnerabilities. Treat HIGH/CRITICAL findings as starting points for
@@ -228,16 +240,40 @@ enable or disable them:
 
 | Flag | Default | Description |
 |---|---|---|
-| `HEURISTICS` | `True` | Heuristic vulnerability checks (copy validation, privilege gate, IRQL, MDL, alloca) |
+| `IOCTL_SCAN` | `True` | Discover & decode IOCTLs (dispatcher scan + `IoControlCode` fallback) |
+| `IOCTL_DECOMPILER` | `True` | Use the Hex-Rays ctree in the dispatcher scan (recovers jump-table / binary-search codes) |
+| `HEURISTICS` | `True` | Heuristic vulnerability checks (see the table above) |
+| `TOCTOU_CHECK` | `True` | Double-fetch / TOCTOU heuristic |
+| `UAF_DETECT` | `True` | Use-after-free heuristics (intra-function register walk + cross-function global) |
+| `ACL_AUDIT` | `True` | Flag world-accessible `IoCreateDevice` / weak `IoCreateDeviceSecure` SDDL |
+| `SYMLINK_TRACK` | `True` | Decode `IoCreateSymbolicLink` target paths |
+| `CALLCHAIN` | `True` | BFS call-chain tracing from handlers to dangerous sinks |
 | `EXPORTS_AUDIT` | `True` | Flag driver exports with zero internal cross-references |
 | `POOLTAG_FALLBACK` | `True` | Register-propagated pool tag scanner (used when import-based scan finds nothing) |
 | `IRP_MJ_ENUM` | `True` | Create `IRP_MJ_FUNCTION` IDA enum and apply to `MajorFunction` slots (WDM only) |
-| `CALLCHAIN` | `True` | BFS call-chain tracing from handlers to dangerous sinks |
-| `RISK_SCORING` | `True` | IOCTL risk scoring (METHOD/ACCESS weights + sink bump) |
+| `RISK_SCORING` | `True` | IOCTL risk scoring (METHOD/ACCESS weights + per-handler sink bump) |
 | `RESULTS_WINDOW` | `True` | Show the Driver Buddy Reloaded findings window after analysis |
 | `JSON_EXPORT` | `True` | Write `findings.json` |
 | `HTML_REPORT` | `True` | Write `report.html` |
 | `SEGMENT_OPCODE_SCAN` | `False` | Linear segment-wide opcode scan (noisy, off by default) |
+
+## Testing
+
+Three layers, from fast to thorough:
+
+- **Pure-Python regression** (no IDA required) - covers all logic that does not touch the live database:
+  ```
+  python tests/test_dbr.py
+  DBR_SDK=900 python tests/test_dbr.py   # simulate the IDA 9.0 import paths
+  ```
+- **Cross-version smoke** - runs the full pipeline under IDA 7.6 SP1, 8.4 and Free 9.3 against a matrix of real
+  `.sys` files and prints a pass/fail table: `pwsh tests/run_cross_version.ps1`.
+- **Golden-output regression** (the false-positive / false-negative guard) - `pwsh tests/run_golden.ps1` re-runs
+  the full analysis on a pristine copy of each reference driver in `tests/drivers/` and compares the findings to
+  the committed `tests/drivers/<driver>.golden.json` baseline (order-insensitive on category, title, severity and
+  IOCTL code/method/access). Any added finding (false positive), missing finding (false negative) or severity
+  change fails the run. Regenerate a golden only when a change intentionally alters findings, and review the diff.
+  Goldens are tied to the IDA decompiler build they were captured with (8.4), so run the regression with that version.
 
 ## Known Caveats and Limitations
 
