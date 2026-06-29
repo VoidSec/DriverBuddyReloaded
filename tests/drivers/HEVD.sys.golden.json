@@ -1,0 +1,1601 @@
+{
+  "tool": "DriverBuddyReloaded",
+  "driver": "HEVD.sys",
+  "generated": "golden",
+  "findings": [
+    {
+      "category": "device_name",
+      "title": "\\??\\C:\\Windows\\System32\\HEVD.log",
+      "ea": "0x140089210",
+      "func": "",
+      "severity": "INFO",
+      "detail": "",
+      "data": {}
+    },
+    {
+      "category": "device_name",
+      "title": "\\Device\\HackSysExtremeVulnerableDriver",
+      "ea": "0x14008a1d0",
+      "func": "",
+      "severity": "INFO",
+      "detail": "",
+      "data": {}
+    },
+    {
+      "category": "device_name",
+      "title": "\\DosDevices\\HackSysExtremeVulnerableDriver",
+      "ea": "0x14008a220",
+      "func": "",
+      "severity": "INFO",
+      "detail": "",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "kcaH",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: AllocateFakeObjectNonPagedPool, AllocateFakeObjectNonPagedPoolNx, AllocateUaFObjectNonPagedPool, AllocateUaFObjectNonPagedPoolNx, CreateArbitraryReadWriteHelperObjectNonPagedPoolNx, DeleteArbitraryReadWriteHelperObjecNonPagedPoolNx, FreeUaFObjectNonPagedPool, FreeUaFObjectNonPagedPoolNx, TriggerBufferOverflowNonPagedPool, TriggerBufferOverflowNonPagedPoolNx, TriggerBufferOverflowPagedPoolSession, TriggerMemoryDisclosureNonPagedPool, TriggerMemoryDisclosureNonPagedPoolNx, TriggerNullPointerDereference, TriggerTypeConfusion, TriggerUninitializedMemoryPagedPool",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x140085c39",
+      "func": "GetArbitraryReadWriteHelperObjecNameNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x140085dfe",
+      "func": "SetArbitraryReadWriteHelperObjecNameNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x1400860d8",
+      "func": "TriggerBufferOverflowNonPagedPool",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x1400862ea",
+      "func": "TriggerBufferOverflowNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x1400864fd",
+      "func": "TriggerBufferOverflowPagedPoolSession",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x14008667e",
+      "func": "TriggerBufferOverflowStack",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x1400867b4",
+      "func": "TriggerBufferOverflowStackGS",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x140086911",
+      "func": "TriggerDoubleFetch",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x140086e50",
+      "func": "TriggerMemoryDisclosureNonPagedPool",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x140087072",
+      "func": "TriggerMemoryDisclosureNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x14008579d",
+      "func": "CreateArbitraryReadWriteHelperObjectNonPagedPoolNx",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x140085a4f",
+      "func": "DeleteArbitraryReadWriteHelperObjecNonPagedPoolNx",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x140085b55",
+      "func": "GetArbitraryReadWriteHelperObjecNameNonPagedPoolNx",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x140085d15",
+      "func": "SetArbitraryReadWriteHelperObjecNameNonPagedPoolNx",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x140085dbf",
+      "func": "SetArbitraryReadWriteHelperObjecNameNonPagedPoolNx",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x140085e99",
+      "func": "TriggerArbitraryWrite",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x14008605e",
+      "func": "TriggerBufferOverflowNonPagedPool",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x140086270",
+      "func": "TriggerBufferOverflowNonPagedPoolNx",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x140086483",
+      "func": "TriggerBufferOverflowPagedPoolSession",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x1400865f8",
+      "func": "TriggerBufferOverflowStack",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x14008672e",
+      "func": "TriggerBufferOverflowStackGS",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x14008685d",
+      "func": "TriggerDoubleFetch",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x140086bb8",
+      "func": "TriggerIntegerOverflow",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x140087166",
+      "func": "TriggerNullPointerDereference",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x14008733d",
+      "func": "TriggerTypeConfusion",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x140087598",
+      "func": "TriggerUninitializedMemoryPagedPool",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x1400877a4",
+      "func": "TriggerUninitializedMemoryStack",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x14008799d",
+      "func": "AllocateFakeObjectNonPagedPool",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x140087e08",
+      "func": "AllocateFakeObjectNonPagedPoolNx",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForRead",
+      "ea": "0x1400881a9",
+      "func": "TriggerWriteNULL",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForWrite",
+      "ea": "0x1400859b8",
+      "func": "CreateArbitraryReadWriteHelperObjectNonPagedPoolNx",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForWrite",
+      "ea": "0x140085bfd",
+      "func": "GetArbitraryReadWriteHelperObjecNameNonPagedPoolNx",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForWrite",
+      "ea": "0x140086dd6",
+      "func": "TriggerMemoryDisclosureNonPagedPool",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ProbeForWrite",
+      "ea": "0x140086ff8",
+      "func": "TriggerMemoryDisclosureNonPagedPoolNx",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ZwCreateFile",
+      "ea": "0x140086ab6",
+      "func": "TriggerInsecureKernelFileAccess",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ZwWriteFile",
+      "ea": "0x140086b01",
+      "func": "TriggerInsecureKernelFileAccess",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022205B",
+      "ea": "0x1400855b0",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236507,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2070,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369266360,
+        "handler_name": "FreeUaFObjectNonPagedPoolNxIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022205F",
+      "ea": "0x1400855b0",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236511,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2071,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369265808,
+        "handler_name": "AllocateFakeObjectNonPagedPoolNxIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222063",
+      "ea": "0x1400855b0",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236515,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2072,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369256472,
+        "handler_name": "CreateArbitraryReadWriteHelperObjectNonPagedPoolNxIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222067",
+      "ea": "0x1400855b0",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler] | sinks: memmove",
+      "data": {
+        "code": 2236519,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2073,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369257532,
+        "handler_name": "SetArbitraryReadWriteHelperObjecNameNonPagedPoolNxIoctlHandler",
+        "sinks": [
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022206B",
+      "ea": "0x1400855b0",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler] | sinks: memmove",
+      "data": {
+        "code": 2236523,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2074,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369257080,
+        "handler_name": "GetArbitraryReadWriteHelperObjecNameNonPagedPoolNxIoctlHandler",
+        "sinks": [
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022206F",
+      "ea": "0x1400855b0",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236527,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2075,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369256724,
+        "handler_name": "DeleteArbitraryReadWriteHelperObjecNonPagedPoolNxIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222057",
+      "ea": "0x14008541f",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236503,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2069,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369266572,
+        "handler_name": "UseUaFObjectNonPagedPoolNxIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022203F",
+      "ea": "0x14008541f",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler] | sinks: memmove",
+      "data": {
+        "code": 2236479,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2063,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369261252,
+        "handler_name": "MemoryDisclosureNonPagedPoolIoctlHandler",
+        "sinks": [
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222043",
+      "ea": "0x14008541f",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler] | sinks: memmove",
+      "data": {
+        "code": 2236483,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2064,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369258880,
+        "handler_name": "BufferOverflowPagedPoolSessionIoctlHandler",
+        "sinks": [
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222047",
+      "ea": "0x14008541f",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236487,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2065,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369266720,
+        "handler_name": "WriteNULLIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022204B",
+      "ea": "0x14008541f",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler] | sinks: memmove",
+      "data": {
+        "code": 2236491,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2066,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369258348,
+        "handler_name": "BufferOverflowNonPagedPoolNxIoctlHandler",
+        "sinks": [
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022204F",
+      "ea": "0x14008541f",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler] | sinks: memmove",
+      "data": {
+        "code": 2236495,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2067,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369261796,
+        "handler_name": "MemoryDisclosureNonPagedPoolNxIoctlHandler",
+        "sinks": [
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222053",
+      "ea": "0x14008541f",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236499,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2068,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369266192,
+        "handler_name": "AllocateUaFObjectNonPagedPoolNxIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222023",
+      "ea": "0x140085298",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236451,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2056,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369263352,
+        "handler_name": "TypeConfusionIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222027",
+      "ea": "0x140085298",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236455,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2057,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369260884,
+        "handler_name": "IntegerOverflowIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022202B",
+      "ea": "0x140085298",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236459,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2058,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369262344,
+        "handler_name": "NullPointerDereferenceIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022202F",
+      "ea": "0x140085298",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236463,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2059,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369264272,
+        "handler_name": "UninitializedMemoryStackIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222033",
+      "ea": "0x140085298",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236467,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2060,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369263928,
+        "handler_name": "UninitializedMemoryPagedPoolIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222037",
+      "ea": "0x140085298",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler] | sinks: memmove",
+      "data": {
+        "code": 2236471,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2061,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369260032,
+        "handler_name": "DoubleFetchIoctlHandler",
+        "sinks": [
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022201F",
+      "ea": "0x1400850cf",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236447,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2055,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369264680,
+        "handler_name": "AllocateFakeObjectNonPagedPoolIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222003",
+      "ea": "0x1400850cf",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler] | sinks: memmove",
+      "data": {
+        "code": 2236419,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2048,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369259412,
+        "handler_name": "BufferOverflowStackIoctlHandler",
+        "sinks": [
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222007",
+      "ea": "0x1400850cf",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler] | sinks: memmove",
+      "data": {
+        "code": 2236423,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2049,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369259712,
+        "handler_name": "BufferOverflowStackGSIoctlHandler",
+        "sinks": [
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022200B",
+      "ea": "0x1400850cf",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236427,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2050,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369257560,
+        "handler_name": "ArbitraryWriteIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022200F",
+      "ea": "0x1400850cf",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler] | sinks: memmove",
+      "data": {
+        "code": 2236431,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2051,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369257820,
+        "handler_name": "BufferOverflowNonPagedPoolIoctlHandler",
+        "sinks": [
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222013",
+      "ea": "0x1400850cf",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236435,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2052,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369265064,
+        "handler_name": "AllocateUaFObjectNonPagedPoolIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222017",
+      "ea": "0x1400850cf",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236439,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2053,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369265444,
+        "handler_name": "UseUaFObjectNonPagedPoolIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022201B",
+      "ea": "0x1400850cf",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2236443,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2054,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 5369265232,
+        "handler_name": "FreeUaFObjectNonPagedPoolIoctlHandler",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x0022203B",
+      "ea": "0x1400850bb",
+      "func": "DispatchDeviceControl",
+      "severity": "CRITICAL",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_NEITHER / FILE_ANY_ACCESS [decompiler] | sinks (dispatcher-wide): memmove",
+      "data": {
+        "code": 2236475,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2062,
+        "method_name": "METHOD_NEITHER",
+        "method_code": 3,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "sinks": [
+          "memmove"
+        ],
+        "sink_attribution": "dispatcher-wide",
+        "risk_reasons": [
+          "METHOD_NEITHER (+3)",
+          "FILE_ANY_ACCESS (+2)",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "acl",
+      "title": "IoCreateDevice: world-accessible by default",
+      "ea": "0x14008a06b",
+      "func": "DriverEntry",
+      "severity": "LOW",
+      "detail": "IoCreateDevice assigns no security descriptor; accessible to all users. Consider IoCreateDeviceSecure with a restrictive SDDL.",
+      "data": {}
+    },
+    {
+      "category": "symlink",
+      "title": "IoCreateSymbolicLink: \\DosDevices\\HackSysExtremeVulnerableDriver",
+      "ea": "0x14008a0e9",
+      "func": "DriverEntry",
+      "severity": "INFO",
+      "detail": "Symbolic link exposes device to Win32 namespace; verify DACL on the target device object.",
+      "data": {}
+    },
+    {
+      "category": "callchain",
+      "title": "BufferOverflowPagedPoolSessionIoctlHandler reaches memmove",
+      "ea": "0x140086380",
+      "func": "BufferOverflowPagedPoolSessionIoctlHandler",
+      "severity": "HIGH",
+      "detail": "BufferOverflowPagedPoolSessionIoctlHandler -> TriggerBufferOverflowPagedPoolSession -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "BufferOverflowPagedPoolSessionIoctlHandler",
+          "TriggerBufferOverflowPagedPoolSession",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "DoubleFetchIoctlHandler reaches memmove",
+      "ea": "0x140086800",
+      "func": "DoubleFetchIoctlHandler",
+      "severity": "HIGH",
+      "detail": "DoubleFetchIoctlHandler -> TriggerDoubleFetch -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "DoubleFetchIoctlHandler",
+          "TriggerDoubleFetch",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "BufferOverflowStackIoctlHandler reaches memmove",
+      "ea": "0x140086594",
+      "func": "BufferOverflowStackIoctlHandler",
+      "severity": "HIGH",
+      "detail": "BufferOverflowStackIoctlHandler -> TriggerBufferOverflowStack -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "BufferOverflowStackIoctlHandler",
+          "TriggerBufferOverflowStack",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "GetArbitraryReadWriteHelperObjecNameNonPagedPoolNxIoctlHandler reaches memmove",
+      "ea": "0x140085c78",
+      "func": "GetArbitraryReadWriteHelperObjecNameNonPagedPoolNxIoctlHandler",
+      "severity": "HIGH",
+      "detail": "GetArbitraryReadWriteHelperObjecNameNonPagedPoolNxIoctlHandler -> GetArbitraryReadWriteHelperObjecNameNonPagedPoolNx -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "GetArbitraryReadWriteHelperObjecNameNonPagedPoolNxIoctlHandler",
+          "GetArbitraryReadWriteHelperObjecNameNonPagedPoolNx",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "SetArbitraryReadWriteHelperObjecNameNonPagedPoolNxIoctlHandler reaches memmove",
+      "ea": "0x140085e3c",
+      "func": "SetArbitraryReadWriteHelperObjecNameNonPagedPoolNxIoctlHandler",
+      "severity": "HIGH",
+      "detail": "SetArbitraryReadWriteHelperObjecNameNonPagedPoolNxIoctlHandler -> SetArbitraryReadWriteHelperObjecNameNonPagedPoolNx -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "SetArbitraryReadWriteHelperObjecNameNonPagedPoolNxIoctlHandler",
+          "SetArbitraryReadWriteHelperObjecNameNonPagedPoolNx",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "BufferOverflowStackGSIoctlHandler reaches memmove",
+      "ea": "0x1400866c0",
+      "func": "BufferOverflowStackGSIoctlHandler",
+      "severity": "HIGH",
+      "detail": "BufferOverflowStackGSIoctlHandler -> TriggerBufferOverflowStackGS -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "BufferOverflowStackGSIoctlHandler",
+          "TriggerBufferOverflowStackGS",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "MemoryDisclosureNonPagedPoolIoctlHandler reaches memmove",
+      "ea": "0x140086cc4",
+      "func": "MemoryDisclosureNonPagedPoolIoctlHandler",
+      "severity": "HIGH",
+      "detail": "MemoryDisclosureNonPagedPoolIoctlHandler -> TriggerMemoryDisclosureNonPagedPool -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "MemoryDisclosureNonPagedPoolIoctlHandler",
+          "TriggerMemoryDisclosureNonPagedPool",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "DispatchDeviceControl reaches memmove",
+      "ea": "0x140085078",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "DispatchDeviceControl -> DoubleFetchIoctlHandler -> TriggerDoubleFetch -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "DispatchDeviceControl",
+          "DoubleFetchIoctlHandler",
+          "TriggerDoubleFetch",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "BufferOverflowNonPagedPoolIoctlHandler reaches memmove",
+      "ea": "0x140085f5c",
+      "func": "BufferOverflowNonPagedPoolIoctlHandler",
+      "severity": "HIGH",
+      "detail": "BufferOverflowNonPagedPoolIoctlHandler -> TriggerBufferOverflowNonPagedPool -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "BufferOverflowNonPagedPoolIoctlHandler",
+          "TriggerBufferOverflowNonPagedPool",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "MemoryDisclosureNonPagedPoolNxIoctlHandler reaches memmove",
+      "ea": "0x140086ee4",
+      "func": "MemoryDisclosureNonPagedPoolNxIoctlHandler",
+      "severity": "HIGH",
+      "detail": "MemoryDisclosureNonPagedPoolNxIoctlHandler -> TriggerMemoryDisclosureNonPagedPoolNx -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "MemoryDisclosureNonPagedPoolNxIoctlHandler",
+          "TriggerMemoryDisclosureNonPagedPoolNx",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "BufferOverflowNonPagedPoolNxIoctlHandler reaches memmove",
+      "ea": "0x14008616c",
+      "func": "BufferOverflowNonPagedPoolNxIoctlHandler",
+      "severity": "HIGH",
+      "detail": "BufferOverflowNonPagedPoolNxIoctlHandler -> TriggerBufferOverflowNonPagedPoolNx -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "BufferOverflowNonPagedPoolNxIoctlHandler",
+          "TriggerBufferOverflowNonPagedPoolNx",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x1400860d8",
+      "func": "TriggerBufferOverflowNonPagedPool",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x1400862ea",
+      "func": "TriggerBufferOverflowNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x1400864fd",
+      "func": "TriggerBufferOverflowPagedPoolSession",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x14008667e",
+      "func": "TriggerBufferOverflowStack",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x1400867b4",
+      "func": "TriggerBufferOverflowStackGS",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x140086911",
+      "func": "TriggerDoubleFetch",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x140086e50",
+      "func": "TriggerMemoryDisclosureNonPagedPool",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x140087072",
+      "func": "TriggerMemoryDisclosureNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Arbitrary write (write-what-where)",
+      "ea": "0x1400881f1",
+      "func": "TriggerWriteNULL",
+      "severity": "HIGH",
+      "detail": "Store through a double-dereferenced (user-controlled) pointer `*(*p) = c`; verify the destination is validated",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x140087e11",
+      "func": "AllocateFakeObjectNonPagedPoolNx",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x140087e39",
+      "func": "AllocateFakeObjectNonPagedPoolNx",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x1400879a6",
+      "func": "AllocateFakeObjectNonPagedPool",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x1400879ce",
+      "func": "AllocateFakeObjectNonPagedPool",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x140085f1d",
+      "func": "TriggerArbitraryWrite",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x140086f57",
+      "func": "TriggerMemoryDisclosureNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x1400861df",
+      "func": "TriggerBufferOverflowNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x1400863f2",
+      "func": "TriggerBufferOverflowPagedPoolSession",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x140087d77",
+      "func": "AllocateFakeObjectNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x140087eef",
+      "func": "AllocateUaFObjectNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x14008790c",
+      "func": "AllocateFakeObjectNonPagedPool",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x140087a84",
+      "func": "AllocateUaFObjectNonPagedPool",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x140086d35",
+      "func": "TriggerMemoryDisclosureNonPagedPool",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x140085825",
+      "func": "CreateArbitraryReadWriteHelperObjectNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x1400858ce",
+      "func": "CreateArbitraryReadWriteHelperObjectNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x140085fcd",
+      "func": "TriggerBufferOverflowNonPagedPool",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "TOCTOU double-fetch: [rdi+0] read at 0x1400881c5 and 0x1400881ee without intervening ProbeForRead",
+      "ea": "0x1400881c5",
+      "func": "TriggerWriteNULL",
+      "severity": "MEDIUM",
+      "detail": "0x1400881c5 -> 0x1400881ee; user-pointer field re-read with no ProbeForRead/ProbeForWrite between",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "TOCTOU double-fetch: [rdi+0] read at 0x1400868ab and 0x140086909 without intervening ProbeForRead",
+      "ea": "0x1400868ab",
+      "func": "TriggerDoubleFetch",
+      "severity": "MEDIUM",
+      "detail": "0x1400868ab -> 0x140086909; user-pointer field re-read with no ProbeForRead/ProbeForWrite between",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "TOCTOU double-fetch: [rdi+8] read at 0x1400868c0 and 0x1400868d6 without intervening ProbeForRead",
+      "ea": "0x1400868c0",
+      "func": "TriggerDoubleFetch",
+      "severity": "MEDIUM",
+      "detail": "0x1400868c0 -> 0x1400868d6; user-pointer field re-read with no ProbeForRead/ProbeForWrite between",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "TOCTOU double-fetch: [rcx+rdx] read at 0x1400011e0 and 0x140001200 without intervening ProbeForRead",
+      "ea": "0x1400011e0",
+      "func": "memmove",
+      "severity": "MEDIUM",
+      "detail": "0x1400011e0 -> 0x140001200; user-pointer field re-read with no ProbeForRead/ProbeForWrite between",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "TOCTOU double-fetch: [rcx+8] read at 0x140085dc9 and 0x140085df4 without intervening ProbeForRead",
+      "ea": "0x140085dc9",
+      "func": "SetArbitraryReadWriteHelperObjecNameNonPagedPoolNx",
+      "severity": "MEDIUM",
+      "detail": "0x140085dc9 -> 0x140085df4; user-pointer field re-read with no ProbeForRead/ProbeForWrite between",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "TOCTOU double-fetch: [rcx+0] read at 0x140085dd2 and 0x140085dfb without intervening ProbeForRead",
+      "ea": "0x140085dd2",
+      "func": "SetArbitraryReadWriteHelperObjecNameNonPagedPoolNx",
+      "severity": "MEDIUM",
+      "detail": "0x140085dd2 -> 0x140085dfb; user-pointer field re-read with no ProbeForRead/ProbeForWrite between",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Use-after-free: global g_UseAfterFreeObjectNonPagedPoolNx freed but not cleared",
+      "ea": "0x140088082",
+      "func": "FreeUaFObjectNonPagedPoolNx",
+      "severity": "HIGH",
+      "detail": "g_UseAfterFreeObjectNonPagedPoolNx freed at 0x140088082 without being nulled; dereferenced elsewhere at 0x140087fad, 0x1400880e3, 0x140088104",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Use-after-free: global g_UseAfterFreeObjectNonPagedPool freed but not cleared",
+      "ea": "0x140087c1a",
+      "func": "FreeUaFObjectNonPagedPool",
+      "severity": "HIGH",
+      "detail": "g_UseAfterFreeObjectNonPagedPool freed at 0x140087c1a without being nulled; dereferenced elsewhere at 0x140085ca8, 0x140085cdb, 0x140087b42",
+      "data": {}
+    }
+  ]
+}

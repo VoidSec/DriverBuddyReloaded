@@ -1,12 +1,7 @@
 {
   "tool": "DriverBuddyReloaded",
   "driver": "beep.sys",
-  "sha256": "98cdbd998cf136fbbb9ecce829717b917374d0af20780bfd02767303c2756d85",
-  "generated": "2026-06-24-1782297945",
-  "severity_counts": {
-    "INFO": 1,
-    "LOW": 2
-  },
+  "generated": "golden",
   "findings": [
     {
       "category": "device_name",
@@ -19,11 +14,33 @@
     },
     {
       "category": "ioctl",
-      "title": "IOCTL 0x00010000",
-      "ea": "0x1c0001024",
+      "title": "IOCTL 0x00010004",
+      "ea": "0x1c000102e",
       "func": "DispatchDeviceControl",
       "severity": "LOW",
-      "detail": "FILE_DEVICE_BEEP / METHOD_BUFFERED / FILE_ANY_ACCESS [dispatcher scan]",
+      "detail": "FILE_DEVICE_BEEP / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 65540,
+        "device_name": "FILE_DEVICE_BEEP",
+        "device_code": 1,
+        "function": 1,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "sink_attribution": "dispatcher-wide",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00010000",
+      "ea": "0x1c0001029",
+      "func": "DispatchDeviceControl",
+      "severity": "LOW",
+      "detail": "FILE_DEVICE_BEEP / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler]",
       "data": {
         "code": 65536,
         "device_name": "FILE_DEVICE_BEEP",
@@ -33,31 +50,20 @@
         "method_code": 0,
         "access_name": "FILE_ANY_ACCESS",
         "access_code": 0,
+        "sink_attribution": "dispatcher-wide",
         "risk_reasons": [
           "FILE_ANY_ACCESS (+2)"
         ]
       }
     },
     {
-      "category": "ioctl",
-      "title": "IOCTL 0x00010004",
-      "ea": "0x1C000102B",
-      "func": "DispatchDeviceControl",
+      "category": "acl",
+      "title": "IoCreateDevice: world-accessible by default",
+      "ea": "0x1c00017b8",
+      "func": "DriverEntry",
       "severity": "LOW",
-      "detail": "FILE_DEVICE_BEEP / METHOD_BUFFERED / FILE_ANY_ACCESS [dispatcher scan]",
-      "data": {
-        "code": 65540,
-        "device_name": "FILE_DEVICE_BEEP",
-        "device_code": 1,
-        "function": 0,
-        "method_name": "METHOD_BUFFERED",
-        "method_code": 0,
-        "access_name": "FILE_ANY_ACCESS",
-        "access_code": 0,
-        "risk_reasons": [
-          "FILE_ANY_ACCESS (+2)"
-        ]
-      }
+      "detail": "IoCreateDevice assigns no security descriptor; accessible to all users. Consider IoCreateDeviceSecure with a restrictive SDDL.",
+      "data": {}
     }
   ]
 }

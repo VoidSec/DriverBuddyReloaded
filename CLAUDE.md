@@ -18,6 +18,14 @@ pwsh tests\run_cross_version.ps1 -Timeout 180 -KeepTemp
 ```
 Launches IDA 7.6 SP1, 8.4, and Free 9.3 in batch mode against real `.sys` files and prints a pass/fail matrix. Results land in `smoke_results/`.
 
+### Run golden-output regression (the FP/FN guard)
+```
+pwsh tests\run_golden.ps1
+```
+For every `tests/drivers/<driver>.golden.json`, copies the matching `.i64` plus its golden to a temp dir, runs the full pipeline headless, and compares the fresh findings to the golden order-insensitively on (category, title, severity, IOCTL code/method/access). Any added finding (false positive), missing finding (false negative) or severity change fails the cell. The four goldens (`beep`, `HEVD`, `ALSysIO64`, `WinRing0x64`) are the captured output of the current pipeline and are the authoritative regression baseline. Run after every change to detection logic.
+
+Regenerate a golden ONLY when a change intentionally alters findings: run the analysis on a fresh copy of the `.i64` and overwrite `<driver>.golden.json` with the new findings (same shape as `Reporter.to_json`), then review the diff. Goldens are tied to the IDA 8.4 decompiler build they were captured with; a different decompiler can legitimately change heuristic findings, so run the regression with that version.
+
 ### IDA installs
 - `C:\Users\c108\Desktop\IDA Pro 7.6 SP1\ida64.exe`
 - `C:\Program Files\IDA Pro 8.4\ida64.exe`
@@ -129,6 +137,8 @@ NTSTATUS filter queries the IDA type DB first (`NTSTATUS` / `_NTSTATUS` enum), f
 - `--ioctl-count <N>`: assert exactly N unique IOCTL codes found (use for ALSysIO64 17, HEVD 28).
 - `--expect-heuristic <pattern>`: assert at least one heuristic finding title contains the pattern (e.g. "TOCTOU" for HEVD).
 Each check result lands in the output JSON under `checks`; exit code is non-zero on any failure.
+
+When no explicit args are passed, `ida_smoke.py` derives the result path from the IDB (`<idb>.smoke.json`) and auto-discovers an adjacent golden reference (`<idb>.golden.json`), running the golden comparison automatically. This is what `tests/run_golden.ps1` relies on (it avoids passing a `-S` argument with a space, which PowerShell's `Start-Process` mangles). The golden run must use a pristine `.i64` copy each time: re-opening a database IDA has already saved can shift decompiler output and drift the findings.
 
 ### Function-name sets
 All heuristic, callchain, and scoring function-name lists live in `config.py` (not scattered across modules): `DANGEROUS_SINKS`, `VALIDATION_FUNCS`, `PRIVILEGE_GATE_FUNCS`, `PRIVILEGED_SENSITIVE_OPS`, `IRQL_RAISING_FUNCS`, `MDL_USER_FUNCS`, `COPY_SINKS`, `ALLOCA_FUNCS`, `POOL_ALLOC_FUNCS`, `FREE_POOL_FUNCS`. Opcode/instruction severities live in `OPCODE_SEVERITY` (named-opcode scan) and `PRIV_INSN_SEVERITY` (in/out/`mov cr*`/etc. flagged by `heuristics.check_privileged_instructions`). Add to the relevant set in `config.py` when expanding coverage; modules import the set by name.

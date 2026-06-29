@@ -50,7 +50,7 @@ def _parse_argv(argv):
     opts keys: golden_path, ioctl_count, expect_heuristic
     """
     opts = {}
-    result_path = os.path.join(_TESTS_DIR, "smoke_result.json")
+    result_path = None
     i = 1
     # First positional arg (if not a flag) is the result path.
     if len(argv) > 1 and not argv[1].startswith("--"):
@@ -166,6 +166,19 @@ def main() -> None:
     idc.auto_wait()
 
     result_path, opts = _parse_argv(list(idc.ARGV))
+
+    # Derive a per-IDB result path and auto-discover an adjacent golden reference
+    # when not given explicitly.  This lets the regression runner pass NO -S
+    # arguments (PowerShell's Start-Process mangles a -S value that contains a
+    # space), copying "<driver>.golden.json" next to the IDB instead.
+    idb = idc.get_idb_path()
+    if not result_path:
+        result_path = (os.path.splitext(idb)[0] + ".smoke.json") if idb \
+            else os.path.join(_TESTS_DIR, "smoke_result.json")
+    if "golden_path" not in opts and idb:
+        cand = os.path.splitext(idb)[0] + ".golden.json"
+        if os.path.exists(cand):
+            opts["golden_path"] = cand
 
     start_time = time.time()
     result = {

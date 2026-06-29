@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Golden-output regression for the four reference drivers (`beep`, `HEVD`, `ALSysIO64`,
+  `WinRing0x64`). The current pipeline output is captured as `tests/drivers/<driver>.golden.json`
+  and is the authoritative FP/FN baseline: `tests/run_golden.ps1` runs the full analysis on a
+  pristine copy of each `.i64` and fails on any added finding (false positive), missing finding
+  (false negative) or severity change. `tests/ida_smoke.py` now derives its result path from the
+  IDB and auto-discovers an adjacent `<idb>.golden.json`, so the runner needs no `-S` arguments
+  (which PowerShell's `Start-Process` mangles when they contain a space).
+
+### Removed
+
+- Stale precedent artifacts under `tests/drivers/` superseded by the committed goldens: the
+  2026-06-24 `*-findings.json` and `*-autoanalysis.txt` for beep / WinRing0x64, and the manual
+  IOCTL reference lists (`ALSysIO64_IOCTLs.txt`, `HVED_IOCTLs.txt`) -- the decoded IOCTLs are now
+  embedded in each golden.
+
 ## [2.2.0] - 2026-06-29
 
 ### Removed

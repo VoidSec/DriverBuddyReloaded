@@ -1,0 +1,1266 @@
+{
+  "tool": "DriverBuddyReloaded",
+  "driver": "ALSysIO64.sys",
+  "generated": "golden",
+  "findings": [
+    {
+      "category": "device_name",
+      "title": "\\Device\\ALSysIO",
+      "ea": "0x15c10",
+      "func": "",
+      "severity": "INFO",
+      "detail": "",
+      "data": {}
+    },
+    {
+      "category": "device_name",
+      "title": "\\DosDevices\\ALSysIO",
+      "ea": "0x15c30",
+      "func": "",
+      "severity": "INFO",
+      "detail": "",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "KxuA",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: sub_1A008",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "bios",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: sub_13F50",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "mcfg",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: sub_148E0",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "mptb",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: sub_15160",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "msrh",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: sub_15400, sub_15570",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "pcin",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: sub_143F0",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "rsdt",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: sub_14610",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "xsdt",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: sub_14610",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "wrmsr",
+      "ea": "0x136a0",
+      "func": "sub_13690",
+      "severity": "CRITICAL",
+      "detail": "wrmsr",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "rdmsr",
+      "ea": "0x1364c",
+      "func": "sub_13640",
+      "severity": "HIGH",
+      "detail": "rdmsr",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x1224e",
+      "func": "sub_12050",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x12278",
+      "func": "sub_12050",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x13727",
+      "func": "sub_136E0",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x1420c",
+      "func": "sub_141C0",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x142d0",
+      "func": "sub_14270",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x14490",
+      "func": "sub_143F0",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x1a0d4",
+      "func": "sub_1A008",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "MmGetSystemRoutineAddress",
+      "ea": "0x11125",
+      "func": "DriverEntry",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "MmGetSystemRoutineAddress",
+      "ea": "0x11149",
+      "func": "DriverEntry",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "MmGetSystemRoutineAddress",
+      "ea": "0x1a152",
+      "func": "sub_1A114",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "MmMapIoSpace",
+      "ea": "0x13030",
+      "func": "sub_12F20",
+      "severity": "CRITICAL",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "MmMapIoSpace",
+      "ea": "0x13715",
+      "func": "sub_136E0",
+      "severity": "CRITICAL",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "MmMapIoSpace",
+      "ea": "0x137a6",
+      "func": "sub_13780",
+      "severity": "CRITICAL",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "IofCallDriver",
+      "ea": "0x12ba8",
+      "func": "sub_12050",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "IofCallDriver",
+      "ea": "0x12cfd",
+      "func": "sub_12050",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "IofCallDriver",
+      "ea": "0x12e30",
+      "func": "sub_12050",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "HalGetBusDataByOffset",
+      "ea": "0x119a9",
+      "func": "HalGetBusDataByOffset_wrapper",
+      "severity": "HIGH",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402604",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "HIGH",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2621449732,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2433,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 71472,
+        "handler_name": "readmsr_wrapper",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> privileged opcode/instruction"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402608",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2621449736,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2434,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 71744,
+        "handler_name": "writemsr_wrapper",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> privileged opcode/instruction"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402610",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "LOW",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2621449744,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2436,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 87670,
+        "handler_name": "DbgPrint",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402614",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "LOW",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2621449748,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2437,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 87670,
+        "handler_name": "DbgPrint",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402620",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "HIGH",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler] | sinks: HalGetBusDataByOffset",
+      "data": {
+        "code": 2621449760,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2440,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 71952,
+        "handler_name": "HalGetBusDataByOffset_wrapper",
+        "sinks": [
+          "HalGetBusDataByOffset"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> HalGetBusDataByOffset"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402624",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "LOW",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2621449764,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2441,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 87670,
+        "handler_name": "DbgPrint",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C40262C",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler] | sinks: MmMapIoSpace, memmove",
+      "data": {
+        "code": 2621449772,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2443,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 73104,
+        "handler_name": "sub_11D90",
+        "sinks": [
+          "MmMapIoSpace",
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> MmMapIoSpace",
+          "-> memmove",
+          "-> privileged opcode/instruction"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402648",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "HIGH",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler] | sinks: memmove",
+      "data": {
+        "code": 2621449800,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2450,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 73808,
+        "handler_name": "sub_12050",
+        "sinks": [
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402650",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "HIGH",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2621449808,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2452,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 72240,
+        "handler_name": "ReadPmTimerValue_wrapper",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> privileged opcode/instruction"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402654",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler] | sinks: MmMapIoSpace, memmove",
+      "data": {
+        "code": 2621449812,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2453,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 72416,
+        "handler_name": "ReadHpetTimerValue_wrapper",
+        "sinks": [
+          "MmMapIoSpace",
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> MmMapIoSpace",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402658",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "LOW",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2621449816,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2454,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 87670,
+        "handler_name": "DbgPrint",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C40265C",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "LOW",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2621449820,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2455,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 87670,
+        "handler_name": "DbgPrint",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402660",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "LOW",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2621449824,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2456,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 87670,
+        "handler_name": "DbgPrint",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402664",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler] | sinks: MmMapIoSpace, memmove",
+      "data": {
+        "code": 2621449828,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2457,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 86816,
+        "handler_name": "sub_15320",
+        "sinks": [
+          "MmMapIoSpace",
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> MmMapIoSpace",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402668",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "LOW",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler]",
+      "data": {
+        "code": 2621449832,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2458,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 87670,
+        "handler_name": "DbgPrint",
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C40266C",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler] | sinks: MmMapIoSpace, memmove",
+      "data": {
+        "code": 2621449836,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2459,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 72656,
+        "handler_name": "io509_wrapper",
+        "sinks": [
+          "MmMapIoSpace",
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> MmMapIoSpace",
+          "-> memmove",
+          "-> privileged opcode/instruction"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x9C402674",
+      "ea": "0x11268",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "CRITICAL",
+      "detail": "<UNKNOWN> / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler] | sinks: MmMapIoSpace, memmove",
+      "data": {
+        "code": 2621449844,
+        "device_name": "<UNKNOWN>",
+        "device_code": 40000,
+        "function": 2461,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "handler_ea": 72944,
+        "handler_name": "io533_wrapper",
+        "sinks": [
+          "MmMapIoSpace",
+          "memmove"
+        ],
+        "sink_attribution": "handler",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> MmMapIoSpace",
+          "-> memmove",
+          "-> privileged opcode/instruction"
+        ]
+      }
+    },
+    {
+      "category": "acl",
+      "title": "IoCreateDevice: world-accessible by default",
+      "ea": "0x1107f",
+      "func": "DriverEntry",
+      "severity": "LOW",
+      "detail": "IoCreateDevice assigns no security descriptor; accessible to all users. Consider IoCreateDeviceSecure with a restrictive SDDL.",
+      "data": {}
+    },
+    {
+      "category": "symlink",
+      "title": "IoCreateSymbolicLink: \\DosDevices\\ALSysIO",
+      "ea": "0x110bd",
+      "func": "DriverEntry",
+      "severity": "INFO",
+      "detail": "Symbolic link exposes device to Win32 namespace; verify DACL on the target device object.",
+      "data": {}
+    },
+    {
+      "category": "callchain",
+      "title": "ReadHpetTimerValue_wrapper reaches MmMapIoSpace",
+      "ea": "0x11ae0",
+      "func": "ReadHpetTimerValue_wrapper",
+      "severity": "CRITICAL",
+      "detail": "ReadHpetTimerValue_wrapper -> sub_136E0 -> MmMapIoSpace",
+      "data": {
+        "sink": "MmMapIoSpace",
+        "path": [
+          "ReadHpetTimerValue_wrapper",
+          "sub_136E0",
+          "MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "ReadHpetTimerValue_wrapper reaches memmove",
+      "ea": "0x11ae0",
+      "func": "ReadHpetTimerValue_wrapper",
+      "severity": "HIGH",
+      "detail": "ReadHpetTimerValue_wrapper -> sub_136E0 -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "ReadHpetTimerValue_wrapper",
+          "sub_136E0",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "sub_15320 reaches MmMapIoSpace",
+      "ea": "0x15320",
+      "func": "sub_15320",
+      "severity": "CRITICAL",
+      "detail": "sub_15320 -> sub_136E0 -> MmMapIoSpace",
+      "data": {
+        "sink": "MmMapIoSpace",
+        "path": [
+          "sub_15320",
+          "sub_136E0",
+          "MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "sub_15320 reaches memmove",
+      "ea": "0x15320",
+      "func": "sub_15320",
+      "severity": "HIGH",
+      "detail": "sub_15320 -> sub_136E0 -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "sub_15320",
+          "sub_136E0",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "Possible_DispatchDeviceControl_1 reaches HalGetBusDataByOffset",
+      "ea": "0x111f0",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "HIGH",
+      "detail": "Possible_DispatchDeviceControl_1 -> HalGetBusDataByOffset_wrapper -> HalGetBusDataByOffset",
+      "data": {
+        "sink": "HalGetBusDataByOffset",
+        "path": [
+          "Possible_DispatchDeviceControl_1",
+          "HalGetBusDataByOffset_wrapper",
+          "HalGetBusDataByOffset"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "Possible_DispatchDeviceControl_1 reaches memmove",
+      "ea": "0x111f0",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "HIGH",
+      "detail": "Possible_DispatchDeviceControl_1 -> sub_12050 -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "Possible_DispatchDeviceControl_1",
+          "sub_12050",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "Possible_DispatchDeviceControl_1 reaches MmMapIoSpace",
+      "ea": "0x111f0",
+      "func": "Possible_DispatchDeviceControl_1",
+      "severity": "CRITICAL",
+      "detail": "Possible_DispatchDeviceControl_1 -> sub_11D90 -> sub_12F20 -> MmMapIoSpace",
+      "data": {
+        "sink": "MmMapIoSpace",
+        "path": [
+          "Possible_DispatchDeviceControl_1",
+          "sub_11D90",
+          "sub_12F20",
+          "MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "HalGetBusDataByOffset_wrapper reaches HalGetBusDataByOffset",
+      "ea": "0x11910",
+      "func": "HalGetBusDataByOffset_wrapper",
+      "severity": "HIGH",
+      "detail": "HalGetBusDataByOffset_wrapper -> HalGetBusDataByOffset",
+      "data": {
+        "sink": "HalGetBusDataByOffset",
+        "path": [
+          "HalGetBusDataByOffset_wrapper",
+          "HalGetBusDataByOffset"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "sub_11D90 reaches MmMapIoSpace",
+      "ea": "0x11d90",
+      "func": "sub_11D90",
+      "severity": "CRITICAL",
+      "detail": "sub_11D90 -> sub_12F20 -> MmMapIoSpace",
+      "data": {
+        "sink": "MmMapIoSpace",
+        "path": [
+          "sub_11D90",
+          "sub_12F20",
+          "MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "sub_11D90 reaches memmove",
+      "ea": "0x11d90",
+      "func": "sub_11D90",
+      "severity": "HIGH",
+      "detail": "sub_11D90 -> sub_13280 -> sub_14610 -> sub_136E0 -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "sub_11D90",
+          "sub_13280",
+          "sub_14610",
+          "sub_136E0",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "sub_12050 reaches memmove",
+      "ea": "0x12050",
+      "func": "sub_12050",
+      "severity": "HIGH",
+      "detail": "sub_12050 -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "sub_12050",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "io509_wrapper reaches MmMapIoSpace",
+      "ea": "0x11bd0",
+      "func": "io509_wrapper",
+      "severity": "CRITICAL",
+      "detail": "io509_wrapper -> sub_138A0 -> sub_136E0 -> MmMapIoSpace",
+      "data": {
+        "sink": "MmMapIoSpace",
+        "path": [
+          "io509_wrapper",
+          "sub_138A0",
+          "sub_136E0",
+          "MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "io509_wrapper reaches memmove",
+      "ea": "0x11bd0",
+      "func": "io509_wrapper",
+      "severity": "HIGH",
+      "detail": "io509_wrapper -> sub_138A0 -> sub_136E0 -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "io509_wrapper",
+          "sub_138A0",
+          "sub_136E0",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "io533_wrapper reaches MmMapIoSpace",
+      "ea": "0x11cf0",
+      "func": "io533_wrapper",
+      "severity": "CRITICAL",
+      "detail": "io533_wrapper -> sub_13E70 -> sub_13DA0 -> sub_138A0 -> sub_136E0 -> MmMapIoSpace",
+      "data": {
+        "sink": "MmMapIoSpace",
+        "path": [
+          "io533_wrapper",
+          "sub_13E70",
+          "sub_13DA0",
+          "sub_138A0",
+          "sub_136E0",
+          "MmMapIoSpace"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "io533_wrapper reaches memmove",
+      "ea": "0x11cf0",
+      "func": "io533_wrapper",
+      "severity": "HIGH",
+      "detail": "io533_wrapper -> sub_13E70 -> sub_13DA0 -> sub_138A0 -> sub_136E0 -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "io533_wrapper",
+          "sub_13E70",
+          "sub_13DA0",
+          "sub_138A0",
+          "sub_136E0",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x1224e",
+      "func": "sub_12050",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x13727",
+      "func": "sub_136E0",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x1420c",
+      "func": "sub_141C0",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x142d0",
+      "func": "sub_14270",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x14490",
+      "func": "sub_143F0",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x1a0d4",
+      "func": "sub_1A008",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Ungated privileged op: MmMapIoSpace",
+      "ea": "0x13715",
+      "func": "sub_136E0",
+      "severity": "HIGH",
+      "detail": "Reachable from dispatcher ReadHpetTimerValue_wrapper with no privilege check on the path",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Ungated privileged op: MmMapIoSpace",
+      "ea": "0x137a6",
+      "func": "sub_13780",
+      "severity": "HIGH",
+      "detail": "Reachable from dispatcher Possible_DispatchDeviceControl_1 with no privilege check on the path",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Ungated privileged op: HalGetBusDataByOffset",
+      "ea": "0x119a9",
+      "func": "HalGetBusDataByOffset_wrapper",
+      "severity": "HIGH",
+      "detail": "Reachable from dispatcher Possible_DispatchDeviceControl_1 with no privilege check on the path",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Ungated privileged op: MmMapIoSpace",
+      "ea": "0x13030",
+      "func": "sub_12F20",
+      "severity": "HIGH",
+      "detail": "Reachable from dispatcher Possible_DispatchDeviceControl_1 with no privilege check on the path",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "Privileged instruction: in",
+      "ea": "0x1380f",
+      "func": "sub_13800",
+      "severity": "HIGH",
+      "detail": "in      eax, dx",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "Privileged instruction: in",
+      "ea": "0x13448",
+      "func": "sub_13280",
+      "severity": "HIGH",
+      "detail": "in      eax, dx",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "Privileged instruction: in",
+      "ea": "0x13473",
+      "func": "sub_13280",
+      "severity": "HIGH",
+      "detail": "in      eax, dx",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "Privileged instruction: in",
+      "ea": "0x134d6",
+      "func": "sub_13280",
+      "severity": "HIGH",
+      "detail": "in      eax, dx",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "Privileged instruction: in",
+      "ea": "0x130fd",
+      "func": "sub_12F20",
+      "severity": "HIGH",
+      "detail": "in      eax, dx",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "Privileged instruction: in",
+      "ea": "0x13124",
+      "func": "sub_12F20",
+      "severity": "HIGH",
+      "detail": "in      eax, dx",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "Privileged instruction: in",
+      "ea": "0x1315b",
+      "func": "sub_12F20",
+      "severity": "HIGH",
+      "detail": "in      eax, dx",
+      "data": {}
+    },
+    {
+      "category": "opcode",
+      "title": "Privileged instruction: out",
+      "ea": "0x1385e",
+      "func": "sub_13850",
+      "severity": "CRITICAL",
+      "detail": "out     dx, eax",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x137ae",
+      "func": "sub_13780",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x153ae",
+      "func": "sub_15320",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x128dd",
+      "func": "sub_12050",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x151e9",
+      "func": "sub_15160",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithQuotaTag",
+      "ea": "0x1a051",
+      "func": "sub_1A008",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x14755",
+      "func": "sub_14610",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x14839",
+      "func": "sub_14610",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x145a3",
+      "func": "sub_14540",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x14021",
+      "func": "sub_13F50",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x1518d",
+      "func": "sub_15160",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x14a14",
+      "func": "sub_148E0",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x14467",
+      "func": "sub_143F0",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Use-after-free: global P freed but not cleared",
+      "ea": "0x14452",
+      "func": "sub_143F0",
+      "severity": "HIGH",
+      "detail": "P freed at 0x14452 without being nulled; dereferenced elsewhere at 0x11693, 0x1399a, 0x13b0d",
+      "data": {}
+    }
+  ]
+}
