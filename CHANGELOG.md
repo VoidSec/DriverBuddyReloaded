@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `device_name_finder._decode_symlink_arg()`: symbolic-link target paths now decode instead of
+  reporting "path could not be decoded" on essentially every driver. Two root causes: (1) the
+  decoder read the operand with `idc.get_strlit_contents(ea, -1, STRTYPE_C_16)`, which transcodes
+  a wide string to UTF-8, then decoded that result a second time as UTF-16LE -- turning
+  `\DosDevices\X` into mojibake that matched no device prefix. It now reads the raw bytes and
+  decodes UTF-16LE once, cutting at the first NUL. (2) The backward walk from the
+  `IoCreateSymbolicLink` call was capped at 30 instructions, but HEVD initialises the link name
+  ~38 instructions before the call (the whole `IoCreateDevice` + `MajorFunction[]` setup sits in
+  between); the window is now 64. The accept test also tightened from "backslash anywhere" to a
+  leading backslash so a stray pointer byte cannot false-match. Verified: HEVD
+  `\DosDevices\HackSysExtremeVulnerableDriver`, WinRing0x64 `\DosDevices\WinRing0_1_2_0`,
+  ALSysIO64 `\DosDevices\ALSysIO` now recovered.
 - ACL (`utils.find_device_create_calls`) and symbolic-link (`device_name_finder.find_symbolic_links`)
   findings were emitted in exact duplicate on every driver. `idautils.XrefsTo(ea, 0)` can return
   more than one xref kind for a single call site, so a lone `IoCreateDevice` /

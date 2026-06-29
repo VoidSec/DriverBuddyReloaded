@@ -207,6 +207,15 @@ def search(rep):
 # N4: Symbolic link exposure tracking
 # ---------------------------------------------------------------------------
 
+# How many instructions to walk back from an IoCreateSymbolicLink call looking
+# for the RtlInitUnicodeString string load.  Must be generous: in HEVD the
+# symbolic-link name is initialised ~38 instructions before the call because the
+# whole IoCreateDevice + MajorFunction[] setup sits in between.  Walking back, the
+# nearest backslash-prefixed string is always the symbolic-link name, so a wider
+# window only ever helps.
+_SYMLINK_LOOKBACK = 64
+
+
 def _decode_symlink_arg(call_ea: int) -> Optional[str]:
     """
     Walk backwards from call_ea looking for a data-xref to a UNICODE_STRING or
@@ -215,7 +224,7 @@ def _decode_symlink_arg(call_ea: int) -> Optional[str]:
     seg_start = idc.get_segm_start(call_ea)
     cur = call_ea
     seen_eas = set()
-    for _ in range(30):
+    for _ in range(_SYMLINK_LOOKBACK):
         prev = idc.prev_head(cur, seg_start)
         if prev == idc.BADADDR or prev == cur or prev in seen_eas:
             break
@@ -229,11 +238,25 @@ def _decode_symlink_arg(call_ea: int) -> Optional[str]:
             if ref_ea == idc.BADADDR or ref_ea < 0x1000:
                 continue
             try:
-                raw = idc.get_strlit_contents(ref_ea, -1, idc.STRTYPE_C_16)
-                if raw and len(raw) >= 4:
-                    s = raw.decode("utf-16-le", errors="ignore").rstrip("\x00")
-                    if any(s.startswith(p) for p in _DEVICE_PREFIXES) or "\\" in s:
-                        return s
+                # Read the raw UTF-16LE bytes directly.  idc.get_strlit_contents()
+                # transcodes a wide string to UTF-8, which then mis-decodes when
+                # read back as UTF-16 -- the cause of every "path could not be
+                # decoded" on plain `RtlInitUnicodeString(&x, L"\\DosDevices\\...")`
+                # literals (verified on HEVD/WinRing0/ALSysIO).  Decoding the whole
+                # buffer and cutting at the first NUL avoids the get_strlit_contents
+                # quirk and the odd-offset truncation of a split-on-`\x00\x00`.
+                raw = ida_bytes.get_bytes(ref_ea, 0x208) or b""
+                if len(raw) < 8:
+                    continue
+                s = raw.decode("utf-16-le", errors="ignore")
+                nul = s.find("\x00")
+                if nul != -1:
+                    s = s[:nul]
+                # A device path always begins with a backslash; require that rather
+                # than "\\ anywhere" so a stray pointer byte cannot false-match.
+                if len(s) >= 4 and (any(s.startswith(p) for p in _DEVICE_PREFIXES)
+                                    or s.startswith("\\")):
+                    return s
             except Exception:
                 pass
     return None
