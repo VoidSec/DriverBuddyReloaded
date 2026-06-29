@@ -205,7 +205,7 @@ def get_function(ioctl_code):
 def decode(ioctl_code):
     """
     Decode a 32-bit IOCTL into its constituent fields. Single source of truth used
-    by the table printer, the auto-scanner, risk scoring and PoC generation.
+    by the table printer, the auto-scanner and risk scoring.
     :param ioctl_code: immediate value representing a Windows IOCTL
     :return dict: decoded fields
     """

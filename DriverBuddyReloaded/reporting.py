@@ -27,7 +27,7 @@ _last_results_chooser = None
 @dataclass
 class Finding:
     """A single analysis result. `data` carries category-specific payload
-    (e.g. decoded IOCTL fields) and is what JSON/HTML/PoC consume."""
+    (e.g. decoded IOCTL fields) and is what the JSON/HTML reports consume."""
     category: str
     title: str
     ea: int = BADADDR

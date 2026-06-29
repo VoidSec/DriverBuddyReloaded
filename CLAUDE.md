@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 python tests/test_dbr.py
 DBR_SDK=900 python tests/test_dbr.py    # simulate IDA 9.0 import paths
 ```
-31 checks, all logic that does not touch the live IDA database. Run both variants on every change.
+28 checks, all logic that does not touch the live IDA database. Run both variants on every change.
 
 ### Run cross-version smoke tests (requires all three IDA installs)
 ```
@@ -51,11 +51,10 @@ DriverBuddyReloaded.py          <- IDA plugin_t (init / run / term / UI hooks)
         +-- find_opcodes.py       opcode scan (off by default: Feature.SEGMENT_OPCODE_SCAN)
         +-- scoring.py            IOCTL risk scoring + severity bump
         +-- reporting.py          JSON / HTML / results window / IOCTL window
-        +-- poc.py                DeviceIoControl PoC harness
 ```
 
 ### The Reporter spine
-Every module emits `Finding` objects (defined in `reporting.py`) via `rep.add_finding(category, title, ...)` instead of bare `print()`. `rep.info()` writes INFO-level lines. At the end of a run the Reporter renders the clickable findings window (`ResultsChooser`), the IOCTL recap window (`IOCTLChooser`), `findings.json`, `report.html`, and `ioctl_pocs.c`. Never bypass the Reporter with direct `print()` calls.
+Every module emits `Finding` objects (defined in `reporting.py`) via `rep.add_finding(category, title, ...)` instead of bare `print()`. `rep.info()` writes INFO-level lines. At the end of a run the Reporter renders the clickable findings window (`ResultsChooser`), the IOCTL recap window (`IOCTLChooser`), `findings.json`, and `report.html`. Never bypass the Reporter with direct `print()` calls.
 
 ### Plugin UI layer (DriverBuddyReloaded.py)
 `DriverBuddyReloaded.py` owns all IDA UI concerns and delegates analysis to `analysis.run_analysis()`.

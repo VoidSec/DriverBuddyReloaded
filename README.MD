@@ -44,10 +44,8 @@ To use the auto-analysis feature:
 3. Check the "Output" window for the analysis results, and the **Driver Buddy Reloaded - Findings** window that opens
    at the end of the run (double-click a row to jump to its address).
 4. The following files are written under IDA's DB directory (all prefixed with `<DRIVER_NAME>-YYYY-MM-DD-TIMESTAMP-`):
-   - `autoanalysis.txt` - the full text analysis log
    - `findings.json` - machine-readable findings (IOCTLs, flagged functions, device names, pooltags, call chains)
    - `report.html` - a standalone, severity-grouped HTML report
-   - `ioctl_pocs.c` - a `DeviceIoControl` PoC harness skeleton (severity-sorted)
    - `pooltags.txt` - dumped Pooltags in `pooltags.txt` format for WinDbg
 
 To decode an IOCTL:
@@ -111,8 +109,7 @@ engineering tasks. It has a number of handy features, such as:
   dangerous sinks such as `MmMapIoSpace`, `memcpy`, `__writemsr`) and presenting all findings, by severity, in a
   clickable results window (double-click to jump to the address)
 * **Tracing call chains** from dispatch / IOCTL handlers to dangerous sinks (heuristic, name-based)
-* Exporting results as a machine-readable **JSON** file, a standalone **HTML report**, and a generated **C/C++
-  `DeviceIoControl` PoC harness** to bootstrap testing/fuzzing
+* Exporting results as a machine-readable **JSON** file and a standalone **HTML report**
 
 ![](img/auto-analysis.png)
 
@@ -241,7 +238,6 @@ enable or disable them:
 | `RESULTS_WINDOW` | `True` | Show the Driver Buddy Reloaded findings window after analysis |
 | `JSON_EXPORT` | `True` | Write `findings.json` |
 | `HTML_REPORT` | `True` | Write `report.html` |
-| `POC_HARNESS` | `True` | Write `ioctl_pocs.c` PoC harness |
 | `SEGMENT_OPCODE_SCAN` | `False` | Linear segment-wide opcode scan (noisy, off by default) |
 
 ## Known Caveats and Limitations
@@ -261,7 +257,7 @@ enable or disable them:
 ## Credits and Acknowledgements
 
 - Created in 2021 by [Paolo Stagno](https://voidsec.com/) aka [@Void_Sec](https://twitter.com/Void_Sec):
-- Risk-scoring, reporting and PoC-generation ideas adapted from
+- Risk-scoring and reporting ideas adapted from
   [Driver Buddy Revolutions](https://github.com/jsacco/driverbuddyrevolutionsIDA) by Juan Sacco.
 - [DriverBuddy](https://github.com/nccgroup/DriverBuddy) was originally written by Braden Hollembaek and Adam Pond of
   NCC Group.

@@ -27,7 +27,6 @@ from DriverBuddyReloaded import (
     heuristics,
     ioctl_decoder,
     irp_mj,
-    poc,
     scoring,
     utils,
 )
@@ -134,8 +133,6 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
         rep.to_json(config.out_path("findings.json"))
     if config.Feature.HTML_REPORT:
         rep.to_html(config.out_path("report.html"))
-    if config.Feature.POC_HARNESS:
-        poc.generate(rep, config.out_path("ioctl_pocs.c"))
 
     rep.info("[+] Analysis Completed!")
     rep.info("-----------------------------------------------")

@@ -9,7 +9,7 @@ under plain CPython with no IDA installed:
     DBR_SDK=900 python3 tests/test_dbr.py  # simulate IDA 9.0 import paths
 
 They cover the parts that can be validated outside IDA (IOCTL decoding, risk
-scoring, JSON/HTML/PoC generation and full plugin import on 7.x/8.4/9.0 SDKs).
+scoring, JSON/HTML generation and full plugin import on 7.x/8.4/9.0 SDKs).
 Behaviour that touches the live database must still be checked inside IDA.
 """
 
@@ -133,7 +133,7 @@ def main():
     _install_ida_stubs()
     sys.path.insert(0, ROOT)
 
-    from DriverBuddyReloaded import config, ioctl_decoder, scoring, poc, reporting
+    from DriverBuddyReloaded import config, ioctl_decoder, scoring, reporting
     from DriverBuddyReloaded import device_name_finder
 
     failures = []
@@ -201,23 +201,17 @@ def main():
     check(len(rep_dedup.by_category("acl")) == 2,
           "T8: finding at a distinct ea is still recorded")
 
-    # ---- JSON / HTML / PoC ----
+    # ---- JSON / HTML ----
     out = tempfile.mkdtemp()
-    json_path, html_path, poc_path = (os.path.join(out, n) for n in ("f.json", "r.html", "poc.c"))
+    json_path, html_path = (os.path.join(out, n) for n in ("f.json", "r.html"))
     rep.to_json(json_path)
     rep.to_html(html_path)
-    poc.generate(rep, poc_path)
     with open(json_path) as fh:
         j = json.load(fh)
     check(bool(j["findings"]) and "severity_counts" in j, "json has findings")
     with open(html_path) as fh:
         h = fh.read()
     check("stub.sys" in h, "html renders driver")
-    with open(poc_path) as fh:
-        c = fh.read()
-    check('CreateFileW(L"\\\\\\\\.\\\\Stub"' in c, "poc has CreateFileW")
-    check("DeviceIoControl(h," in c, "poc has DeviceIoControl")
-    check(c.index("0x00222003") < c.index("0x00222000"), "poc CRITICAL first")
 
     # ---- T1: check_for_fake_driver_entry backward walk uses idc.prev_head ----
     # Set up a fake function: start=0x10000, end=0x10010.

@@ -1,7 +1,7 @@
 """
 DriverBuddyReloaded.py: Entry point for the IDA Python plugin used in Windows driver vulnerability
 research.  Created in 2021 by Paolo Stagno aka VoidSec: https://voidsec.com
-Ported to IDA 7.6/8.4/9.0+ and extended with risk scoring, JSON/HTML reporting and PoC generation.
+Ported to IDA 7.6/8.4/9.0+ and extended with risk scoring and JSON/HTML reporting.
 
 This module owns the plugin lifecycle (plugin_t, hotkeys, UI hooks, IOCTL tracker) and delegates
 all analysis work to DriverBuddyReloaded.analysis.run_analysis().

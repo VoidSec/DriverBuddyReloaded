@@ -4,8 +4,7 @@ dangerous sinks (config.DANGEROUS_SINKS).
 
 This is a heuristic lead generator built on IDA's cross-reference database, not a
 real dataflow analysis, so findings are starting points rather than ground truth.
-Results feed risk scoring (a handler that reaches a sink is bumped) and the PoC
-prioritisation.
+Results feed risk scoring (a handler that reaches a sink is bumped).
 """
 
 from __future__ import annotations

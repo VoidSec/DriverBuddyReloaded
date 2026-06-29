@@ -27,7 +27,6 @@ class Feature:
     RESULTS_WINDOW = True
     JSON_EXPORT = True
     HTML_REPORT = True
-    POC_HARNESS = True
     CALLCHAIN = True
     HEURISTICS = True
     EXPORTS_AUDIT = True
