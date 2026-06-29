@@ -31,6 +31,12 @@ from DriverBuddyReloaded.reporting import Finding
 _VALID_LOOKBACK = 20
 _VALID_LOOKAHEAD = 6
 
+def _is_lib_or_thunk(ea: int) -> bool:
+    """True for FLIRT library functions and thunks (memmove, memset, CRT helpers):
+    they are not driver logic and only add noise to the handler scan set.
+    Constants are read lazily so importing this module needs no live IDA."""
+    return bool(idc.get_func_flags(ea) & (ida_funcs.FUNC_LIB | ida_funcs.FUNC_THUNK))
+
 
 def _callee_name(ea: int) -> str:
     """Resolved name of the function called/jumped-to at `ea`.
@@ -121,33 +127,43 @@ def check_user_copy_validation(rep: Reporter, handler_eas: Set[int]) -> None:
                     _VALID_LOOKBACK, _VALID_LOOKAHEAD)))
 
 
-def check_privilege_gate(rep: Reporter, handler_eas: Set[int]) -> None:
+def check_privilege_gate(rep: Reporter, seed_eas: Set[int]) -> None:
     """
-    Flag handlers that invoke a PRIVILEGED_SENSITIVE_OPS member without any
-    PRIVILEGE_GATE_FUNCS call in the same function.
+    Flag PRIVILEGED_SENSITIVE_OPS that are reachable from a dispatcher with no
+    privilege check (SeAccessCheck / SeSinglePrivilegeCheck / token query / ...)
+    anywhere on the path.
 
-    Computing the callee set once per function avoids the O(n^2) pattern in the clone.
+    Path-level rather than single-function: a privileged primitive is frequently
+    wrapped (WinRing0x64 `MmMapIoSpace_wrapper`, ALSysIO64 `sub_12F20`), so a
+    per-function check on the dispatcher alone never saw it (false negative),
+    while a per-function check on the wrapper alone would wrongly report a sink
+    that a dispatcher-level gate actually protects (false positive).  For each
+    dispatcher subtree we therefore: gather the transitively-reachable functions,
+    skip the whole subtree when a gate appears anywhere on it, and otherwise flag
+    every reachable sensitive-op call site once.
     """
-    for func_ea in handler_eas:
-        func_name = ida_funcs.get_func_name(func_ea) or ""
-        callees = _callees(func_ea)
-        sensitive = callees & config.PRIVILEGED_SENSITIVE_OPS
-        if not sensitive:
+    reported = set()
+    for seed in seed_eas:
+        reachable = [ea for ea in transitive_callees({seed}, config.HANDLER_SEED_DEPTH)
+                     if not _is_lib_or_thunk(ea)]
+        # A gate anywhere on the dispatcher's call tree protects everything below it.
+        if any(_callees(f) & config.PRIVILEGE_GATE_FUNCS for f in reachable):
             continue
-        gated = bool(callees & config.PRIVILEGE_GATE_FUNCS)
-        if gated:
-            continue
-        for head in idautils.FuncItems(func_ea):
-            target = _callee_name(head)
-            if target in sensitive:
-                rep.add(Finding(
-                    category="heuristic",
-                    title="Ungated privileged op: {}".format(target),
-                    ea=head,
-                    func=func_name,
-                    severity=config.SEV_HIGH,
-                    detail="No privilege gate ({}) found in handler".format(
-                        ", ".join(sorted(config.PRIVILEGE_GATE_FUNCS)[:3]))))
+        seed_name = ida_funcs.get_func_name(seed) or "0x{:x}".format(seed)
+        for func_ea in reachable:
+            func_name = ida_funcs.get_func_name(func_ea) or ""
+            for head in idautils.FuncItems(func_ea):
+                target = _callee_name(head)
+                if target in config.PRIVILEGED_SENSITIVE_OPS and head not in reported:
+                    reported.add(head)
+                    rep.add(Finding(
+                        category="heuristic",
+                        title="Ungated privileged op: {}".format(target),
+                        ea=head,
+                        func=func_name,
+                        severity=config.SEV_HIGH,
+                        detail="Reachable from dispatcher {} with no privilege check "
+                               "on the path".format(seed_name)))
 
 
 def check_irql(rep: Reporter, handler_eas: Set[int]) -> None:
@@ -525,15 +541,14 @@ def run(rep: Reporter, ctx: AnalysisContext) -> None:
     # deep checks see the per-IOCTL handler bodies (HEVD's Trigger*/IoctlHandler
     # callees), not just the dispatcher prologue.  This is what lets double-fetch,
     # pool-trust, privilege-gate, IRQL, MDL and alloca fire on the real handler code.
-    _LIBTHUNK = ida_funcs.FUNC_LIB | ida_funcs.FUNC_THUNK
     handler_eas = {
         ea for ea in transitive_callees(seed_eas, config.HANDLER_SEED_DEPTH)
-        if not (idc.get_func_flags(ea) & _LIBTHUNK)  # skip memmove/memset/CRT leaves
+        if not _is_lib_or_thunk(ea)  # skip memmove/memset/CRT leaves
     }
     rep.info("[>] Running heuristic checks on {} handler(s) ({} dispatcher seed(s))...".format(
         len(handler_eas), len(seed_eas)))
     check_user_copy_validation(rep, handler_eas)
-    check_privilege_gate(rep, handler_eas)
+    check_privilege_gate(rep, seed_eas)
     check_irql(rep, handler_eas)
     check_mdl(rep, handler_eas)
     check_alloca(rep, handler_eas)

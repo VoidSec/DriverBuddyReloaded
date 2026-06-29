@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `heuristics.check_privilege_gate()`: now a path-level analysis instead of single-function. A
+  privileged primitive (`MmMapIoSpace`, `__writemsr`-class APIs, `Zw*` memory/section/process ops)
+  is usually reached through a wrapper, so the old per-function check on the dispatcher never saw it.
+  For each dispatcher subtree the check now collects the transitively-reachable functions, skips the
+  whole subtree if a privilege gate (`SeAccessCheck` / `SeSinglePrivilegeCheck` / token query / ...)
+  appears anywhere on it -- so a gate in the dispatcher correctly protects a deeper sink, no false
+  positive -- and otherwise flags every reachable sensitive-op call site once. Verified: ALSysIO64
+  reports 3 and WinRing0x64 reports 1 ungated `MmMapIoSpace` (none before); beep/HEVD unaffected.
 - `heuristics`: the deep checks (double-fetch, pool-alloc-trust, privilege-gate, IRQL, MDL, alloca)
   now run on the dispatcher **and the functions it transitively calls**, not just the dispatcher
   itself. `handler_seed_eas()` only ever returned the dispatch routine, so for drivers that route
