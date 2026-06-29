@@ -23,6 +23,11 @@ import ida_funcs
 import idautils
 import idc
 
+try:
+    import ida_xref
+except ImportError:  # pragma: no cover
+    ida_xref = None
+
 from DriverBuddyReloaded import config, ida_compat
 from DriverBuddyReloaded.callchain import handler_seed_eas, transitive_callees
 from DriverBuddyReloaded.reporting import Finding
@@ -562,6 +567,102 @@ def check_use_after_free(rep: "Reporter", ctx: "AnalysisContext", handler_ea: in
             pass
 
 
+def _backwalk_global_into_reg(call_ea: int, reg: str, func_start: int):
+    """If the value in `reg` at `call_ea` was loaded straight from a global, return
+    that global's data EA; otherwise None.  Stops at the first writer of `reg`, so a
+    register-only / locally-computed argument is correctly rejected."""
+    cur = call_ea
+    for _ in range(16):
+        prev = idc.prev_head(cur, func_start)
+        if prev == idc.BADADDR or prev == cur:
+            break
+        cur = prev
+        if idc.print_insn_mnem(cur) in ("mov", "lea") and \
+                idc.print_operand(cur, 0).lower().startswith(reg):
+            if idc.get_operand_type(cur, 1) == idc.o_mem:
+                g = idc.get_operand_value(cur, 1)
+                if g not in (idc.BADADDR, None) and g >= 0x1000:
+                    return g
+            return None  # reg overwritten by a non-global source
+    return None
+
+
+def _global_nulled_after(g_ea: int, free_ea: int, func_ea: int) -> bool:
+    """True if the freeing function writes 0 to the global after the free."""
+    for head in idautils.FuncItems(func_ea):
+        if head <= free_ea:
+            continue
+        if idc.print_insn_mnem(head) == "mov" \
+                and idc.get_operand_type(head, 0) == idc.o_mem \
+                and idc.get_operand_value(head, 0) == g_ea \
+                and idc.get_operand_type(head, 1) == idc.o_imm \
+                and idc.get_operand_value(head, 1) == 0:
+            return True
+    return False
+
+
+def _global_read_sites(g_ea: int, exclude_func: int):
+    """Read references to the global from functions other than the freeing one."""
+    dr_w = getattr(ida_xref, "dr_W", 2) if ida_xref else 2
+    sites = []
+    for xr in idautils.XrefsTo(g_ea, 0):
+        if getattr(xr, "type", None) == dr_w:
+            continue  # a write (e.g. the allocator storing the pointer) is not a use
+        fn = ida_funcs.get_func(xr.frm)
+        if not fn or fn.start_ea == exclude_func:
+            continue
+        sites.append(xr.frm)
+    return sites
+
+
+def check_use_after_free_global(rep: "Reporter", handler_eas: Set[int]) -> None:
+    """
+    N6b: cross-function use-after-free via a global pointer.
+
+    The register-tracking check (check_use_after_free) is intra-function and
+    cannot model the canonical driver UAF where one IOCTL frees a global object
+    pointer without nulling it and a *different* IOCTL later dereferences the
+    dangling global (e.g. HEVD g_UseAfterFreeObjectNonPagedPool).  This pass finds
+    ExFreePool* calls whose argument is loaded directly from a global, confirms the
+    global is not zeroed in the freeing function, and confirms it is read elsewhere
+    -- emitting HIGH when all three hold.
+    """
+    try:
+        from DriverBuddyReloaded.ida_compat import is_64bit
+        reg = "rcx" if is_64bit() else "ecx"
+    except Exception:
+        reg = "rcx"
+
+    seen_globals = {}
+    for func_ea in handler_eas:
+        func = ida_funcs.get_func(func_ea)
+        start = func.start_ea if func else func_ea
+        for head in idautils.FuncItems(func_ea):
+            if idc.print_insn_mnem(head) != "call":
+                continue
+            if _callee_name(head) not in config.FREE_POOL_FUNCS:
+                continue
+            g_ea = _backwalk_global_into_reg(head, reg, start)
+            if g_ea is not None:
+                seen_globals.setdefault(g_ea, (head, func_ea))
+
+    for g_ea, (free_ea, free_func) in seen_globals.items():
+        if _global_nulled_after(g_ea, free_ea, free_func):
+            continue
+        uses = _global_read_sites(g_ea, free_func)
+        if not uses:
+            continue
+        gname = idc.get_name(g_ea) or "0x{:x}".format(g_ea)
+        rep.add(Finding(
+            category="heuristic",
+            title="Use-after-free: global {} freed but not cleared".format(gname),
+            ea=free_ea,
+            func=ida_funcs.get_func_name(free_func) or "",
+            severity=config.SEV_HIGH,
+            detail="{} freed at 0x{:x} without being nulled; dereferenced elsewhere at {}".format(
+                gname, free_ea, ", ".join("0x{:x}".format(u) for u in uses[:3]))))
+
+
 def run(rep: Reporter, ctx: AnalysisContext) -> None:
     """
     Run all heuristic checks.  Seeds handlers from callchain.handler_seed_eas()
@@ -601,5 +702,6 @@ def run(rep: Reporter, ctx: AnalysisContext) -> None:
     if config.Feature.UAF_DETECT:
         for ea in handler_eas:
             check_use_after_free(rep, ctx, ea)
+        check_use_after_free_global(rep, handler_eas)
     n = len(rep.by_category("heuristic"))
     rep.info("[>] Heuristics: {} finding(s) emitted".format(n))

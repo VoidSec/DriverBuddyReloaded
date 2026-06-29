@@ -40,6 +40,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `heuristics.check_use_after_free_global()`: cross-function, global-pointer UAF detection. The
+  existing register-tracking `check_use_after_free()` is intra-function and cannot model the
+  canonical driver UAF where one IOCTL frees a global object pointer without nulling it and a
+  *different* IOCTL later dereferences the dangling global. The new pass finds `ExFreePool*` calls
+  whose argument is loaded directly from a global, confirms that global is not zeroed in the freeing
+  function, and confirms it is read from another function -- emitting HIGH only when all three hold.
+  Verified: HEVD reports both `g_UseAfterFreeObjectNonPagedPool` and `...Nx`; beep/ALSysIO64/WinRing0x64
+  report none (no false positives).
 - `heuristics.check_privileged_instructions()`: flags privileged CPU instructions reachable from a
   dispatch handler -- port I/O (`in`/`out`/`ins`/`outs`), control/debug-register moves
   (`mov cr*`/`mov dr*`), descriptor-table loads (`lgdt`/`lidt`/`lldt`/`ltr`/`lmsw`) and
