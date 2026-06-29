@@ -567,6 +567,123 @@ def check_use_after_free(rep: "Reporter", ctx: "AnalysisContext", handler_ea: in
             pass
 
 
+_COPY_FUNC_NAMES = frozenset({
+    "memmove", "memcpy", "memset", "wmemcpy", "memcpy_s", "memmove_s", "qmemcpy",
+})
+
+
+def _node_ea(node, default: int) -> int:
+    """Best-effort source address of a ctree node, falling back to *default*."""
+    try:
+        ea = node.ea
+        if ea is not None and ea != idc.BADADDR:
+            return ea
+    except Exception:
+        pass
+    return default
+
+
+def check_write_primitives(rep: "Reporter", handler_eas: Set[int]) -> None:
+    """
+    Arbitrary-write (write-what-where) detection via the decompiler ctree.
+
+    The copy-validation check only sees memcpy-family *calls*; the most direct
+    write primitives are plain pointer stores the compiler never turns into a
+    call.  Two high-signal shapes are flagged HIGH:
+
+      - `*p = *q`  : a value read through one pointer stored through another
+                     (HEVD TriggerArbitraryWrite `*Where = *What`; ALSysIO64
+                     sub_13780 writes a user dword to mapped physical memory).
+      - `*(*p) = c`: a store through a double-dereferenced (pointer-to-pointer)
+                     destination (HEVD TriggerWriteNULL `*(*UserBuffer) = 0`).
+
+    Both require a pointer *value* (not `&local`) on the destination, so ordinary
+    `out_struct->field = x` stores (cot_memptr LHS) are not flagged.  Gated on
+    config.Feature.IOCTL_DECOMPILER + HexRays; best-effort, fully guarded.
+    """
+    if not config.Feature.IOCTL_DECOMPILER:
+        return
+    try:
+        import ida_hexrays
+    except Exception:
+        return
+    try:
+        init = getattr(ida_hexrays, "init_hexrays_plugin", None)
+        if init is not None and not init():
+            return
+    except Exception:
+        return
+
+    cot_asg = getattr(ida_hexrays, "cot_asg", None)
+    cot_ptr = getattr(ida_hexrays, "cot_ptr", None)
+    cot_cast = getattr(ida_hexrays, "cot_cast", None)
+    CV_FAST = getattr(ida_hexrays, "CV_FAST", 8)
+    if cot_asg is None or cot_ptr is None:
+        return
+
+    def _unwrap(n):
+        while cot_cast is not None and n is not None and n.op == cot_cast:
+            n = n.x
+        return n
+
+    for func_ea in handler_eas:
+        try:
+            cfunc = ida_hexrays.decompile(func_ea)
+        except Exception:
+            cfunc = None
+        if cfunc is None:
+            continue
+        fname = ida_funcs.get_func_name(func_ea) or ""
+        # A bare element copy (`*p = *q`) is the body of every memcpy/memmove-style
+        # routine; skip those so the check does not flag the copy primitive itself.
+        if fname in config.COPY_SINKS or fname.lower() in _COPY_FUNC_NAMES:
+            continue
+        hits = {}
+
+        class _W(ida_hexrays.ctree_visitor_t):
+            def __init__(self):
+                ida_hexrays.ctree_visitor_t.__init__(self, CV_FAST)
+
+            def visit_expr(self, e):
+                try:
+                    if e.op == cot_asg and e.x is not None and e.x.op == cot_ptr:
+                        dst = _unwrap(e.x.x)
+                        rhs = _unwrap(e.y)
+                        # Double-deref store `*(*p) = c` is the canonical, rarely
+                        # benign write-what-where; single-deref `*p = *q` is a
+                        # weaker controlled-copy lead (also appears in struct copies).
+                        type_b = dst is not None and dst.op == cot_ptr
+                        type_a = rhs is not None and rhs.op == cot_ptr
+                        if type_b:
+                            hits[_node_ea(e, func_ea)] = "b"
+                        elif type_a:
+                            hits.setdefault(_node_ea(e, func_ea), "a")
+                except Exception:
+                    pass
+                return 0
+
+        try:
+            _W().apply_to(cfunc.body, None)
+        except Exception:
+            pass
+
+        for ea, shape in hits.items():
+            if shape == "b":
+                rep.add(Finding(
+                    category="heuristic",
+                    title="Arbitrary write (write-what-where)",
+                    ea=ea, func=fname, severity=config.SEV_HIGH,
+                    detail="Store through a double-dereferenced (user-controlled) "
+                           "pointer `*(*p) = c`; verify the destination is validated"))
+            else:
+                rep.add(Finding(
+                    category="heuristic",
+                    title="Controlled pointer write",
+                    ea=ea, func=fname, severity=config.SEV_MEDIUM,
+                    detail="Value read through one pointer stored through another "
+                           "`*p = *q`; review whether the destination is attacker-controlled"))
+
+
 def _backwalk_global_into_reg(call_ea: int, reg: str, func_start: int):
     """If the value in `reg` at `call_ea` was loaded straight from a global, return
     that global's data EA; otherwise None.  Stops at the first writer of `reg`, so a
@@ -690,6 +807,7 @@ def run(rep: Reporter, ctx: AnalysisContext) -> None:
     check_mdl(rep, handler_eas)
     check_alloca(rep, handler_eas)
     check_privileged_instructions(rep, handler_eas)
+    check_write_primitives(rep, handler_eas)
     check_pool_alloc_trust(rep, handler_eas)
     check_physical_mem_ref(rep, handler_eas)
     if config.Feature.TOCTOU_CHECK:

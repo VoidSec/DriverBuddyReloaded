@@ -40,6 +40,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `heuristics.check_write_primitives()`: decompiler-ctree detection of arbitrary-write primitives
+  that are plain pointer stores (never a memcpy-family call, so the copy-validation check could not
+  see them). `*(*p) = c` (double-dereference store, the canonical write-what-where) is HIGH;
+  `*p = *q` (value read through one pointer stored through another) is MEDIUM, with memcpy/memmove-style
+  copy routines excluded by name so the copy primitive itself is not flagged. Gated on
+  `Feature.IOCTL_DECOMPILER` + HexRays. Verified: HEVD `TriggerWriteNULL` HIGH plus
+  `TriggerArbitraryWrite` and the fake-object installers MEDIUM; ALSysIO64 surfaces its physical-memory
+  write wrapper; beep stays clean. (The remaining item-7 sub-cases -- integer-overflow in a hand-rolled
+  bounds check, e.g. HEVD's `Size + 4 <= 0x800` -- need value-flow tracking and are left as a known gap;
+  `check_pool_alloc_trust` already covers unvalidated allocation sizes.)
 - `heuristics.check_use_after_free_global()`: cross-function, global-pointer UAF detection. The
   existing register-tracking `check_use_after_free()` is intra-function and cannot model the
   canonical driver UAF where one IOCTL frees a global object pointer without nulling it and a
