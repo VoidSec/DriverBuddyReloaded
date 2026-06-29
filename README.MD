@@ -4,7 +4,7 @@
 
 ## Table of Contents
 
-- [Driver Buddy Reloaded Quickstart](#driver-buddy-reloaded-quickstart)
+- [Driver Buddy Reloaded](#driver-buddy-reloaded)
   - [Table of Contents](#table-of-contents)
   - [Installation](#installation)
   - [Quick Usage](#quick-usage)
