@@ -31,7 +31,7 @@ Copy the `DriverBuddyReloaded` folder and the `DriverBuddyReloaded.py` script fi
 
 If your IDA is configured for Python 2, run the `idapyswitch` binary (located in IDA's folder) to switch it to Python 3.
 
-**NOTE:** Driver Buddy Reloaded runs on IDA 7.x, 8.x (including 8.4) and 9.0+ with Python 3. All version-specific
+**NOTE:** Driver Buddy Reloaded runs on IDA 7.6+, 8.x (including 8.4) and 9.0+ with Python 3. All version-specific
 IDA API differences (the removal of `get_inf_structure`, the `ida_struct` module and the `idc.*struc*` helpers in
 IDA 9.0, etc.) are handled internally by the `DriverBuddyReloaded/ida_compat.py` compatibility layer.
 
@@ -44,7 +44,7 @@ To use the auto-analysis feature:
 3. Check the "Output" window for the analysis results, and the **Driver Buddy Reloaded - Findings** window that opens
    at the end of the run (double-click a row to jump to its address).
 4. The following files are written under IDA's DB directory (all prefixed with `<DRIVER_NAME>-YYYY-MM-DD-TIMESTAMP-`):
-   - `findings.json` - machine-readable findings (IOCTLs, flagged functions, device names, pooltags, call chains, heuristics)
+   - `findings.json` - machine-readable findings (IOCTLs, flagged functions, device names, pooltags, call chains, heuristics, device ACL audit, symbolic links, exports audit, privileged opcodes)
    - `report.html` - a standalone, severity-grouped HTML report
    - `pooltags.txt` - dumped Pooltags in `pooltags.txt` format for WinDbg
    - `autoanalysis.txt` - the full text analysis log (mirrors the Output window)
@@ -74,20 +74,21 @@ To reopen the IOCTLs window or findings window at any time (without re-running a
   provided. You can edit the `custom` list including driver's specific functions.
   
   **Note**: `winapi_function_prefixes` will partial match to start of function name (e.g. `Zw` will match `ZwClose`, `ZwCommitComplete` and so on) while `winapi_functions` will perform exact matches only.
-- In [find_opcodes.py](DriverBuddyReloaded/find_opcodes.py), the `find_opcode_data` option will prevent Driver Buddy
-  Reloaded to find opcodes in data sections. Switching it to `True` will print something along
-  this [line](https://github.com/VoidSec/DriverBuddyReloaded/issues/11):
-  `Found jnz     short loc_15862 in sub_15820 at 0x00015852`
-  Usually, going at the showed address and re-defining the selection as code will bring the searched opcode back.
+- In [find_opcodes.py](DriverBuddyReloaded/find_opcodes.py), the `find_opcode_data` option (default `False`)
+  suppresses opcode matches that fall in data sections
+  ([issue #11](https://github.com/VoidSec/DriverBuddyReloaded/issues/11)). Switching it to `True` also surfaces
+  raw byte matches in data; if a real opcode was missed this way, going to the reported address and re-defining
+  the bytes as code usually recovers it. Matches are reported like every other stage (results window,
+  `findings.json`, `report.html`).
   
-  **Watch out**: switching it to `True`, will generates more false positives!
+  **Watch out**: switching it to `True` generates more false positives!
 
 ## About Driver Buddy Reloaded
 
 **Driver Buddy Reloaded** is an IDA Pro Python plugin that helps automate some tedious Windows Kernel Drivers reverse
 engineering tasks. It has a number of handy features, such as:
 
-* Identifying the type of the driver (WDM, KMDF, UMDF, Mini-Filter, Stream Minidriver, AVStream, PortCls)
+* Identifying the type of the driver (WDM, KMDF, UMDF, WDF, Mini-Filter, Stream Minidriver, AVStream, PortCls)
 * Locating `DispatchDeviceControl` / `DispatchInternalDeviceControl` functions
 * Populating common structures for `WDF` and `WDM` drivers
     * Attempts to identify and label structures like the `IRP` and `IO_STACK_LOCATION`
@@ -277,17 +278,16 @@ Three layers, from fast to thorough:
 
 ## Known Caveats and Limitations
 
-- IOCTL candidates are validated against the `CTL_CODE` structure: the DeviceType field (bits 31-16) must be non-zero, and the value must not match a known NTSTATUS code. This rules out loop counters and small immediates while preserving all valid IOCTLs including vendor-defined device types (`0x8000+`). The filter is applied by both the `IoControlCode` xref scan and the dispatcher flow-chart scan. [Issue #15](https://github.com/VoidSec/DriverBuddyReloaded/issues/15)
+- IOCTL candidates are validated against the `CTL_CODE` structure by `_is_valid_ctl_code()`: the DeviceType field (bits 31-16) must be non-zero, and the value must not match a known NTSTATUS code or the `0xFFFFFFFF` `(DWORD)-1` sentinel (a comparison constant seen inside real dispatchers, e.g. WinRing0). This rules out loop counters, small immediates and error codes while preserving all valid IOCTLs including vendor-defined device types (`0x8000+`). The same filter is applied to all four discovery paths: the `IoControlCode` xref scan and the three dispatcher collectors (decompiler ctree, IDA switch-table recovery, and the raw immediate-operand scan).
 - Risk scoring and call-chain tracing are **heuristic, name-based lead generators**, not dataflow analysis; treat
   High/Critical findings as places to look first, not as confirmed vulnerabilities. Feature toggles live in
   `DriverBuddyReloaded/config.py`.
 - Experimental `DispatchDeviceControl` searching works only for x64 drivers
-- In [find_opcodes.py](DriverBuddyReloaded/find_opcodes.py), the `find_opcode_data` option will prevent Driver Buddy
-  Reloaded to find opcodes in data sections. Switching it to `True` will print something along
-  this line:
-  `Found jnz     short loc_15862 in sub_15820 at 0x00015852`
-  Usually, going at the showed address and re-defining the selection as code will bring the searched opcode back.
-  **Watch out**: It is prone to false positives!
+- In [find_opcodes.py](DriverBuddyReloaded/find_opcodes.py), the `find_opcode_data` option (default `False`)
+  suppresses opcode matches that fall in data sections. Switching it to `True` also surfaces raw byte matches in
+  data, which is prone to false positives; if a real opcode was missed, going to the reported address and
+  re-defining the bytes as code usually recovers it. Matches are reported like every other stage (results window,
+  `findings.json`, `report.html`).
 
 ## Credits and Acknowledgements
 

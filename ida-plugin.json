@@ -5,7 +5,7 @@
     "entryPoint": "DriverBuddyReloaded.py",
     "logoPath": "img/logo.png",
     "version": "2.2.0",
-    "description": "Automated triage for Windows kernel drivers: IOCTL discovery and decoding, WDM/WDF/KMDF/UMDF structure labelling, heuristic vulnerability checks, pool tag extraction, device name detection, risk scoring, call-chain tracing, and JSON/HTML/PoC reporting.",
+    "description": "Automated triage for Windows kernel drivers: IOCTL discovery and decoding, WDM/WDF/KMDF/UMDF structure labelling, heuristic vulnerability checks, pool tag extraction, device name detection, risk scoring, call-chain tracing, and JSON/HTML reporting.",
     "urls": {
       "repository": "https://github.com/VoidSec/DriverBuddyReloaded",
       "homepage": "https://voidsec.com"
