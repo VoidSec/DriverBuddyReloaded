@@ -59,8 +59,7 @@ To decode ALL IOCTLs within a function:
    `DispatchDeviceControl`, `DispatchInternalDeviceControl`, `Possible_DispatchDeviceControl_#`)
 2. Right-click and select `Driver Buddy Reloaded -> Decode ALL IOCTLs in Function`; alternatively, press the `CTRL+ALT+F`
    shortcut.
-3. A `DriverName.sys-DATE-TIME_STAMP-IOCTLs.txt` file,
-   containing all the decoded IOCTLs up to that moment, will be written under IDA's DB directory.
+3. The decoded IOCTLs are printed to the Output window and listed in the severity-coloured IOCTLs window.
 
 To reopen the IOCTLs window or findings window at any time (without re-running analysis):
 
@@ -162,8 +161,8 @@ If you right-click, alternatively using the
 Reloaded menu, a "**Decode All**" option appears, this attempt to decode all the IOCTL codes it can find in the
 function. This is a bit hacky but most of the time it can speed things up.
 
-- An `IOCTLs.txt` file (prefixed with `<DRIVER_NAME>-YYYY-MM-DD-TIMESTAMP-`) containing all decoded IOCTLs is
-  written under IDA's DB directory.
+- The decoded IOCTLs are printed to the Output window and listed in the severity-coloured IOCTLs window; after
+  auto-analysis they are also recorded in `findings.json` / `report.html`.
 
 Auto-analysis additionally runs a multi-strategy scan over identified dispatcher functions to discover IOCTLs
 automatically, without requiring manual cursor placement. For each dispatcher it uses the Hex-Rays decompiler

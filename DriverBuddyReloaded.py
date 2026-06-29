@@ -75,8 +75,10 @@ class IOCTLTracker:
 
     def print_table(self, ioctls):
         """
-        Print a table of decoded IOCTL codes and write the result to a file in the IDB directory.
-        Rendering happens once; a file-write failure no longer duplicates the table.
+        Print a table of decoded IOCTL codes to the Output window.  The decoded
+        IOCTLs are also shown in the severity-coloured IOCTL window and, after
+        auto-analysis, recorded in findings.json / report.html, so no separate
+        text file is written.
         :param ioctls: list of (address, IOCTL code) tuples
         """
 
@@ -84,15 +86,7 @@ class IOCTLTracker:
                  "-----------------------------------------------",
                  ioctl_decoder.IOCTL_TABLE_HEADER]
         lines += [ioctl_decoder.format_row(addr, code) for (addr, code) in ioctls]
-        text = "\n".join(lines)
-        print("\n" + text)
-        path = config.out_path("IOCTLs.txt")
-        try:
-            with open(path, "w", encoding="utf-8") as ioctl_file:
-                ioctl_file.write(text + "\n")
-            print("\n[>] Saved decoded IOCTLs to \"{}\"".format(path))
-        except OSError as e:
-            print("[!] ERR: can't save decoded IOCTLs to \"{}\": {}".format(path, e))
+        print("\n" + "\n".join(lines))
 
 
 class IOCTLChooser(ida_kernwin.Choose):

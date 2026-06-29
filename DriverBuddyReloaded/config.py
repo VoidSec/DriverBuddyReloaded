@@ -414,7 +414,7 @@ def run_stamp():
 
 
 def out_path(suffix):
-    """Absolute path for an output artefact, e.g. out_path('IOCTLs.txt')."""
+    """Absolute path for an output artefact, e.g. out_path('findings.json')."""
     return os.path.join(_db_dir(), "{}-{}-{}".format(driver_name(), run_stamp(), suffix))
 
 
