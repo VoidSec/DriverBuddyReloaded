@@ -16,6 +16,13 @@ if TYPE_CHECKING:
 
 from DriverBuddyReloaded import config
 
+try:
+    import ida_funcs
+    from DriverBuddyReloaded.callchain import transitive_callees
+except Exception:  # pragma: no cover - only when imported outside IDA without stubs
+    ida_funcs = None
+    transitive_callees = None
+
 
 def _points_to_severity(points):
     if points >= 5:
@@ -71,21 +78,64 @@ def score(rep: Reporter) -> None:
                 prev_names | ({sink_name} if sink_name else set()),
             )
 
+    # Privileged inline primitives (wrmsr/rdmsr, port I/O, mov cr*) are opcode
+    # findings, not callable sinks, so the call-chain tracer never sees them.
+    # Map the function that contains each to its severity so an IOCTL whose
+    # handler transitively reaches it (e.g. ALSysIO64's writemsr_wrapper) is
+    # scored on that primitive rather than dropping to LOW.
+    opcode_sev_by_func = {}
+    if ida_funcs is not None:
+        for f in rep.by_category("opcode"):
+            if not f.ea:
+                continue
+            fn = ida_funcs.get_func(f.ea)
+            if fn:
+                opcode_sev_by_func[fn.start_ea] = max(
+                    opcode_sev_by_func.get(fn.start_ea, 0), f.severity)
+    _opcode_reach_cache = {}
+
+    def _opcode_reach_sev(handler_ea):
+        if not opcode_sev_by_func or transitive_callees is None:
+            return 0
+        if handler_ea in _opcode_reach_cache:
+            return _opcode_reach_cache[handler_ea]
+        reach = transitive_callees({handler_ea})
+        best = max((sev for fea, sev in opcode_sev_by_func.items() if fea in reach),
+                   default=0)
+        _opcode_reach_cache[handler_ea] = best
+        return best
+
     for f in ioctls:
         sev, reasons = score_ioctl(f.data)
-        entry = sink_by_func.get(f.func)
+        # Attribute sinks to the IOCTL's own handler when the decoder resolved it,
+        # so a handler that reaches no sink is not tarred with sinks that only
+        # other cases of the same dispatcher reach.  Fall back to the dispatcher
+        # function otherwise, and mark that attribution as imprecise.
+        handler = f.data.get("handler_name")
+        attrib = handler or f.func
+        precise = handler is not None
+        entry = sink_by_func.get(attrib)
         if entry:
             sink_sev, sink_names = entry
             if sink_sev:
                 sinks_sorted = sorted(sink_names)
                 reasons.extend("-> {}".format(s) for s in sinks_sorted)
                 f.data["sinks"] = sinks_sorted
-                if sinks_sorted:
-                    f.detail = f.detail + " | sinks: " + ", ".join(sinks_sorted)
+                f.detail = f.detail + " | sinks{}: ".format(
+                    "" if precise else " (dispatcher-wide)") + ", ".join(sinks_sorted)
                 sev = max(sev, sink_sev)
                 # A raw-pointer IOCTL that also reaches a sink is the worst case.
                 if f.data.get("method_name") == "METHOD_NEITHER":
                     sev = config.SEV_CRITICAL
+        # Bump for a privileged inline primitive reachable from this handler
+        # (MSR access, port I/O, control-register move).
+        handler_ea = f.data.get("handler_ea")
+        if handler_ea:
+            opc_sev = _opcode_reach_sev(handler_ea)
+            if opc_sev:
+                sev = max(sev, opc_sev)
+                reasons.append("-> privileged opcode/instruction")
+        f.data["sink_attribution"] = "handler" if precise else "dispatcher-wide"
         f.severity = config.clamp_severity(sev)
         f.data["risk_reasons"] = reasons
 

@@ -356,18 +356,24 @@ def _is_valid_ctl_code(value: int) -> bool:
 
 
 def _emit_ioctl(rep: Reporter, code: int, ea: int, func_name: str,
-                source: str, already_seen: set) -> bool:
+                source: str, already_seen: set, handler_ea: int = None) -> bool:
     """Add one IOCTL Finding if `code` is a new, valid CTL_CODE.
 
     Returns True when a finding was added (the code was new and valid).  All
     discovery strategies funnel through here so dedup and validation are
-    applied uniformly regardless of how the code was recovered.
+    applied uniformly regardless of how the code was recovered.  When the
+    decoder resolved which handler the dispatcher routes this code to,
+    `handler_ea` carries it so risk scoring can attribute sinks per-IOCTL
+    instead of per-dispatcher.
     """
     code &= 0xffffffff
     if code in already_seen or not _is_valid_ctl_code(code):
         return False
     already_seen.add(code)
     d = decode(code)
+    if handler_ea is not None:
+        d["handler_ea"] = handler_ea
+        d["handler_name"] = ida_funcs.get_func_name(handler_ea) or ("sub_%X" % handler_ea)
     rep.add(Finding(
         category="ioctl",
         title="IOCTL 0x%08X" % code,
@@ -518,10 +524,41 @@ def _collect_hexrays_consts(func_ea: int):
         cot_cast = getattr(ida_hexrays, "cot_cast", None)
         cot_eq = getattr(ida_hexrays, "cot_eq", None)
         cot_ne = getattr(ida_hexrays, "cot_ne", None)
+        cot_call = getattr(ida_hexrays, "cot_call", None)
+        cot_obj = getattr(ida_hexrays, "cot_obj", None)
         cit_switch = getattr(ida_hexrays, "cit_switch", None)
         if cot_num is None:
             return []
         eq_ops = frozenset(o for o in (cot_eq, cot_ne) if o is not None)
+
+        def _case_handler_ea(case_insn):
+            """Start EA of the first in-binary function a switch case calls, i.e.
+            the per-IOCTL handler.  Imported callees (DbgPrintEx logging, etc.)
+            resolve to no function and are skipped, so the real handler/wrapper
+            wins even when logging precedes it."""
+            if cot_call is None or cot_obj is None:
+                return None
+            box = [None]
+
+            class _CC(ida_hexrays.ctree_visitor_t):
+                def __init__(self):
+                    ida_hexrays.ctree_visitor_t.__init__(self, CV_FAST)
+
+                def visit_expr(self, e):
+                    if box[0] is None and e.op == cot_call and e.x is not None and e.x.op == cot_obj:
+                        try:
+                            f = ida_funcs.get_func(e.x.obj_ea)
+                            if f:
+                                box[0] = f.start_ea
+                        except Exception:
+                            pass
+                    return 0
+
+            try:
+                _CC().apply_to(case_insn, None)
+            except Exception:
+                pass
+            return box[0]
 
         def _unwrap(node):
             while cot_cast is not None and node is not None and node.op == cot_cast:
@@ -568,8 +605,9 @@ def _collect_hexrays_consts(func_ea: int):
                             switch_vars.add(sel)
                         ea = _node_ea(ins, func_ea)
                         for case in sw.cases:
+                            handler_ea = _case_handler_ea(case)
                             for val in case.values:
-                                switch_cases.append((int(val) & 0xffffffff, ea))
+                                switch_cases.append((int(val) & 0xffffffff, ea, handler_ea))
                 except Exception:
                     pass
                 return 0
@@ -578,12 +616,12 @@ def _collect_hexrays_consts(func_ea: int):
     except Exception:
         pass
 
-    found = list(switch_cases)
+    found = list(switch_cases)  # (code, ea, handler_ea) triples
     for var_idx, code, ea in eq_candidates:
         # With a switch present, only trust comparisons against the selector
         # variable; without one, accept every comparison constant.
         if not switch_vars or (var_idx is not None and var_idx in switch_vars):
-            found.append((code, ea))
+            found.append((code, ea, None))  # if-chain comparison has no case body
     return found
 
 
@@ -639,8 +677,12 @@ def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
 
         emitted_here = False
         for source, candidates in structured:
-            for code, ea in candidates:
-                if _emit_ioctl(rep, code, ea, func_name, source, already_seen):
+            for cand in candidates:
+                # decompiler collector yields (code, ea, handler_ea);
+                # the switch-table collector yields (code, ea).
+                code, ea = cand[0], cand[1]
+                handler_ea = cand[2] if len(cand) > 2 else None
+                if _emit_ioctl(rep, code, ea, func_name, source, already_seen, handler_ea):
                     result = True
                     emitted_here = True
 

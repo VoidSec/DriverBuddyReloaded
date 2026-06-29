@@ -71,6 +71,14 @@ def _seed_eas(rep: Reporter, ctx: AnalysisContext) -> Set[int]:
         fn = ida_funcs.get_func(f.ea)
         if fn:
             seeds.add(fn.start_ea)
+        # The per-IOCTL handler (resolved by the decoder) is also a seed, so the
+        # tracer reports sinks reachable from each handler -- not just the
+        # dispatcher -- and risk scoring can attribute them per IOCTL.
+        handler_ea = f.data.get("handler_ea") if f.data else None
+        if handler_ea:
+            hfn = ida_funcs.get_func(handler_ea)
+            if hfn:
+                seeds.add(hfn.start_ea)
     for name, ea in ctx.functions_map.items():
         if name in ("DispatchDeviceControl", "DispatchInternalDeviceControl") \
                 or name.startswith("Possible_DispatchDeviceControl"):

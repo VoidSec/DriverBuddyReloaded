@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Per-IOCTL sink attribution (`ioctl_decoder` + `callchain` + `scoring`). Previously every IOCTL in
+  a monolithic dispatcher inherited the union of *all* sinks reachable from the dispatcher, so e.g.
+  all 28 HEVD IOCTLs showed `memmove` and all 17 ALSysIO64 IOCTLs showed `MmMapIoSpace, memmove`
+  (including a benign constant-write IOCTL marked CRITICAL). Now:
+  - the decompiler collector resolves the per-case handler function (first in-binary call in the
+    switch case body, skipping logging imports) and stores `data['handler_ea']`/`handler_name`;
+  - `callchain` additionally seeds the tracer from each handler, so it reports per-handler paths;
+  - `scoring` attributes sinks to the IOCTL's own handler when known (falling back to the dispatcher
+    tagged `sink_attribution: dispatcher-wide`), and bumps an IOCTL whose handler transitively reaches
+    a privileged inline primitive (wrmsr/rdmsr, port I/O, `mov cr*`) -- which are opcode findings, not
+    callable sinks -- so MSR/port IOCTLs are not lost to LOW.
+  Result on the corpus (IOCTL recovery unchanged at 28/17/18/2): HEVD 11 CRITICAL (the handlers that
+  actually reach `memmove`) + 17 HIGH (raw METHOD_NEITHER, no sink) instead of a flat 28 CRITICAL;
+  ALSysIO64 6 CRITICAL / 4 HIGH / 7 LOW (the constant-write IOCTL is now LOW, the MSR-write CRITICAL);
+  WinRing0x64 16 CRITICAL / 1 HIGH / 1 MEDIUM.
 - `heuristics.check_privilege_gate()`: now a path-level analysis instead of single-function. A
   privileged primitive (`MmMapIoSpace`, `__writemsr`-class APIs, `Zw*` memory/section/process ops)
   is usually reached through a wrapper, so the old per-function check on the dispatcher never saw it.
