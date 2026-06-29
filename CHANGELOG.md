@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ioctl_decoder.py` `scan_dispatchers()`: now recovers IOCTL codes that never appear as
+  immediate operands in the disassembly. Previously the dispatcher scan only matched literal
+  immediates in `cmp`/`sub`/`mov`, so it missed every code the compiler hid inside a jump table
+  (only the table base/bound remain as immediates) or a binary-search comparison tree
+  (intermediate codes survive only as deltas). Two new collectors run per dispatcher and merge
+  with the immediate scan through a single `_emit_ioctl()` validation/dedup funnel:
+  - `_collect_hexrays_consts()` decompiles the dispatcher and reads switch-case labels and
+    `==`/`!=` comparison constants from the ctree. Comparison constants are anchored to a
+    switch-selector variable when a switch is present (so an unrelated `status == STATUS_*`
+    check is ignored); with no switch present (if-chain dispatcher) every comparison constant
+    is taken. Gated on the new `config.Feature.IOCTL_DECOMPILER` flag + HexRays availability.
+  - `_collect_switch_cases()` reads IDA's recovered switch metadata
+    (`get_switch_info` + `calc_switch_cases`), excluding the default-jump group so the dense
+    filler values between real cases are dropped. Works without the decompiler.
+  The raw immediate scan is now a last resort, used only when both structured collectors
+  recover nothing for a dispatcher. Measured recovery on the test corpus rose from 7/28 to
+  **28/28** (HEVD) and 4/17 to **17/17** (ALSysIO64); WinRing0x64 (18) and beep (2) unchanged,
+  all with no false positives (verified full-pipeline on IDA 7.6 SP1 and 8.4).
+
+### Changed
+
+- `analysis.run_analysis()`: the precise dispatcher scan now runs before `find_ioctls()`, and
+  the fuzzy whole-binary `IoControlCode` text scan only runs as a fallback when the dispatcher
+  scan found nothing. `find_ioctls()` can mistake data constants for IOCTLs (e.g. a misread
+  `0x0032C004`), so skipping it when the structured decode succeeds removes those false positives.
+- `ioctl_decoder.py` `_is_valid_ctl_code()`: now also rejects the `0xFFFFFFFF` (`(DWORD)-1` /
+  `INVALID_HANDLE_VALUE`) sentinel, which is structurally a valid CTL_CODE but surfaces from
+  `== -1` checks inside dispatchers (observed in WinRing0x64).
+
 ### Fixed
 
 - `DriverBuddyReloaded.py` `make_comment()`: fixed an `AttributeError: module 'idc'

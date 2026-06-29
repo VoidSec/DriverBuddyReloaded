@@ -96,7 +96,9 @@ engineering tasks. It has a number of handy features, such as:
     * Label calls to `WDF` functions that would normally be unlabeled
     * Creates an `IRP_MJ_FUNCTION` IDA enum and applies it to `MajorFunction` array slots in `DriverEntry` (WDM)
 * Finding and decoding IOCTL codes
-    * Automatic flow-chart scan of identified dispatcher functions (no cursor placement required)
+    * Automatic multi-strategy scan of identified dispatcher functions (no cursor placement required):
+      decompiler ctree (recovers codes hidden by jump-table or binary-search dispatch that never appear as
+      immediates), IDA switch-table recovery, and a raw immediate-operand fallback
     * NTSTATUS values resolved dynamically from the IDA type database (no static list)
 * Flagging functions prone to misuse
 * Finding potential `DeviceName` (mmap scan + IDA Strings DB fallback, with source address)
@@ -166,8 +168,14 @@ function. This is a bit hacky but most of the time it can speed things up.
 - An `IOCTLs.txt` file (prefixed with `<DRIVER_NAME>-YYYY-MM-DD-TIMESTAMP-`) containing all decoded IOCTLs is
   written under IDA's DB directory.
 
-Auto-analysis additionally runs a flow-chart scan over identified dispatcher functions to discover IOCTLs
-automatically, without requiring manual cursor placement.
+Auto-analysis additionally runs a multi-strategy scan over identified dispatcher functions to discover IOCTLs
+automatically, without requiring manual cursor placement. For each dispatcher it uses the Hex-Rays decompiler
+(when available) to read switch-case labels and `==`/`!=` comparison constants directly from the reconstructed
+control flow, falling back to IDA's switch-table metadata and then to a raw immediate-operand scan. The
+decompiler path recovers codes that never appear verbatim in the disassembly - e.g. drivers whose dispatcher
+the compiler emitted as a jump table (only the table base/bound survive as immediates) or as a binary-search
+comparison tree (intermediate codes survive only as deltas). On a representative corpus this raised recovery
+from 7/28 to 28/28 (HEVD) and 4/17 to 17/17 (ALSysIO64) with no false positives.
 
 ![](img/IOCTL-table.png)
 ![](img/decode-IOCTL.png)

@@ -35,6 +35,8 @@ class Feature:
     SEGMENT_OPCODE_SCAN = False  # noisy with existing find(x=True); opt-in only
     IRP_MJ_ENUM = True
     IOCTL_SCAN = True
+    IOCTL_DECOMPILER = True  # use HexRays ctree in scan_dispatchers (recovers
+    #                          codes hidden by jump tables / binary-search dispatch)
     TOCTOU_CHECK = True
     ACL_AUDIT = True
     SYMLINK_TRACK = True
@@ -45,6 +47,8 @@ class Feature:
         """Raise ValueError if the current feature-flag combination is incoherent."""
         if cls.CALLCHAIN and not cls.IOCTL_SCAN:
             raise ValueError("Feature.CALLCHAIN requires Feature.IOCTL_SCAN")
+        if cls.IOCTL_DECOMPILER and not cls.IOCTL_SCAN:
+            raise ValueError("Feature.IOCTL_DECOMPILER requires Feature.IOCTL_SCAN")
 
 
 # Depth (in call edges) the name-based call-chain tracer walks out from a handler.

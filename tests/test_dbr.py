@@ -242,6 +242,8 @@ def main():
     check(not _is_valid_ctl_code(0xC0000005), "T2: 0xC0000005 invalid (STATUS_ACCESS_VIOLATION)")
     check(_is_valid_ctl_code(0x00222003),  "T2: 0x00222003 valid (HEVD METHOD_NEITHER)")
     check(_is_valid_ctl_code(0x0022e004),  "T2: 0x0022e004 valid (vendor device type)")
+    check(not _is_valid_ctl_code(0xFFFFFFFF), "T2: 0xFFFFFFFF invalid (== -1 sentinel)")
+    check(_is_valid_ctl_code(0x9C402604),  "T2: 0x9C402604 valid (ALSysIO vendor IOCTL)")
 
     # ---- T3: check_irql emits finding when IRQL-raiser and Zw* call coexist ----
     # FuncItems returns [0x30000, 0x30004].

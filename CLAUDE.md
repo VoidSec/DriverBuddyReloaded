@@ -104,11 +104,19 @@ export a tiny `/GS` security-cookie stub (`GsDriverEntry`) that contains no
 `MajorFunction` assignments; the ctree visitor finds nothing in the stub.
 
 ### IOCTL decoding
-Two complementary strategies, both in `ioctl_decoder.py`:
-1. `find_ioctls()` - walks `IoControlCode` xrefs that IDA resolved from struct type info; fast and precise when IDA has applied `IO_STACK_LOCATION` typing, silent otherwise.
-2. `scan_dispatchers(rep, ddc_addresses)` - flow-chart brute-force scan of the identified dispatcher EAs; catches IOCTLs that `find_ioctls()` misses on stripped or poorly-typed binaries. Runs automatically when `ctx.ddc_addresses` is non-empty.
+Two complementary entry points, both in `ioctl_decoder.py`. `analysis.run_analysis()` runs `scan_dispatchers()` **first** (precise) and only falls back to `find_ioctls()` (fuzzy) when the dispatcher scan recovered nothing:
 
-Both paths run every candidate through `_is_valid_ctl_code()` (ioctl_decoder.py), which validates the CTL_CODE structure (DeviceType bits[31:16] must be non-zero) and rejects known NTSTATUS values via `_get_ntstatus_values()`. The structural check is equivalent to the old `>= 0x10000` floor but expresses the intent explicitly and is easy to tighten later (e.g. restrict to assigned device type ranges). `config.IOCTL_MIN_VALUE` was removed -- the check now lives entirely in `_is_valid_ctl_code()`.
+1. `scan_dispatchers(rep, ddc_addresses)` - the primary path; runs three collectors per dispatcher EA and merges them through `_emit_ioctl()` (single dedup + validation funnel):
+   - `_collect_hexrays_consts()` - decompiles the dispatcher and walks the ctree for switch-case labels and `==`/`!=` comparison constants. This is the only method that recovers codes the compiler did not leave as immediates: **jump-table dispatch** (only the table base/bound survive as immediates; e.g. ALSysIO64) and **binary-search comparison trees** (intermediate codes survive only as deltas; e.g. 21 of HEVD's 28). Gated on `config.Feature.IOCTL_DECOMPILER` + HexRays availability.
+   - `_collect_switch_cases()` - IDA `get_switch_info` + `calc_switch_cases`, excluding the `defjump` group (so the dense filler values between real cases are dropped). Recovers jump-table dispatch **without** the decompiler.
+   - `_collect_immediates()` - the original `cmp`/`sub`/`mov` immediate-operand flow-chart scan. Low precision (cannot distinguish an IOCTL from an NTSTATUS code moved into a register), so it runs **only as a last resort** when the two structured collectors found nothing for that dispatcher.
+2. `find_ioctls()` - walks `IoControlCode` matches that IDA resolved from struct type info; a fuzzy whole-binary text scan kept as a fallback for when dispatcher detection fails (no DDC / stripped). It can mistake data constants for IOCTLs, which is why it no longer runs when `scan_dispatchers()` succeeds.
+
+**Decompiler comparison anchoring**: switch-case labels are always trusted; `==`/`!=` constants are not. When the dispatcher contains a switch, only comparisons against a switch-selector variable are kept (a `status == STATUS_BUFFER_TOO_SMALL` check on an unrelated lvar is ignored). When there is no switch to anchor on (pure if-chain dispatcher, e.g. beep), every comparison constant is taken and left to the structural/NTSTATUS/sentinel filter.
+
+Every candidate runs through `_is_valid_ctl_code()`, which validates the CTL_CODE structure (DeviceType bits[31:16] must be non-zero), rejects the `0xFFFFFFFF` (`== -1`) sentinel via `_SENTINEL_REJECTS`, and rejects known NTSTATUS values via `_get_ntstatus_values()`. The structural check is equivalent to the old `>= 0x10000` floor but expresses the intent explicitly. `config.IOCTL_MIN_VALUE` was removed -- the check now lives entirely in `_is_valid_ctl_code()`.
+
+Validated exact recovery (full pipeline, IDA 7.6 SP1 + 8.4): HEVD 28/28, ALSysIO64 17/17, WinRing0x64 18/18, beep 2/2, no false positives. IDA Free 9.x cannot be driven headlessly (`-S` batch scripting is disabled in the Free edition), so cross-version smoke for 9.x must be run interactively; the new code uses only 7.6-9.x-stable APIs (`ida_nalt.get_switch_info`, `idaapi.calc_switch_cases`, `ida_hexrays` ctree), each getattr-guarded with graceful `[]` fallback.
 
 NTSTATUS filter queries the IDA type DB first (`NTSTATUS` / `_NTSTATUS` enum), falls back to a small hardcoded set. Result is cached for the run.
 

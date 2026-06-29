@@ -105,9 +105,14 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
     found_by_pattern = False
     found_by_dispatcher = False
     if config.Feature.IOCTL_SCAN:
-        found_by_pattern = ioctl_decoder.find_ioctls(rep)
+        # Precise, structured dispatcher decode first (decompiler / switch tables).
         if ctx.ddc_addresses:
             found_by_dispatcher = ioctl_decoder.scan_dispatchers(rep, ctx.ddc_addresses)
+        # find_ioctls() is a fuzzy whole-binary "IoControlCode" text scan that can
+        # mistake data constants for IOCTLs; only fall back to it when the
+        # dispatcher decode recovered nothing (no DDC, stripped, or unsupported).
+        if not found_by_dispatcher:
+            found_by_pattern = ioctl_decoder.find_ioctls(rep)
         if not found_by_pattern and not found_by_dispatcher:
             rep.info("[!] Unable to automatically find any IOCTLs")
 

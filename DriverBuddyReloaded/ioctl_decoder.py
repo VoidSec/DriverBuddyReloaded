@@ -328,6 +328,13 @@ def _get_ntstatus_values() -> set:
     return _ntstatus_cache
 
 
+# Sentinel values that are structurally valid CTL_CODEs but never real IOCTLs.
+# 0xFFFFFFFF is the ubiquitous (DWORD)-1 / INVALID_HANDLE_VALUE comparison
+# constant; it surfaces from `== -1` checks inside dispatchers (observed in
+# WinRing0) and must not be reported as an IOCTL.
+_SENTINEL_REJECTS = frozenset({0xFFFFFFFF})
+
+
 def _is_valid_ctl_code(value: int) -> bool:
     """Return True when value is a structurally valid CTL_CODE and not a known NTSTATUS.
 
@@ -335,20 +342,271 @@ def _is_valid_ctl_code(value: int) -> bool:
     bits[13:2]=Function, bits[1:0]=Method.  A nonzero DeviceType is the
     only meaningful structural gate -- it rules out loop counters, array
     indices, and other small immediates while preserving every valid IOCTL
-    including vendor-defined device types (0x8000+).
+    including vendor-defined device types (0x8000+).  A small sentinel set and
+    the NTSTATUS table strip the false positives that survive the structural
+    gate (e.g. the (DWORD)-1 comparison constant and STATUS_* error codes).
     """
+    value &= 0xffffffff
     device_type = (value >> 16) & 0xffff
-    return device_type != 0 and value not in _get_ntstatus_values()
+    if device_type == 0:
+        return False
+    if value in _SENTINEL_REJECTS:
+        return False
+    return value not in _get_ntstatus_values()
+
+
+def _emit_ioctl(rep: Reporter, code: int, ea: int, func_name: str,
+                source: str, already_seen: set) -> bool:
+    """Add one IOCTL Finding if `code` is a new, valid CTL_CODE.
+
+    Returns True when a finding was added (the code was new and valid).  All
+    discovery strategies funnel through here so dedup and validation are
+    applied uniformly regardless of how the code was recovered.
+    """
+    code &= 0xffffffff
+    if code in already_seen or not _is_valid_ctl_code(code):
+        return False
+    already_seen.add(code)
+    d = decode(code)
+    rep.add(Finding(
+        category="ioctl",
+        title="IOCTL 0x%08X" % code,
+        ea=ea,
+        func=func_name,
+        severity=config.SEV_INFO,
+        detail="%s / %s / %s [%s]" % (
+            d["device_name"], d["method_name"], d["access_name"], source),
+        data=d))
+    return True
+
+
+def _node_ea(node, default: int) -> int:
+    """Best-effort source address for a ctree node, falling back to *default*."""
+    try:
+        ea = node.ea
+        if ea is not None and ea != idc.BADADDR:
+            return ea
+    except Exception:
+        pass
+    return default
+
+
+def _collect_immediates(func_ea: int):
+    """Yield (code, ea) for cmp/sub/mov instructions with an immediate operand.
+
+    The original brute-force strategy: catches IOCTLs that appear verbatim as
+    an immediate in a comparison chain.  Misses codes encoded as jump-table
+    offsets or as deltas in a compiler-generated binary search (see the
+    switch-table and decompiler collectors for those).
+    """
+    out = []
+    try:
+        f = idaapi.get_func(func_ea)
+        if not f:
+            return out
+        fc = idaapi.FlowChart(f, flags=idaapi.FC_PREDS)
+        for block in fc:
+            instr = block.start_ea
+            while instr != idc.BADADDR and instr < block.end_ea:
+                if (idc.print_insn_mnem(instr) in ('cmp', 'sub', 'mov')
+                        and idc.get_operand_type(instr, 1) == idc.o_imm):
+                    out.append((idc.get_operand_value(instr, 1) & 0xffffffff, instr))
+                instr = idc.next_head(instr, block.end_ea)
+    except Exception:
+        pass
+    return out
+
+
+def _get_switch_info(ea: int):
+    """Cross-version idaapi/ida_nalt switch-info lookup for the jump at `ea`."""
+    try:
+        import ida_nalt
+        fn = getattr(ida_nalt, "get_switch_info", None)
+        if fn is not None:
+            return fn(ea)
+    except Exception:
+        pass
+    fn = getattr(idaapi, "get_switch_info_ex", None) or getattr(idaapi, "get_switch_info", None)
+    if fn is not None:
+        try:
+            return fn(ea)
+        except Exception:
+            return None
+    return None
+
+
+def _collect_switch_cases(func_ea: int):
+    """Yield (code, ea) for every explicit case label of switches in *func_ea*.
+
+    Uses IDA's recovered switch metadata (idaapi.calc_switch_cases), so it works
+    without the decompiler.  This recovers jump-table dispatch (e.g. ALSysIO64),
+    where the individual IOCTL codes never appear as immediates -- only the
+    table base and bound do.  Case groups that target the default handler are
+    excluded so the dense "filler" values between real cases are not reported.
+    """
+    out = []
+    try:
+        f = idaapi.get_func(func_ea)
+        if not f:
+            return out
+        calc = getattr(idaapi, "calc_switch_cases", None)
+        cur = f.start_ea
+        while cur != idc.BADADDR and cur < f.end_ea:
+            si = _get_switch_info(cur)
+            if si is not None and getattr(si, "ncases", 0) and calc is not None:
+                try:
+                    defjump = int(getattr(si, "defjump", idc.BADADDR))
+                    cat = calc(cur, si)
+                    for i in range(cat.cases.size()):
+                        if cat.targets[i] == defjump:
+                            continue  # default block: skip dense filler values
+                        cvec = cat.cases[i]
+                        for j in range(cvec.size()):
+                            out.append((int(cvec[j]) & 0xffffffff, cur))
+                except Exception:
+                    pass
+            cur = idc.next_head(cur, f.end_ea)
+    except Exception:
+        pass
+    return out
+
+
+def _collect_hexrays_consts(func_ea: int):
+    """Yield (code, ea) for IOCTL constants recovered from the decompiler ctree.
+
+    The decompiler reconstructs both jump-table switches and compiler-generated
+    binary-search comparison trees back into explicit `switch`/`==` constructs,
+    so it recovers IOCTL codes that never survive as immediates in the
+    disassembly (e.g. 21 of HEVD's 28 codes).  Two kinds of constant are taken:
+
+      - switch case-label values: highest confidence.  The default case carries
+        no values, so the dense filler between real cases is naturally excluded.
+      - the constant operand of an == / != comparison.  These are needed both
+        for drivers that dispatch via an if-chain (no switch at all, e.g. beep)
+        and for the occasional case the decompiler renders as a comparison
+        rather than folding it into the switch (e.g. one of HEVD's 28).
+
+    Comparison constants are anchored to avoid false positives: when the
+    function contains a switch, only == / != comparisons made against a
+    switch-selector variable are kept (so a `status == STATUS_BUFFER_TOO_SMALL`
+    check on an unrelated variable is ignored).  When there is no switch to
+    anchor on, every comparison constant is taken and left to the structural /
+    NTSTATUS / sentinel filter in _emit_ioctl.
+    """
+    try:
+        import ida_hexrays
+    except Exception:
+        return []
+    try:
+        init = getattr(ida_hexrays, "init_hexrays_plugin", None)
+        if init is not None and not init():
+            return []
+    except Exception:
+        return []
+
+    switch_cases = []          # [(code, ea)] -- always kept
+    switch_vars = set()        # lvar indices used as a switch selector
+    eq_candidates = []         # [(var_idx_or_None, code, ea)]
+    try:
+        cfunc = ida_hexrays.decompile(func_ea)
+        if cfunc is None:
+            return []
+
+        CV_FAST = getattr(ida_hexrays, "CV_FAST", 8)
+        cot_num = getattr(ida_hexrays, "cot_num", None)
+        cot_var = getattr(ida_hexrays, "cot_var", None)
+        cot_cast = getattr(ida_hexrays, "cot_cast", None)
+        cot_eq = getattr(ida_hexrays, "cot_eq", None)
+        cot_ne = getattr(ida_hexrays, "cot_ne", None)
+        cit_switch = getattr(ida_hexrays, "cit_switch", None)
+        if cot_num is None:
+            return []
+        eq_ops = frozenset(o for o in (cot_eq, cot_ne) if o is not None)
+
+        def _unwrap(node):
+            while cot_cast is not None and node is not None and node.op == cot_cast:
+                node = node.x
+            return node
+
+        def _var_idx(node):
+            node = _unwrap(node)
+            if node is not None and cot_var is not None and node.op == cot_var:
+                try:
+                    return node.v.idx
+                except Exception:
+                    return None
+            return None
+
+        class _Collector(ida_hexrays.ctree_visitor_t):
+            def __init__(self):
+                ida_hexrays.ctree_visitor_t.__init__(self, CV_FAST)
+
+            def visit_expr(self, e):
+                try:
+                    if e.op in eq_ops:
+                        x, y = e.x, e.y
+                        if x.op == cot_num and y.op != cot_num:
+                            const_node, other = x, y
+                        elif y.op == cot_num and x.op != cot_num:
+                            const_node, other = y, x
+                        else:
+                            return 0
+                        eq_candidates.append((
+                            _var_idx(other),
+                            int(const_node.numval()) & 0xffffffff,
+                            _node_ea(e, func_ea)))
+                except Exception:
+                    pass
+                return 0
+
+            def visit_insn(self, ins):
+                try:
+                    if cit_switch is not None and ins.op == cit_switch:
+                        sw = ins.cswitch
+                        sel = _var_idx(sw.expr)
+                        if sel is not None:
+                            switch_vars.add(sel)
+                        ea = _node_ea(ins, func_ea)
+                        for case in sw.cases:
+                            for val in case.values:
+                                switch_cases.append((int(val) & 0xffffffff, ea))
+                except Exception:
+                    pass
+                return 0
+
+        _Collector().apply_to(cfunc.body, None)
+    except Exception:
+        pass
+
+    found = list(switch_cases)
+    for var_idx, code, ea in eq_candidates:
+        # With a switch present, only trust comparisons against the selector
+        # variable; without one, accept every comparison constant.
+        if not switch_vars or (var_idx is not None and var_idx in switch_vars):
+            found.append((code, ea))
+    return found
 
 
 def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
     """
-    Flow-chart IOCTL scan over every identified WDM dispatch handler.
+    Multi-strategy IOCTL recovery over every identified WDM dispatch handler.
 
     Complements find_ioctls() (which relies on IDA's IoControlCode operand
-    annotation) by brute-force scanning each basic block for cmp/sub/mov
-    instructions whose second operand is a large immediate that is not a known
-    NTSTATUS value.  Skips IOCTL addresses already recorded by find_ioctls().
+    annotation) by running three independent collectors over each dispatcher
+    and merging their results into a single deduplicated set:
+
+      1. decompiler ctree  -- switch cases + == / != constants (most complete;
+         recovers codes that never appear as immediates, e.g. binary-search
+         dispatch). Gated on config.Feature.IOCTL_DECOMPILER and HexRays.
+      2. IDA switch tables -- calc_switch_cases case labels minus the default
+         (recovers jump-table dispatch without needing the decompiler).
+      3. immediate scan    -- cmp/sub/mov immediate operands (the original
+         brute-force fallback for simple comparison chains).
+
+    Running all three maximises recall regardless of how a given driver was
+    compiled or which IDA features are available.  Every candidate is validated
+    and deduplicated by _emit_ioctl, so codes already recorded by find_ioctls()
+    (or an earlier collector) are not double-counted.
 
     :param rep: Reporter instance
     :param ddc_addresses: list of function start EAs to scan
@@ -367,35 +625,29 @@ def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
 
     for i, func_ea in enumerate(ddc_list):
         rep.info("  [scan] dispatcher 0x{:x} ({}/{})".format(func_ea, i + 1, len(ddc_list)))
-        f = idaapi.get_func(func_ea)
-        if not f:
-            continue
         func_name = ida_funcs.get_func_name(func_ea) or ""
-        fc = idaapi.FlowChart(f, flags=idaapi.FC_PREDS)
-        for block in fc:
-            instr = block.start_ea
-            while instr != idc.BADADDR and instr < block.end_ea:
-                if idc.print_insn_mnem(instr) not in ('cmp', 'sub', 'mov'):
-                    instr = idc.next_head(instr, block.end_ea)
-                    continue
-                if idc.get_operand_type(instr, 1) != idc.o_imm:
-                    instr = idc.next_head(instr, block.end_ea)
-                    continue
-                value = idc.get_operand_value(instr, 1) & 0xffffffff
-                if value not in already_seen and _is_valid_ctl_code(value):
-                    already_seen.add(value)
-                    d = decode(value)
-                    rep.add(Finding(
-                        category="ioctl",
-                        title="IOCTL 0x%08X" % value,
-                        ea=instr,
-                        func=func_name,
-                        severity=config.SEV_INFO,
-                        detail="%s / %s / %s [dispatcher scan]" % (
-                            d["device_name"], d["method_name"], d["access_name"]),
-                        data=d))
+
+        # The structured collectors (decompiler ctree, IDA switch tables) know
+        # which constants are dispatch values, so they are precise.  The raw
+        # immediate scan cannot tell an IOCTL from an NTSTATUS code moved into a
+        # register or a magic constant, so it is only used as a last resort when
+        # the structured methods recover nothing for this dispatcher.
+        structured = []
+        if config.Feature.IOCTL_DECOMPILER:
+            structured.append(("decompiler", _collect_hexrays_consts(func_ea)))
+        structured.append(("switch table", _collect_switch_cases(func_ea)))
+
+        emitted_here = False
+        for source, candidates in structured:
+            for code, ea in candidates:
+                if _emit_ioctl(rep, code, ea, func_name, source, already_seen):
                     result = True
-                instr = idc.next_head(instr, block.end_ea)
+                    emitted_here = True
+
+        if not emitted_here:
+            for code, ea in _collect_immediates(func_ea):
+                if _emit_ioctl(rep, code, ea, func_name, "dispatcher scan", already_seen):
+                    result = True
     return result
 
 
