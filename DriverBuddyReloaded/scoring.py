@@ -3,7 +3,7 @@ scoring.py: heuristic risk scoring for decoded IOCTLs.
 
 Severity is derived from the IOCTL transfer method and access mode (the fields
 that map to real high-severity driver bug classes) and bumped when the handling
-function is known to reach a dangerous sink (see config.DANGEROUS_SINKS and the
+function is known to reach a dangerous sink (see signatures.DANGEROUS_SINKS and the
 call-chain tracer).
 """
 

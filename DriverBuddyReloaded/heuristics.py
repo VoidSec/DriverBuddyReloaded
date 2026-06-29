@@ -3,7 +3,9 @@ heuristics.py: vulnerability heuristic checks ported and adapted from DriverBudd
 
 Each check emits Finding(category="heuristic") entries.  The checks are best-effort signal
 generators -- they produce starting points for manual review, not definitive vulnerability
-reports.  All checks are gated on config.Feature.HEURISTICS.
+reports.  The structural checks run as a group under config.Feature.HEURISTICS; the
+double-fetch and use-after-free checks are gated independently on Feature.TOCTOU_CHECK
+and Feature.UAF_DETECT, so each settings-UI checkbox takes effect on its own.
 
 Architecture note: handler discovery delegates to callchain.handler_seed_eas() so the exact
 same set of dispatch functions found during call-chain tracing is reused here.
@@ -780,11 +782,18 @@ def check_use_after_free_global(rep: "Reporter", handler_eas: Set[int]) -> None:
 
 def run(rep: Reporter, ctx: AnalysisContext) -> None:
     """
-    Run all heuristic checks.  Seeds handlers from callchain.handler_seed_eas()
-    so handler discovery is never duplicated.
+    Run the enabled heuristic checks.  The structural checks (copy-validation,
+    privilege-gate, IRQL, MDL, alloca, privileged-instructions, write-primitives,
+    pool-alloc-trust, physical-mem-ref) run as a group when Feature.HEURISTICS is
+    set; the double-fetch and use-after-free checks are gated independently on
+    Feature.TOCTOU_CHECK and Feature.UAF_DETECT.  Seeds handlers from
+    callchain.handler_seed_eas() so handler discovery is never duplicated.
     :param rep: Reporter instance
     :param ctx: AnalysisContext (provides functions_map for seed discovery)
     """
+    if not (config.Feature.HEURISTICS or config.Feature.TOCTOU_CHECK
+            or config.Feature.UAF_DETECT):
+        return
     seed_eas = handler_seed_eas(rep, ctx)
     if not seed_eas:
         rep.info("[!] Heuristics: no handler EAs found; skipping checks")
@@ -799,15 +808,16 @@ def run(rep: Reporter, ctx: AnalysisContext) -> None:
     }
     rep.info("[>] Running heuristic checks on {} handler(s) ({} dispatcher seed(s))...".format(
         len(handler_eas), len(seed_eas)))
-    check_user_copy_validation(rep, handler_eas)
-    check_privilege_gate(rep, seed_eas)
-    check_irql(rep, handler_eas)
-    check_mdl(rep, handler_eas)
-    check_alloca(rep, handler_eas)
-    check_privileged_instructions(rep, handler_eas)
-    check_write_primitives(rep, handler_eas)
-    check_pool_alloc_trust(rep, handler_eas)
-    check_physical_mem_ref(rep, handler_eas)
+    if config.Feature.HEURISTICS:
+        check_user_copy_validation(rep, handler_eas)
+        check_privilege_gate(rep, seed_eas)
+        check_irql(rep, handler_eas)
+        check_mdl(rep, handler_eas)
+        check_alloca(rep, handler_eas)
+        check_privileged_instructions(rep, handler_eas)
+        check_write_primitives(rep, handler_eas)
+        check_pool_alloc_trust(rep, handler_eas)
+        check_physical_mem_ref(rep, handler_eas)
     if config.Feature.TOCTOU_CHECK:
         # Only scan handlers that can see a user-mode pointer (METHOD_NEITHER);
         # re-reading a METHOD_BUFFERED kernel copy is not a race.

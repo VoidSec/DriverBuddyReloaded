@@ -28,7 +28,7 @@ import ida_strlist
 import idautils
 import idc
 
-from DriverBuddyReloaded import config
+from DriverBuddyReloaded import config, signatures as sig
 from DriverBuddyReloaded.reporting import Finding
 
 ASCII_BYTE = b" !\"#\\$%&\'\\(\\)\\*\\+,-\\./0123456789:;<=>\\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\\[\\]\\^_`abcdefghijklmnopqrstuvwxyz\\{\\|\\}\\\\~\t"
@@ -254,42 +254,55 @@ def _decode_symlink_arg(call_ea: int) -> Optional[str]:
     return None
 
 
+# Symlink-creation APIs whose link object has a NULL DACL: any user can delete the
+# link and plant a replacement, so merely creating one is rated above INFO.
+_UNPROTECTED_SYMLINK_FUNCS = {"IoCreateUnprotectedSymbolicLink"}
+
+
 def find_symbolic_links(rep, ctx) -> None:
     """
-    N4: Walk xrefs to IoCreateSymbolicLink and emit an INFO finding per call.
+    N4: Walk xrefs to the symbolic-link creation APIs (sig.SYMLINK_CREATE_FUNCS)
+    and emit a finding per call site.
 
-    Attempts to decode the first argument (the symbolic link path) by walking
-    backwards from each call site and reading the UNICODE_STRING buffer.
-    Decoded paths are stored in ctx.symbolic_links for downstream correlation.
-    Gated on Feature.SYMLINK_TRACK.
+    Attempts to decode the link-path argument by walking backwards from each call
+    site and reading the UNICODE_STRING buffer (position-agnostic, so it covers the
+    WDF variant whose name is not the first argument).  Decoded paths are stored in
+    ctx.symbolic_links for downstream correlation.  Lookups use ctx.functions_map
+    (a superset of ctx.imports_map) so WDF functions resolved as named subs are
+    covered alongside the ntoskrnl imports.  Gated on Feature.SYMLINK_TRACK.
     """
-    ea = ctx.imports_map.get("IoCreateSymbolicLink")
-    if not ea:
-        return
-    seen_sites = set()
-    for xr in idautils.XrefsTo(ea, 0):
-        if xr.frm in seen_sites:
-            continue  # one import can resolve via several xref kinds per call site
-        seen_sites.add(xr.frm)
-        fn = ida_funcs.get_func(xr.frm)
-        caller_name = ida_funcs.get_func_name(fn.start_ea) if fn else ""
-        path = _decode_symlink_arg(xr.frm)
-        if path:
-            ctx.symbolic_links.append(path)
-            rep.add(Finding(
-                category="symlink",
-                title="IoCreateSymbolicLink: {}".format(path),
-                ea=xr.frm,
-                func=caller_name,
-                severity=config.SEV_INFO,
-                detail="Symbolic link exposes device to Win32 namespace; "
-                       "verify DACL on the target device object."))
-        else:
-            rep.add(Finding(
-                category="symlink",
-                title="IoCreateSymbolicLink: path could not be decoded",
-                ea=xr.frm,
-                func=caller_name,
-                severity=config.SEV_INFO,
-                detail="Symbolic link target could not be statically recovered; "
-                       "manual review required."))
+    for func_name in sorted(sig.SYMLINK_CREATE_FUNCS):
+        ea = ctx.functions_map.get(func_name)
+        if not ea:
+            continue
+        unprotected = func_name in _UNPROTECTED_SYMLINK_FUNCS
+        severity = config.SEV_LOW if unprotected else config.SEV_INFO
+        exposure = ("Symbolic link object has a NULL DACL; any user can delete it and "
+                    "redirect the link. " if unprotected
+                    else "Symbolic link exposes device to Win32 namespace; ")
+        seen_sites = set()
+        for xr in idautils.XrefsTo(ea, 0):
+            if xr.frm in seen_sites:
+                continue  # one import can resolve via several xref kinds per call site
+            seen_sites.add(xr.frm)
+            fn = ida_funcs.get_func(xr.frm)
+            caller_name = ida_funcs.get_func_name(fn.start_ea) if fn else ""
+            path = _decode_symlink_arg(xr.frm)
+            if path:
+                ctx.symbolic_links.append(path)
+                rep.add(Finding(
+                    category="symlink",
+                    title="{}: {}".format(func_name, path),
+                    ea=xr.frm,
+                    func=caller_name,
+                    severity=severity,
+                    detail=exposure + "verify DACL on the target device object."))
+            else:
+                rep.add(Finding(
+                    category="symlink",
+                    title="{}: path could not be decoded".format(func_name),
+                    ea=xr.frm,
+                    func=caller_name,
+                    severity=severity,
+                    detail="Symbolic link target could not be statically recovered; "
+                           "manual review required."))

@@ -328,15 +328,20 @@ FREE_POOL_FUNCS = {
     "ExFreePool2",
 }
 
-# Device-creation APIs audited by the ACL check.
-DEVICE_CREATE_FUNCS = {
-    "IoCreateDevice",
-    "IoCreateDeviceSecure",
-    "WdfDeviceCreate",
+# Device-creation APIs that set no security descriptor inline on the create call,
+# audited by utils.find_device_create_calls (each call site flagged for manual ACL
+# review).  IoCreateDeviceSecure, which carries an inline SDDL the check decodes
+# and rates, is handled separately in that function rather than listed here.
+DEVICE_CREATE_UNSECURED_FUNCS = {
+    "IoCreateDevice",     # WDM: no security descriptor -> world-accessible by default
+    "WdfDeviceCreate",    # KMDF: DACL set out-of-band (WdfDeviceInitAssignSDDLString / INF)
 }
 
-# Symbolic-link APIs tracked for exposure analysis.
-SYMLINK_FUNCS = {
+# Symbolic-link creation APIs tracked for device-exposure analysis by
+# device_name_finder.find_symbolic_links.  Deletion APIs are intentionally
+# excluded: removing a link reduces exposure, it does not create it.
+SYMLINK_CREATE_FUNCS = {
     "IoCreateSymbolicLink",
-    "IoDeleteSymbolicLink",
+    "IoCreateUnprotectedSymbolicLink",  # NULL-DACL link: any user can delete/redirect it
+    "WdfDeviceCreateSymbolicLink",      # KMDF symbolic-link creation
 }

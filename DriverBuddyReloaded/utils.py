@@ -297,20 +297,44 @@ def _find_sddl_in_func(func_ea: int, sddl_map: dict) -> Optional[str]:
     return None
 
 
+# Per-API (title, detail) for the unsecured device-creation APIs.  The
+# IoCreateDevice wording is kept verbatim to preserve the golden-regression baseline.
+_UNSECURED_DEVICE_GUIDANCE = {
+    "IoCreateDevice": (
+        "IoCreateDevice: world-accessible by default",
+        "IoCreateDevice assigns no security descriptor; accessible to all users. "
+        "Consider IoCreateDeviceSecure with a restrictive SDDL."),
+    "WdfDeviceCreate": (
+        "WdfDeviceCreate: security descriptor not set inline",
+        "WdfDeviceCreate carries no inline SDDL; the device DACL must be assigned via "
+        "WdfDeviceInitAssignSDDLString or the INF. Verify it is restrictive."),
+}
+
+
 def find_device_create_calls(rep: "Reporter", ctx: "AnalysisContext") -> None:
     """
-    N3: Walk xrefs to IoCreateDevice and IoCreateDeviceSecure and audit ACL posture.
+    N3: Walk xrefs to device-creation APIs and audit ACL posture.
 
-    IoCreateDevice creates devices that are world-accessible by default (no SD) -> LOW.
-    IoCreateDeviceSecure accepts an SDDL string; if it contains a world SID -> MEDIUM,
-    if the SDDL cannot be statically recovered -> LOW (needs manual review).
+    The unsecured APIs (sig.DEVICE_CREATE_UNSECURED_FUNCS: IoCreateDevice,
+    WdfDeviceCreate) set no security descriptor on the create call itself -> LOW,
+    flagged for manual ACL review.  IoCreateDeviceSecure accepts an inline SDDL
+    string; if it contains a world SID -> MEDIUM, if the SDDL cannot be statically
+    recovered -> LOW (needs manual review).
+
+    Lookups use ctx.functions_map (a superset of ctx.imports_map) so WDF functions
+    resolved as named subs are covered alongside the ntoskrnl imports.
     """
     sddl_map = _build_sddl_map()
 
-    for func_name in ("IoCreateDevice",):
-        ea = ctx.imports_map.get(func_name)
+    for func_name in sorted(sig.DEVICE_CREATE_UNSECURED_FUNCS):
+        ea = ctx.functions_map.get(func_name)
         if not ea:
             continue
+        title, detail = _UNSECURED_DEVICE_GUIDANCE.get(
+            func_name,
+            ("{}: security descriptor not set inline".format(func_name),
+             "{} creates a device with no inline security descriptor; "
+             "verify the device DACL is restrictive.".format(func_name)))
         seen_sites = set()
         for xr in idautils.XrefsTo(ea, 0):
             if xr.frm in seen_sites:
@@ -320,14 +344,13 @@ def find_device_create_calls(rep: "Reporter", ctx: "AnalysisContext") -> None:
             caller_name = ida_funcs.get_func_name(fn.start_ea) if fn else ""
             rep.add(Finding(
                 category="acl",
-                title="IoCreateDevice: world-accessible by default",
+                title=title,
                 ea=xr.frm,
                 func=caller_name,
                 severity=config.SEV_LOW,
-                detail="IoCreateDevice assigns no security descriptor; accessible to all users. "
-                       "Consider IoCreateDeviceSecure with a restrictive SDDL."))
+                detail=detail))
 
-    ea = ctx.imports_map.get("IoCreateDeviceSecure")
+    ea = ctx.functions_map.get("IoCreateDeviceSecure")
     if not ea:
         return
     seen_secure_sites = set()

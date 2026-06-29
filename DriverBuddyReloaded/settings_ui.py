@@ -235,17 +235,23 @@ class _SettingsDialog:
 
 def show_settings() -> bool:
     """
-    Show the scan-settings dialog. On OK writes the chosen values to config.
-    Returns True if the user confirmed, False if they cancelled.
+    Show the scan-settings dialog. Returns True if analysis should proceed.
+
+    On OK the chosen values are written to config and True is returned; on Cancel
+    False is returned so the caller aborts the run. If the dialog cannot be shown
+    (e.g. Qt unavailable), a warning is logged and True is returned so analysis
+    proceeds with the current config settings rather than being silently disabled.
     """
     try:
         dlg = _SettingsDialog()
+        from PyQt5 import QtWidgets
+        accepted = dlg.exec_() == QtWidgets.QDialog.Accepted
     except Exception as exc:
-        print("[Driver Buddy Reloaded] Could not open settings dialog: {}".format(exc))
-        return False
+        print("[Driver Buddy Reloaded] Settings dialog unavailable ({}); "
+              "proceeding with current settings.".format(exc))
+        return True
 
-    from PyQt5 import QtWidgets
-    if dlg.exec_() == QtWidgets.QDialog.Accepted:
+    if accepted:
         dlg.apply()
         return True
     return False

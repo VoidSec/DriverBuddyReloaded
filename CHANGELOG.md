@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.3.0] - 2026-06-29
 
 ### Added
 
@@ -27,6 +27,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   session-scoped -- `config.py` on disk is never touched.
 - `DriverBuddyReloaded/custom.py` promoted to package root (was
   `vulnerable_functions_lists/custom.py`); the now-empty directory is deleted.
+- `signatures.DEVICE_CREATE_UNSECURED_FUNCS` and `signatures.SYMLINK_CREATE_FUNCS`: the
+  API name sets consumed by the ACL audit and the symbolic-link finder, now wired into
+  those checks instead of each consumer hard-coding a single API. The ACL audit
+  (`utils.find_device_create_calls`) additionally flags `WdfDeviceCreate` (KMDF device
+  whose DACL is set out-of-band via `WdfDeviceInitAssignSDDLString` / INF). The
+  symbolic-link finder (`device_name_finder.find_symbolic_links`) additionally covers
+  `IoCreateUnprotectedSymbolicLink` (rated LOW: the link object has a NULL DACL, so any
+  user can delete and redirect it) and `WdfDeviceCreateSymbolicLink`. Both checks now
+  resolve names via `ctx.functions_map` (a superset of `ctx.imports_map`) so WDF
+  functions resolved as named subs are covered alongside the ntoskrnl imports.
 
 ### Changed
 
@@ -43,6 +53,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `UiAction.register_action()` / `unregister_action()`: menu-path calls are now skipped
   when `menu_path` is empty, fixing a silent `False` return that affected all hotkey-only
   actions.
+
+### Fixed
+
+- `heuristics.run()` / `analysis.py`: the `TOCTOU / double-fetch` and `Use-after-free`
+  settings-UI checkboxes had no effect unless `Heuristics` was also enabled, because both
+  checks lived inside `heuristics.run()` which only ran under `Feature.HEURISTICS`. The
+  structural checks are now gated as a group on `Feature.HEURISTICS`, while double-fetch and
+  use-after-free are gated independently on `Feature.TOCTOU_CHECK` / `Feature.UAF_DETECT`;
+  the heuristics stage is entered whenever any of the three is enabled, so each checkbox
+  takes effect on its own.
+- `settings_ui.show_settings()`: now fails open. If the Qt dialog cannot be constructed or
+  shown it logs a warning and returns `True` so analysis proceeds with the current config,
+  instead of conflating the failure with a user cancel and silently aborting the run.
 
 ### Removed
 

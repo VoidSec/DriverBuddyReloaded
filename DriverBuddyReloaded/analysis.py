@@ -121,7 +121,10 @@ def run_analysis(rep: Reporter) -> Dict[str, Any]:
         _stage(rep, "symlink_track", device_name_finder.find_symbolic_links, rep, ctx)
     if config.Feature.CALLCHAIN:
         _stage(rep, "callchain", callchain.trace, rep, ctx)
-    if config.Feature.HEURISTICS:
+    # heuristics.run() also hosts the double-fetch (TOCTOU) and use-after-free
+    # checks, each with its own feature flag, so enter the stage whenever any of
+    # the three is enabled (the function gates the individual checks internally).
+    if config.Feature.HEURISTICS or config.Feature.TOCTOU_CHECK or config.Feature.UAF_DETECT:
         _stage(rep, "heuristics", heuristics.run, rep, ctx)
     if config.Feature.EXPORTS_AUDIT:
         _stage(rep, "exports_audit", exports_audit.audit, rep)

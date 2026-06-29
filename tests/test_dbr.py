@@ -157,6 +157,15 @@ def main():
     found_strings = list(device_name_finder.extract_unicode_strings(dev_utf16))
     check(any("Test" in s.s for s in found_strings), "utf16 device name found")
 
+    # ---- settings_ui: dialog metadata stays in sync with config ----
+    # Importing the module runs the _FEATURE_DEFAULTS / _TUNING_DEFAULTS
+    # comprehensions, which raise if a dialog attr name drifts from config.
+    from DriverBuddyReloaded import settings_ui
+    check(all(hasattr(config.Feature, a) for a, _ in settings_ui._FEATURES),
+          "settings_ui feature attrs all exist on config.Feature")
+    check(all(hasattr(config, a) for a, _, _ in settings_ui._TUNING),
+          "settings_ui tuning attrs all exist on config")
+
     # ---- IOCTL decode ----
     d = ioctl_decoder.decode(0x222000)
     check(d["device_name"] == "FILE_DEVICE_UNKNOWN", "decode device")
@@ -305,6 +314,47 @@ def main():
     ioctl_decoder.scan_dispatchers(rep_t4, [0x1000])
     t4_count = len(rep_t4.by_category("ioctl"))
     check(t4_count == 1, "T4: scan_dispatchers dedup by code value keeps count at 1")
+
+    # ---- N3/N4: ACL and symlink checks cover all sensible APIs ----
+    from DriverBuddyReloaded import signatures as sig
+    from DriverBuddyReloaded.utils import AnalysisContext
+    check({"IoCreateDevice", "WdfDeviceCreate"} <= sig.DEVICE_CREATE_UNSECURED_FUNCS,
+          "N3: device-create set includes WDM + WDF create APIs")
+    check({"IoCreateSymbolicLink", "IoCreateUnprotectedSymbolicLink"}
+          <= sig.SYMLINK_CREATE_FUNCS,
+          "N4: symlink set includes protected + unprotected create APIs")
+
+    # find_symbolic_links must iterate the set and rate the unprotected variant
+    # higher.  Two APIs resolve (each with one call site); the WDF one is absent
+    # from functions_map and so is skipped.  prev_head -> BADADDR forces the
+    # decoder down the "could not be decoded" branch deterministically.
+    idautils_stub = sys.modules["idautils"]
+    idafuncs_stub = sys.modules["ida_funcs"]
+    idc_stub.get_segm_start = lambda ea: 0x1000
+    idc_stub.prev_head = lambda ea, start: _BADADDR
+    idafuncs_stub.get_func = lambda ea: None
+
+    _sl_site = {0x7000: 0x7100, 0x7004: 0x7104}
+
+    class _Xr:
+        def __init__(self, frm):
+            self.frm = frm
+
+    idautils_stub.XrefsTo = lambda ea, f: iter([_Xr(_sl_site[ea])] if ea in _sl_site else [])
+
+    ctx_n4 = AnalysisContext()
+    ctx_n4.functions_map = {"IoCreateSymbolicLink": 0x7000,
+                            "IoCreateUnprotectedSymbolicLink": 0x7004}
+    rep_n4 = reporting.Reporter()
+    device_name_finder.find_symbolic_links(rep_n4, ctx_n4)
+    sl = {f.title: f for f in rep_n4.by_category("symlink")}
+    check(len(sl) == 2, "N4: one finding per resolved symlink API (WDF one absent -> skipped)")
+    prot = sl.get("IoCreateSymbolicLink: path could not be decoded")
+    unprot = sl.get("IoCreateUnprotectedSymbolicLink: path could not be decoded")
+    check(prot is not None and prot.severity == config.SEV_INFO,
+          "N4: IoCreateSymbolicLink rated INFO")
+    check(unprot is not None and unprot.severity == config.SEV_LOW,
+          "N4: IoCreateUnprotectedSymbolicLink rated LOW (NULL-DACL link)")
 
     print("\n{} check(s), {} failure(s)".format(total[0], len(failures)))
     return 1 if failures else 0
