@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- IOCTL scan: dispatchers whose control-code read Hex-Rays renders through an
+  unexpected `IO_STACK_LOCATION.Parameters` union member or struct path are no
+  longer dropped (issue #41, IObit Unlocker). Three stacked fixes:
+  - `wdm.references_iocontrolcode()` now recognises the
+    `IRP.Tail.Overlay.CurrentStackLocation` load by its operand *offset*
+    (`o_displ == 0xB8`) in addition to the member-name renderings, so the gate
+    no longer false-negatives on databases where the IRP struct is applied
+    (`[rdx+(IRP.Tail+40h)]` instead of `[rdx+0B8h]`).
+  - Store-proven dispatchers (`ctx.ddc_confirmed`, from the MajorFunction[] /
+    struct-store scans) skip the corroboration gate in `scan_dispatchers()`;
+    only CFG/struct-index guessed candidates keep it.
+  - `_collect_hexrays_consts()` reconstructs **base+delta** dispatch pairs:
+    compilers encode adjacent codes as `sub esi, 222124h` / `cmp esi, 4`
+    (`v = selector - base; if (v != 0) ... if (v == 4)`), leaving the second
+    code with no immediate or comparison operand of its own. Without this only
+    `0x222124` was recoverable; `0x222128` was invisible in every strategy.
+    IDA 8.4 renders the base arm as a bare truthiness test (`if (v6)`), so
+    `if (v)` / `if (!v)` conditions on a subtracted lvar contribute the base
+    code as well (9.4 renders the same check as `v6 != 0`).
+- New golden: `tests/drivers/IObitUnlocker.sys.{i64,golden.json}` -- regression
+  fixture for the above (exactly `0x222124` + `0x222128`, no false positives).
+
+### Added
+
+- `_collect_hexrays_consts()` rejects comparison constants against negative
+  literals (`cexpr_t.is_negative_const()`); their masked values pass the
+  structural CTL_CODE check (device type 0xFFFF) but are never dispatch codes
+  (IObit Unlocker's `ptr == -528` pointer-overflow guard surfaced as a bogus
+  `0xFFFFFDF0` "IOCTL").
+
 ## [2.5.1] - 2026-07-08
 
 ### Added

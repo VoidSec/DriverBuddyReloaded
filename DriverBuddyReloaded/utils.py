@@ -49,6 +49,13 @@ class AnalysisContext:
     driver_map: dict = field(default_factory=dict)
     # Addresses of identified WDM dispatch handlers; populated by get_driver_id().
     ddc_addresses: list = field(default_factory=list)
+    # Subset of ddc_addresses proven to be dispatchers by a MajorFunction[] /
+    # struct-store scan (as opposed to the CFG/struct-index guess).  Passed to
+    # scan_dispatchers so the low-precision immediate scan runs on these without
+    # IoControlCode corroboration: a proven dispatcher whose control-code read
+    # renders through an unexpected union member or struct path must not be
+    # dropped (issue #41).
+    ddc_confirmed: set = field(default_factory=set)
     # Real DriverEntry EA after resolving GsDriverEntry / fake-entry wrappers.
     real_entry_addr: int = 0
     # Symbolic link paths discovered by find_symbolic_links() (N4).
@@ -237,14 +244,22 @@ def get_driver_id(driver_entry_addr: int, rep: Reporter, ctx: AnalysisContext) -
     # MajorFunction[IRP_MJ_DEVICE_CONTROL] store (works whether the assignment
     # lives in DriverEntry or a helper, and for minifilter/WDF entries).
     ddc_addrs = find_majorfunction_dispatchers(rep)
+    # Provenance matters downstream (issue #41): store-scan and struct-store
+    # dispatchers are *proven* and get the gate-free immediate scan in
+    # scan_dispatchers; CFG/struct-index guesses keep the IoControlCode
+    # corroboration gate so misidentified helpers cannot leak constants.
+    ddc_confirmed = set(ddc_addrs)
     if not ddc_addrs:
         # Fallbacks: the entry-scoped struct-store scan, then the corroborated
         # CFG/struct-index guess.  Both only recover WDM-shaped dispatchers.
         ddc_map = locate_ddc(ctx.real_entry_addr, rep)
         if ddc_map is not None:
             ddc_addrs = list(ddc_map.values())
+            ddc_confirmed = set(ddc_addrs)
         else:
             ddc_addrs = find_dispatch_function(rep)
+            ddc_confirmed = set()
+    ctx.ddc_confirmed = ddc_confirmed
 
     for ddc in ddc_addrs:
         define_ddc(ddc, rep)

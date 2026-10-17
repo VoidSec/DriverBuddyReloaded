@@ -14,7 +14,7 @@ https://github.com/tandasat/WinIoCtlDecoder/blob/master/plugins/WinIoCtlDecoder.
 
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING
+from typing import List, Optional, Set, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from DriverBuddyReloaded.reporting import Reporter
@@ -518,6 +518,14 @@ def _collect_hexrays_consts(func_ea: int):
         for drivers that dispatch via an if-chain (no switch at all, e.g. beep)
         and for the occasional case the decompiler renders as a comparison
         rather than folding it into the switch (e.g. one of HEVD's 28).
+      - base + delta pairs (issue #41): compilers encode adjacent codes as
+        `sub esi, 222124h` / `cmp esi, 4`, i.e. `v = selector - base` followed
+        by == / != against a delta.  Neither code appears as a comparison
+        operand or an immediate, so every == / != on a subtracted lvar also
+        yields base + delta (and the base itself when compared against 0).
+        IDA 8.4 renders the base arm as a bare truthiness test (`if (v6)`, no
+        cot_ne node), so `if (v)` / `if (!v)` conditions on a subtracted lvar
+        contribute the base code as well.
 
     Comparison constants are anchored to avoid false positives: when the
     function contains a switch, only == / != comparisons made against a
@@ -549,6 +557,10 @@ def _collect_hexrays_consts(func_ea: int):
         cot_num = getattr(ida_hexrays, "cot_num", None)
         cot_var = getattr(ida_hexrays, "cot_var", None)
         cot_cast = getattr(ida_hexrays, "cot_cast", None)
+        cot_sub = getattr(ida_hexrays, "cot_sub", None)
+        cot_asg = getattr(ida_hexrays, "cot_asg", None)
+        cot_lnot = getattr(ida_hexrays, "cot_lnot", None)
+        cit_if = getattr(ida_hexrays, "cit_if", None)
         cot_eq = getattr(ida_hexrays, "cot_eq", None)
         cot_ne = getattr(ida_hexrays, "cot_ne", None)
         cot_call = getattr(ida_hexrays, "cot_call", None)
@@ -557,6 +569,13 @@ def _collect_hexrays_consts(func_ea: int):
         if cot_num is None:
             return []
         eq_ops = frozenset(o for o in (cot_eq, cot_ne) if o is not None)
+
+        # lvar idx -> [(base, selector_var_idx), ...] for `v = selector - base`
+        # assignments.  Comparison constants against v are deltas from base, so
+        # the dispatched codes are base + delta (issue #41: adjacent codes encoded
+        # as `sub esi, 222124h` / `cmp esi, 4` leave the second code without any
+        # immediate or comparison operand of its own).
+        sub_map = {}
 
         def _case_handler_ea(case_insn):
             """Start EA of the first in-binary function a switch case calls, i.e.
@@ -647,6 +666,24 @@ def _collect_hexrays_consts(func_ea: int):
 
             def visit_expr(self, e):
                 try:
+                    # Record `v = selector - base` so later comparisons against v
+                    # can be reconstructed as base + delta.
+                    if cot_asg is not None and cot_sub is not None and e.op == cot_asg:
+                        dest = _unwrap(e.x)
+                        if dest is not None and dest.op == cot_var:
+                            src = _unwrap(e.y)
+                            if src is not None and src.op == cot_sub:
+                                a = _unwrap(src.x)
+                                b = _unwrap(src.y)
+                                if a is not None and b is not None:
+                                    if (a.op == cot_var and b.op == cot_num
+                                            and not b.is_negative_const()):
+                                        sub_map.setdefault(dest.v.idx, []).append(
+                                            (int(b.numval()) & 0xffffffff, a.v.idx))
+                                    elif (b.op == cot_var and a.op == cot_num
+                                            and not a.is_negative_const()):
+                                        sub_map.setdefault(dest.v.idx, []).append(
+                                            (int(a.numval()) & 0xffffffff, b.v.idx))
                     if e.op in eq_ops:
                         x, y = e.x, e.y
                         if x.op == cot_num and y.op != cot_num:
@@ -655,16 +692,58 @@ def _collect_hexrays_consts(func_ea: int):
                             const_node, other = y, x
                         else:
                             return 0
+                        # A comparison against a negative literal (e.g. the
+                        # `ptr == -528` pointer-overflow guard in IObitUnlocker,
+                        # issue #41) is never a dispatch-code comparison; its
+                        # masked value would pass the structural CTL_CODE check
+                        # (device type 0xFFFF) and surface as a false positive.
+                        if const_node.is_negative_const():
+                            return 0
                         eq_candidates.append((
                             _var_idx(other),
                             int(const_node.numval()) & 0xffffffff,
                             _node_ea(e, func_ea)))
+                        # `if ((selector - base) == delta)`: the dispatched code
+                        # is base + delta, not the bare delta (or num - delta when
+                        # the constant is on the left of the subtraction).
+                        if cot_sub is not None:
+                            side = _unwrap(other)
+                            if side is not None and side.op == cot_sub:
+                                a = _unwrap(side.x)
+                                b = _unwrap(side.y)
+                                if a is not None and b is not None:
+                                    if a.op == cot_var and b.op == cot_num:
+                                        eq_candidates.append((
+                                            a.v.idx,
+                                            (int(const_node.numval()) & 0xffffffff)
+                                            + (int(b.numval()) & 0xffffffff),
+                                            _node_ea(e, func_ea)))
+                                    elif b.op == cot_var and a.op == cot_num:
+                                        eq_candidates.append((
+                                            b.v.idx,
+                                            (int(const_node.numval()) & 0xffffffff)
+                                            - (int(a.numval()) & 0xffffffff),
+                                            _node_ea(e, func_ea)))
                 except Exception:
                     pass
                 return 0
 
             def visit_insn(self, ins):
                 try:
+                    # `if (v)` / `if (!v)` on a variable fed by `v = selector -
+                    # base` is an implicit compare-to-zero selecting the base
+                    # code itself.  IDA 8.4 renders the first arm of
+                    # IObitUnlocker's dispatch as `if (v6)` with no cot_ne node
+                    # for the eq collector above to see (issue #41).  Candidate
+                    # 0 itself is rejected downstream; the sub_map replay below
+                    # turns it into the base code.
+                    if cit_if is not None and cot_var is not None and ins.op == cit_if:
+                        cond = _unwrap(ins.cif.expr)
+                        if cond is not None and cot_lnot is not None and cond.op == cot_lnot:
+                            cond = _unwrap(cond.x)
+                        if cond is not None and cond.op == cot_var:
+                            eq_candidates.append((
+                                cond.v.idx, 0, _node_ea(ins, func_ea)))
                     if cit_switch is not None and ins.op == cit_switch:
                         sw = ins.cswitch
                         sel = _var_idx(sw.expr)
@@ -705,10 +784,19 @@ def _collect_hexrays_consts(func_ea: int):
         if not switch_vars or (var_idx is not None and var_idx in switch_vars):
             # if-chain comparison: no switch case body to bound, so no case range.
             found.append((code, ea, None, None))
+        # Base+delta reconstruction (issue #41): a comparison on a variable fed by
+        # `v = selector - base` dispatches base + code (e.g. `v6 = sel - 0x222124;
+        # if (v6 != 0) ... if (v6 == 4)` is really 0x222124 / 0x222128 -- neither
+        # code appears as a comparison operand or immediate).  Same anchoring rule
+        # as above, applied to the variable the base was subtracted from.
+        for base, src_idx in sub_map.get(var_idx, []):
+            if not switch_vars or (src_idx is not None and src_idx in switch_vars):
+                found.append(((base + code) & 0xffffffff, ea, None, None))
     return found
 
 
-def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
+def scan_dispatchers(rep: Reporter, ddc_addresses: List[int],
+                     confirmed_eas: Optional[Set[int]] = None) -> bool:
     """
     Multi-strategy IOCTL recovery over every identified WDM dispatch handler.
 
@@ -716,9 +804,10 @@ def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
     annotation) by running three independent collectors over each dispatcher
     and merging their results into a single deduplicated set:
 
-      1. decompiler ctree  -- switch cases + == / != constants (most complete;
-         recovers codes that never appear as immediates, e.g. binary-search
-         dispatch). Gated on config.Feature.IOCTL_DECOMPILER and HexRays.
+      1. decompiler ctree  -- switch cases + == / != constants + base/delta
+         reconstruction (most complete; recovers codes that never appear as
+         immediates, e.g. binary-search dispatch).  Gated on
+         config.Feature.IOCTL_DECOMPILER and HexRays.
       2. IDA switch tables -- calc_switch_cases case labels minus the default
          (recovers jump-table dispatch without needing the decompiler).
       3. immediate scan    -- cmp/sub/mov immediate operands (the original
@@ -731,6 +820,13 @@ def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
 
     :param rep: Reporter instance
     :param ddc_addresses: list of function start EAs to scan
+    :param confirmed_eas: subset of *ddc_addresses* proven to be dispatchers by a
+        MajorFunction[] / struct-store scan.  The low-precision immediate scan
+        runs on these without IoControlCode corroboration: the store already
+        proves what the function is, and member-name/offset recognition of the
+        control-code read can false-negative on struct-annotated databases
+        (issue #41).  None (legacy callers) keeps the corroboration gate for
+        every candidate.
     :return bool: True if any new IOCTLs were found
     """
     if not ddc_addresses:
@@ -777,7 +873,13 @@ def scan_dispatchers(rep: Reporter, ddc_addresses: List[int]) -> bool:
             # function that actually reads the IRP's IoControlCode.  This stops a
             # CFG-misidentified library helper (e.g. RTCore's SepSddlGetAclForString)
             # from leaking its internal constants as false-positive IOCTLs.
-            if references_iocontrolcode(func_ea):
+            # Store-proven dispatchers (confirmed_eas) skip the gate: the
+            # MajorFunction[] store already proves what the function is, and
+            # IoControlCode-name recognition can false-negative when Hex-Rays
+            # renders the read through an unexpected union member or the database
+            # carries struct annotations (issue #41).
+            if ((confirmed_eas is not None and func_ea in confirmed_eas)
+                    or references_iocontrolcode(func_ea)):
                 for code, ea in _collect_immediates(func_ea):
                     if _emit_ioctl(rep, code, ea, func_name, "dispatcher scan", already_seen):
                         result = True

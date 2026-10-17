@@ -1,0 +1,709 @@
+{
+  "tool": "DriverBuddyReloaded",
+  "driver": "IObitUnlocker.sys",
+  "sha256": "c6e50ac7b540e20979b9928867bacf738fab41e0543b0587cd8c0fe90273a577",
+  "generated": "2026-10-18-1792269905",
+  "severity_counts": {
+    "INFO": 12,
+    "HIGH": 26,
+    "LOW": 20,
+    "MEDIUM": 10
+  },
+  "findings": [
+    {
+      "category": "device_name",
+      "title": "\\Device\\HarddiskDmVolumes\\",
+      "ea": "0x140006790",
+      "func": "",
+      "severity": "INFO",
+      "detail": "",
+      "data": {}
+    },
+    {
+      "category": "device_name",
+      "title": "\\Device\\HarddiskVolume1\\unlocker.log",
+      "ea": "0x1400064c0",
+      "func": "",
+      "severity": "INFO",
+      "detail": "",
+      "data": {}
+    },
+    {
+      "category": "device_name",
+      "title": "\\Device\\IObitUnlockerDevice",
+      "ea": "0x1400063b0",
+      "func": "",
+      "severity": "INFO",
+      "detail": "",
+      "data": {}
+    },
+    {
+      "category": "device_name",
+      "title": "\\DosDevices\\C:",
+      "ea": "0x140006770",
+      "func": "",
+      "severity": "INFO",
+      "detail": "",
+      "data": {}
+    },
+    {
+      "category": "device_name",
+      "title": "\\DosDevices\\IObitUnlockerDevice",
+      "ea": "0x1400063f0",
+      "func": "",
+      "severity": "INFO",
+      "detail": "",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "\u0000\u0000UM",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: sub_140001240",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "bRpP",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: CmRegUtilUcValueGetFullBuffer",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "cUpP",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: CmpRegUtilAllocateUnicodeString",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "dSeS",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: SepSddlSecurityDescriptorFromSDDLString",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "lAeS",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: SepSddlAddAceToAcl, SepSddlGetAclForString",
+      "data": {}
+    },
+    {
+      "category": "pooltag",
+      "title": "sTeS",
+      "ea": null,
+      "func": "",
+      "severity": "INFO",
+      "detail": "Called by: sub_14000BAA4",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x140002659",
+      "func": "sub_140002354",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x140002948",
+      "func": "sub_14000273C",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x140002f71",
+      "func": "sub_140002ED4",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x140003c87",
+      "func": "sub_140003BDC",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x1400054db",
+      "func": "sub_140005394",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x140005717",
+      "func": "sub_1400055D0",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x14000bb35",
+      "func": "sub_14000BAA4",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x14000bc19",
+      "func": "SepSddlAddAceToAcl",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "memmove",
+      "ea": "0x14000c9af",
+      "func": "CmRegUtilUcValueSetUcString",
+      "severity": "HIGH",
+      "detail": "C/C++ function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "IofCallDriver",
+      "ea": "0x14000339e",
+      "func": "sub_140003244",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "IofCallDriver",
+      "ea": "0x140004e44",
+      "func": "sub_140004C94",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "IofCallDriver",
+      "ea": "0x140005055",
+      "func": "sub_140004EA8",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "IofCallDriver",
+      "ea": "0x140005577",
+      "func": "sub_140005394",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "IofCallDriver",
+      "ea": "0x1400057b3",
+      "func": "sub_1400055D0",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ObReferenceObjectByHandle",
+      "ea": "0x1400032ad",
+      "func": "sub_140003244",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ObReferenceObjectByHandle",
+      "ea": "0x140004d2e",
+      "func": "sub_140004C94",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ObReferenceObjectByHandle",
+      "ea": "0x140004f3f",
+      "func": "sub_140004EA8",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ObReferenceObjectByHandle",
+      "ea": "0x14000543e",
+      "func": "sub_140005394",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ObReferenceObjectByHandle",
+      "ea": "0x14000567a",
+      "func": "sub_1400055D0",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ZwCreateFile",
+      "ea": "0x14000389d",
+      "func": "sub_1400037A8",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ZwCreateFile",
+      "ea": "0x140003a28",
+      "func": "sub_140003994",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ZwWriteFile",
+      "ea": "0x1400047a7",
+      "func": "sub_1400045DC",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ZwTerminateProcess",
+      "ea": "0x1400030c2",
+      "func": "sub_140002ED4",
+      "severity": "HIGH",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "MmGetSystemRoutineAddress",
+      "ea": "0x14000534f",
+      "func": "sub_140005330",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "MmGetSystemRoutineAddress",
+      "ea": "0x14000b029",
+      "func": "Core::do_resolve_APIs",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "MmGetSystemRoutineAddress",
+      "ea": "0x14000b06c",
+      "func": "Core::do_resolve_APIs",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "MmGetSystemRoutineAddress",
+      "ea": "0x14000c3ba",
+      "func": "SepSddlSecurityDescriptorFromSDDLString",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ObOpenObjectByPointer",
+      "ea": "0x140003ba4",
+      "func": "sub_140003B60",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "flagged_function",
+      "title": "ObOpenObjectByPointer",
+      "ea": "0x14000b33c",
+      "func": "IopDevObjApplyPostCreationSettings",
+      "severity": "LOW",
+      "detail": "WinAPI function",
+      "data": {}
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222124",
+      "ea": "0x14000129c",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler] | sinks (dispatcher-wide): PsLookupProcessByProcessId, ZwOpenProcess, ZwTerminateProcess, memmove",
+      "data": {
+        "code": 2236708,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2121,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "sinks": [
+          "PsLookupProcessByProcessId",
+          "ZwOpenProcess",
+          "ZwTerminateProcess",
+          "memmove"
+        ],
+        "sink_attribution": "dispatcher-wide",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> PsLookupProcessByProcessId",
+          "-> ZwOpenProcess",
+          "-> ZwTerminateProcess",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "ioctl",
+      "title": "IOCTL 0x00222128",
+      "ea": "0x1400012a5",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "FILE_DEVICE_UNKNOWN / METHOD_BUFFERED / FILE_ANY_ACCESS [decompiler] | sinks (dispatcher-wide): PsLookupProcessByProcessId, ZwOpenProcess, ZwTerminateProcess, memmove",
+      "data": {
+        "code": 2236712,
+        "device_name": "FILE_DEVICE_UNKNOWN",
+        "device_code": 34,
+        "function": 2122,
+        "method_name": "METHOD_BUFFERED",
+        "method_code": 0,
+        "access_name": "FILE_ANY_ACCESS",
+        "access_code": 0,
+        "sinks": [
+          "PsLookupProcessByProcessId",
+          "ZwOpenProcess",
+          "ZwTerminateProcess",
+          "memmove"
+        ],
+        "sink_attribution": "dispatcher-wide",
+        "risk_reasons": [
+          "FILE_ANY_ACCESS (+2)",
+          "-> PsLookupProcessByProcessId",
+          "-> ZwOpenProcess",
+          "-> ZwTerminateProcess",
+          "-> memmove"
+        ]
+      }
+    },
+    {
+      "category": "acl",
+      "title": "IoCreateDevice: world-accessible by default",
+      "ea": "0x14000b25c",
+      "func": "IoDevObjCreateDeviceSecure",
+      "severity": "LOW",
+      "detail": "IoCreateDevice assigns no security descriptor; accessible to all users. Consider IoCreateDeviceSecure with a restrictive SDDL.",
+      "data": {}
+    },
+    {
+      "category": "symlink",
+      "title": "IoCreateSymbolicLink: \\DosDevices\\IObitUnlockerDevice",
+      "ea": "0x14000109e",
+      "func": "Real_Driver_Entry",
+      "severity": "INFO",
+      "detail": "Symbolic link exposes device to Win32 namespace; verify DACL on the target device object.",
+      "data": {}
+    },
+    {
+      "category": "callchain",
+      "title": "DispatchDeviceControl reaches memmove",
+      "ea": "0x140001240",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "DispatchDeviceControl -> sub_140005B18 -> sub_140003B60 -> sub_140003BDC -> memmove",
+      "data": {
+        "sink": "memmove",
+        "path": [
+          "DispatchDeviceControl",
+          "sub_140005B18",
+          "sub_140003B60",
+          "sub_140003BDC",
+          "memmove"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "DispatchDeviceControl reaches ZwTerminateProcess",
+      "ea": "0x140001240",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "DispatchDeviceControl -> sub_1400059D0 -> sub_140005884 -> sub_140002ED4 -> ZwTerminateProcess",
+      "data": {
+        "sink": "ZwTerminateProcess",
+        "path": [
+          "DispatchDeviceControl",
+          "sub_1400059D0",
+          "sub_140005884",
+          "sub_140002ED4",
+          "ZwTerminateProcess"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "DispatchDeviceControl reaches PsLookupProcessByProcessId",
+      "ea": "0x140001240",
+      "func": "DispatchDeviceControl",
+      "severity": "MEDIUM",
+      "detail": "DispatchDeviceControl -> sub_1400059D0 -> sub_140005884 -> sub_14000273C -> PsLookupProcessByProcessId",
+      "data": {
+        "sink": "PsLookupProcessByProcessId",
+        "path": [
+          "DispatchDeviceControl",
+          "sub_1400059D0",
+          "sub_140005884",
+          "sub_14000273C",
+          "PsLookupProcessByProcessId"
+        ]
+      }
+    },
+    {
+      "category": "callchain",
+      "title": "DispatchDeviceControl reaches ZwOpenProcess",
+      "ea": "0x140001240",
+      "func": "DispatchDeviceControl",
+      "severity": "MEDIUM",
+      "detail": "DispatchDeviceControl -> sub_1400059D0 -> sub_140005884 -> sub_140002ED4 -> sub_1400031A0 -> ZwOpenProcess",
+      "data": {
+        "sink": "ZwOpenProcess",
+        "path": [
+          "DispatchDeviceControl",
+          "sub_1400059D0",
+          "sub_140005884",
+          "sub_140002ED4",
+          "sub_1400031A0",
+          "ZwOpenProcess"
+        ]
+      }
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x1400054db",
+      "func": "sub_140005394",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x140002948",
+      "func": "sub_14000273C",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x140005717",
+      "func": "sub_1400055D0",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x140002f71",
+      "func": "sub_140002ED4",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x140002659",
+      "func": "sub_140002354",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Unvalidated copy: memmove",
+      "ea": "0x140003c87",
+      "func": "sub_140003BDC",
+      "severity": "HIGH",
+      "detail": "No validation call found in 20-back/6-forward window",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Ungated privileged op: ZwOpenProcess",
+      "ea": "0x1400031ee",
+      "func": "sub_1400031A0",
+      "severity": "HIGH",
+      "detail": "Reachable from dispatcher DispatchDeviceControl with no privilege check on the path",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Ungated privileged op: ZwTerminateProcess",
+      "ea": "0x1400030c2",
+      "func": "sub_140002ED4",
+      "severity": "HIGH",
+      "detail": "Reachable from dispatcher DispatchDeviceControl with no privilege check on the path",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x140001815",
+      "func": "sub_140001778",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x140003d31",
+      "func": "sub_140003CB0",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x140002a1f",
+      "func": "sub_14000273C",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x140001e31",
+      "func": "sub_140001CC0",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x140002035",
+      "func": "sub_140001CC0",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x140001a69",
+      "func": "sub_1400019C8",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x1400018b5",
+      "func": "sub_14000184C",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Controlled pointer write",
+      "ea": "0x1400011ca",
+      "func": "sub_140001160",
+      "severity": "MEDIUM",
+      "detail": "Value read through one pointer stored through another `*p = *q`; review whether the destination is attacker-controlled",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x140001690",
+      "func": "sub_140001680",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x14000137d",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x1400014d7",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    },
+    {
+      "category": "heuristic",
+      "title": "Allocation without size validation: ExAllocatePoolWithTag",
+      "ea": "0x1400015a3",
+      "func": "DispatchDeviceControl",
+      "severity": "HIGH",
+      "detail": "No safe-arithmetic guard near pool alloc in IOCTL handler",
+      "data": {}
+    }
+  ]
+}

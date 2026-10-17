@@ -39,7 +39,13 @@ def references_iocontrolcode(func_ea):
     CRT helpers such as SepSddlGetAclForString or __GSHandlerCheckCommon are not
     mistaken for dispatchers) and gates the low-precision immediate-operand IOCTL
     scan so it never mines a non-dispatcher's internal constants.
+
+    The iostack load is recognised by its *offset*, not by member-name text: the
+    same `mov reg, [irp+0B8h]` renders as `[rdx+0B8h]` on a pristine database but
+    as `[rdx+(IRP.Tail+40h)]` once the IRP struct type is applied (issue #41).
     """
+
+    _IRP_STACK_OFFSET = 0xB8  # IRP.Tail.Overlay.CurrentStackLocation, x64
     try:
         items = list(idautils.FuncItems(func_ea))
     except Exception:
@@ -57,6 +63,18 @@ def references_iocontrolcode(func_ea):
                 return True
             if "CurrentStackLocation" in disasm:
                 saw_iostack = True
+            # Structural form: a register load from [reg+0B8h], regardless of how
+            # IDA renders the member path (raw offset, "(IRP.Tail+40h)", ...).
+            # Operand 0 must be a register so a *store* into [x+0B8h] is not
+            # mistaken for the load.
+            if (idc.print_insn_mnem(i) == "mov"
+                    and idc.get_operand_type(i, 0) == idc.o_reg
+                    and idc.get_operand_type(i, 1) == idc.o_displ
+                    and (idc.get_operand_value(i, 1) & 0xFFFFFFFF) == _IRP_STACK_OFFSET):
+                saw_iostack = True
+                iostack_reg = idc.print_operand(i, 0)
+                if iostack_reg:
+                    iostack_read = "[" + iostack_reg + "+18h]"
             # Raw form (pristine database): IRP.Tail.Overlay.CurrentStackLocation
             # load dst reg <- [irp+0B8h], then the control code at [iostack+18h].
             if "+0B8h" in disasm:
