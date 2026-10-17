@@ -305,6 +305,46 @@ def _save_numforms(func_ea, targets, ida_hexrays, rep):
             rep.info("[!] IRP_MJ: save_user_numforms failed: {}".format(e))
 
 
+def _ensure_driver_entry_typed(driver_entry_addr: int, rep: Reporter) -> bool:
+    """Apply the canonical DriverEntry prototype when the first argument is not
+    already PDRIVER_OBJECT.
+
+    The IRP_MJ enum-index annotator matches `<DriverObject>->MajorFunction[<n>]`
+    assignments in the ctree, which only exist once the DriverObject argument is
+    typed as _DRIVER_OBJECT*.  Untyped drivers (e.g. IObit Unlocker, issue #41's
+    sample) render the same stores as raw offsets (`a1[28] = ...`), silently
+    skipping the annotation.  IDA auto-loads the WDM types for .sys files, so
+    PDRIVER_OBJECT is always available; forcing the prototype is safe because
+    DriverEntry's signature is fixed by the kernel's contract.
+
+    Returns True when the prototype was (re)applied.
+    """
+    try:
+        import ida_typeinf
+    except ImportError:
+        return False
+    try:
+        cur = ida_typeinf.tinfo_t()
+        if idaapi.get_tinfo(cur, driver_entry_addr) and cur.is_func():
+            ftd = ida_typeinf.func_type_data_t()
+            if cur.get_func_details(ftd) and ftd.size() >= 1:
+                if ftd[0].type.dstr() == "PDRIVER_OBJECT":
+                    return False  # already correct; do not clobber
+    except Exception:
+        pass
+    # x64 has a single calling convention; x86 DriverEntry is __cdecl.
+    cc = "__stdcall" if ida_compat.ptr_size() == 8 else "__cdecl"
+    ok = idc.SetType(driver_entry_addr,
+                     "NTSTATUS {} DriverEntry(PDRIVER_OBJECT DriverObject, "
+                     "PUNICODE_STRING RegistryPath);".format(cc))
+    if ok:
+        rep.info("[>] IRP_MJ: applied PDRIVER_OBJECT prototype to DriverEntry "
+                 "(was untyped); dispatch stores now render symbolically")
+    else:
+        rep.info("[!] IRP_MJ: could not apply DriverEntry prototype")
+    return ok
+
+
 def apply_to_driver_entry(driver_entry_addr: int, rep: Reporter) -> None:
     """
     Annotate MajorFunction dispatch-table assignments in DriverEntry:
@@ -323,6 +363,10 @@ def apply_to_driver_entry(driver_entry_addr: int, rep: Reporter) -> None:
     if eid is None:
         rep.info("[!] IRP_MJ: failed to create {} enum".format(_ENUM_NAME))
         return
+
+    # Type DriverEntry before annotating: the HexRays enum-index annotator only
+    # matches _DRIVER_OBJECT member accesses, which untyped drivers never render.
+    _ensure_driver_entry_typed(driver_entry_addr, rep)
 
     ptr_sz   = ida_compat.ptr_size()
     mf_off   = _majorfunction_offset(ptr_sz)

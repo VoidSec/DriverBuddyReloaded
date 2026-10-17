@@ -33,6 +33,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `irp_mj.py` now applies the canonical DriverEntry prototype
+  (`NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)`)
+  when the binary ships `DriverEntry` untyped.  Without it the decompiler renders
+  the dispatch stores as raw offsets (`a1[28] = ...`) and the enum-index
+  annotator -- which matches `_DRIVER_OBJECT` member accesses only -- silently
+  does nothing.  With it, untyped drivers render
+  `DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ...` in the decompiler
+  and carry the usual repeatable comments in disassembly.  IDA ships the WDM
+  types for `.sys` files already, so no til loading is involved.
 - `_collect_hexrays_consts()` rejects comparison constants against negative
   literals (`cexpr_t.is_negative_const()`); their masked values pass the
   structural CTL_CODE check (device type 0xFFFF) but are never dispatch codes
