@@ -130,6 +130,18 @@ requirements discovered through live debugging:
    attribute in IDA 7.6. Use the standalone `restore_user_numforms(func_ea)` /
    `save_user_numforms(func_ea, nf_map)` instead.
 
+The annotator only matches `_DRIVER_OBJECT` member accesses
+(`cot_memptr`/`cot_memref` at the MajorFunction offset), so
+`_ensure_driver_entry_typed()` applies the canonical
+`NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)`
+prototype first when arg0 is untyped -- otherwise untyped drivers render the
+stores as raw offsets (`a1[28] = ...`) and are silently skipped. IDA
+auto-loads the WDM types for `.sys` files, so the `_DRIVER_OBJECT` struct
+(MajorFunction at 0x70 x64) and `PDRIVER_OBJECT` are always present; no til
+loading is needed. Scope: DriverEntry only -- helpers that *receive*
+DriverObject and do the stores (amp-style) still need their argument typed
+(and the annotator re-run on their decompilation) to render symbolically.
+
 `ctx.real_entry_addr` (set in `get_driver_id()` via `check_for_fake_driver_entry()`)
 is passed to `irp_mj.run()` instead of the raw `driver_entry_addr`. Some drivers
 export a tiny `/GS` security-cookie stub (`GsDriverEntry`) that contains no
